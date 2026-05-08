@@ -1,312 +1,80 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CRM V2 corregido · Ñ Mayúscula</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CRM V2 operativo · Ñ Mayúscula</title>
 <style>
-:root{--bg:#080808;--panel:#171318;--text:#fff8eb;--muted:#c9bba6;--gold:#f3b83f;--gold2:#ffd76c;--red:#be2a25;--green:#38b980;--blue:#8cc8ff;--line:rgba(255,255,255,.14);--shadow:0 18px 60px rgba(0,0,0,.42)}
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:radial-gradient(circle at 16% -10%,rgba(243,184,63,.26),transparent 34%),radial-gradient(circle at 98% 0%,rgba(190,42,37,.22),transparent 31%),linear-gradient(135deg,#050505,#151012 58%,#050505);min-height:100vh}
-button,input,select{font:inherit}button{cursor:pointer}a{color:inherit}
-.wrap{max-width:1540px;margin:0 auto;padding:26px}
-.top{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}
-.brand{display:flex;gap:14px;align-items:center}
-.logo{width:62px;height:62px;border-radius:18px;background:linear-gradient(135deg,var(--gold2),var(--gold),#9b1f1c);color:#140c07;display:grid;place-items:center;font-size:34px;font-weight:900;box-shadow:var(--shadow)}
-h1{margin:0 0 6px;font-size:34px}.lead,.muted{color:var(--muted)}.lead{line-height:1.45}
-.actions{display:flex;flex-wrap:wrap;gap:10px}
-.btn{border:0;border-radius:13px;padding:11px 14px;font-weight:900;text-decoration:none;display:inline-flex;gap:8px;align-items:center}
-.btn.gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#130c07}
-.btn.dark{background:rgba(255,255,255,.08);border:1px solid var(--line);color:var(--text)}
-.status{padding:14px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.055);margin:0 0 14px;color:var(--muted);line-height:1.45}
-.status.ok{border-color:rgba(56,185,128,.45);color:#caffdf;background:rgba(56,185,128,.12)}
-.status.error{border-color:rgba(255,80,80,.45);color:#ffd0d0;background:rgba(190,42,37,.14)}
-.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
-.metric{grid-column:span 3;background:rgba(255,255,255,.065);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow);cursor:pointer;transition:.15s transform,.15s border-color}
-.metric:hover{transform:translateY(-2px);border-color:rgba(243,184,63,.55)}
-.metric span{display:inline-flex;padding:7px 10px;border-radius:999px;border:1px solid rgba(243,184,63,.45);background:rgba(243,184,63,.14);color:var(--gold2);font-size:12px;font-weight:900}
-.metric strong{display:block;font-size:34px;margin:8px 0 2px}
-.panel{margin-top:14px;background:rgba(255,255,255,.065);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow)}
-.quick{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:14px}
-.quick button{border:1px solid rgba(243,184,63,.32);background:rgba(255,255,255,.07);color:var(--text);border-radius:999px;padding:9px 12px;font-weight:900}
-.quick button.active,.quick button:hover{background:rgba(243,184,63,.18);color:var(--gold2)}
-.toolbar{display:grid;grid-template-columns:1.35fr repeat(5,minmax(125px,.65fr));gap:10px;margin:14px 0}
-.field{display:grid;gap:5px}
-.field label{font-size:11px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.04em}
-.field input,.field select{width:100%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:var(--text);border-radius:12px;padding:10px;outline:none}
-.field select option{color:#111}.count{font-size:13px;margin:8px 0 10px;color:var(--muted)}
-.tableWrap{overflow:auto;border:1px solid var(--line);border-radius:16px;max-height:67vh}
-table{width:100%;border-collapse:collapse;min-width:1540px}
-th,td{padding:11px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left;vertical-align:top;font-size:13px}
-th{position:sticky;top:0;background:#171318;color:var(--gold2);z-index:1;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
-tr:hover td{background:rgba(255,255,255,.04)}
-.pill{display:inline-flex;padding:6px 9px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.06);font-size:12px;font-weight:800;white-space:nowrap}
-.pill.green{border-color:rgba(56,185,128,.45);background:rgba(56,185,128,.14);color:#9df2c8}
-.pill.red{border-color:rgba(190,42,37,.45);background:rgba(190,42,37,.16);color:#ffb7b3}
-.pill.gold{border-color:rgba(243,184,63,.45);background:rgba(243,184,63,.14);color:var(--gold2)}
-.pill.blue{border-color:rgba(140,200,255,.45);background:rgba(140,200,255,.13);color:#c8e5ff}
-.detailBtn,.mailBtn{display:inline-flex;align-items:center;justify-content:center;border-radius:10px;padding:7px 9px;text-decoration:none;font-weight:900;font-size:12px;white-space:nowrap;margin:2px}
-.detailBtn{background:transparent;color:var(--gold2);border:1px solid rgba(243,184,63,.36)}
-.mailBtn{background:rgba(56,185,128,.12);color:#a8ffd0;border:1px solid rgba(56,185,128,.35)}
-.warn{border:1px solid rgba(243,184,63,.38);background:rgba(243,184,63,.09);border-radius:14px;padding:12px;margin-top:12px;color:#ffe3a3;font-size:12px}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.74);display:none;align-items:center;justify-content:center;padding:18px;z-index:10}
-.modal.open{display:flex}.modalBox{width:min(1050px,100%);max-height:92vh;overflow:auto;background:#171318;border:1px solid var(--line);border-radius:22px;box-shadow:0 25px 100px rgba(0,0,0,.62)}
-.modalHead{position:sticky;top:0;background:#171318;border-bottom:1px solid var(--line);padding:16px 18px;display:flex;justify-content:space-between;align-items:center}
-.modalBody{padding:18px}.kv{display:grid;grid-template-columns:230px 1fr;gap:8px;border-bottom:1px solid rgba(255,255,255,.08);padding:9px 0}.kv b{color:var(--gold2)}
-.close{background:transparent;color:white;border:1px solid var(--line);border-radius:10px;padding:7px 10px}
-@media(max-width:980px){.wrap{padding:18px}.top{display:grid}.metric{grid-column:span 12}.toolbar{grid-template-columns:1fr}.metric strong{font-size:30px}h1{font-size:28px}.kv{grid-template-columns:1fr}}
+:root{--text:#fff8eb;--muted:#c9bba6;--gold:#f3b83f;--gold2:#ffd76c;--red:#be2a25;--green:#38b980;--blue:#8cc8ff;--line:rgba(255,255,255,.14);--shadow:0 18px 60px rgba(0,0,0,.42)}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:radial-gradient(circle at 16% -10%,rgba(243,184,63,.26),transparent 34%),radial-gradient(circle at 98% 0,rgba(190,42,37,.22),transparent 31%),linear-gradient(135deg,#050505,#151012 58%,#050505);min-height:100vh}button,input,select{font:inherit}button{cursor:pointer}.wrap{max-width:1560px;margin:0 auto;padding:26px}.top{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:18px}.brand{display:flex;gap:14px;align-items:center}.logo{width:62px;height:62px;border-radius:18px;background:linear-gradient(135deg,var(--gold2),var(--gold),#9b1f1c);color:#140c07;display:grid;place-items:center;font-size:34px;font-weight:900;box-shadow:var(--shadow)}h1{margin:0 0 6px;font-size:34px}.lead,.muted{color:var(--muted)}.actions{display:flex;flex-wrap:wrap;gap:10px}.btn{border:0;border-radius:13px;padding:11px 14px;font-weight:900;text-decoration:none;display:inline-flex;color:var(--text)}.btn.gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#130c07}.btn.dark{background:rgba(255,255,255,.08);border:1px solid var(--line)}.status{padding:14px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.055);margin:0 0 14px;color:var(--muted)}.status.ok{border-color:rgba(56,185,128,.45);color:#caffdf;background:rgba(56,185,128,.12)}.status.error{border-color:rgba(255,80,80,.45);color:#ffd0d0;background:rgba(190,42,37,.14)}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.metric{grid-column:span 3;background:rgba(255,255,255,.065);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow);cursor:pointer}.metric:hover{border-color:rgba(243,184,63,.55)}.metric span{display:inline-flex;padding:7px 10px;border-radius:999px;border:1px solid rgba(243,184,63,.45);background:rgba(243,184,63,.14);color:var(--gold2);font-size:12px;font-weight:900}.metric strong{display:block;font-size:34px;margin:8px 0 2px}.panel{margin-top:14px;background:rgba(255,255,255,.065);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow)}.quick{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:14px}.quick button{border:1px solid rgba(243,184,63,.32);background:rgba(255,255,255,.07);color:var(--text);border-radius:999px;padding:9px 12px;font-weight:900}.quick button.active,.quick button:hover{background:rgba(243,184,63,.18);color:var(--gold2)}.toolbar{display:grid;grid-template-columns:1.35fr repeat(6,minmax(115px,.6fr));gap:10px;margin:14px 0}.field{display:grid;gap:5px}.field label{font-size:11px;color:var(--muted);font-weight:900;text-transform:uppercase}.field input,.field select{width:100%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:var(--text);border-radius:12px;padding:10px}.field select option{color:#111}.count{font-size:13px;margin:8px 0 10px;color:var(--muted)}.tableWrap{overflow:auto;border:1px solid var(--line);border-radius:16px;max-height:67vh}table{width:100%;border-collapse:collapse;min-width:1700px}th,td{padding:11px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left;vertical-align:top;font-size:13px}th{position:sticky;top:0;background:#171318;color:var(--gold2);z-index:1;font-size:11px;text-transform:uppercase}tr:hover td{background:rgba(255,255,255,.04)}.pill{display:inline-flex;padding:6px 9px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.06);font-size:12px;font-weight:800;white-space:nowrap}.green{border-color:rgba(56,185,128,.45);background:rgba(56,185,128,.14);color:#9df2c8}.red{border-color:rgba(190,42,37,.45);background:rgba(190,42,37,.16);color:#ffb7b3}.goldp{border-color:rgba(243,184,63,.45);background:rgba(243,184,63,.14);color:var(--gold2)}.blue{border-color:rgba(140,200,255,.45);background:rgba(140,200,255,.13);color:#c8e5ff}.detailBtn,.mailBtn{display:inline-flex;border-radius:10px;padding:7px 9px;text-decoration:none;font-weight:900;font-size:12px;white-space:nowrap;margin:2px}.detailBtn{background:transparent;color:var(--gold2);border:1px solid rgba(243,184,63,.36)}.mailBtn{background:rgba(56,185,128,.12);color:#a8ffd0;border:1px solid rgba(56,185,128,.35)}.warn{border:1px solid rgba(243,184,63,.38);background:rgba(243,184,63,.09);border-radius:14px;padding:12px;margin-top:12px;color:#ffe3a3;font-size:12px}.modal{position:fixed;inset:0;background:rgba(0,0,0,.74);display:none;align-items:center;justify-content:center;padding:18px;z-index:10}.modal.open{display:flex}.modalBox{width:min(1050px,100%);max-height:92vh;overflow:auto;background:#171318;border:1px solid var(--line);border-radius:22px;box-shadow:0 25px 100px rgba(0,0,0,.62)}.modalHead{position:sticky;top:0;background:#171318;border-bottom:1px solid var(--line);padding:16px 18px;display:flex;justify-content:space-between;align-items:center}.modalBody{padding:18px}.kv{display:grid;grid-template-columns:230px 1fr;gap:8px;border-bottom:1px solid rgba(255,255,255,.08);padding:9px 0}.kv b{color:var(--gold2)}.close{background:transparent;color:white;border:1px solid var(--line);border-radius:10px;padding:7px 10px}@media(max-width:980px){.wrap{padding:18px}.top{display:grid}.metric{grid-column:span 12}.toolbar{grid-template-columns:1fr}h1{font-size:28px}.kv{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header class="top">
-    <div class="brand">
-      <div class="logo">Ñ</div>
-      <div>
-        <h1>CRM V2 · Ñ Mayúscula</h1>
-        <div class="lead">Panel operativo conectado a Google Sheets. Métricas calculadas solo desde las filas reales del CRM.</div>
-      </div>
-    </div>
-    <div class="actions">
-      <a class="btn dark" href="./crm.html">CRM estable</a>
-      <a class="btn dark" href="./">App principal</a>
-      <button class="btn gold" type="button" onclick="loadCRM()">Actualizar</button>
-      <button class="btn dark" type="button" onclick="downloadCSV()">Exportar vista CSV</button>
-    </div>
-  </header>
-
-  <div id="status" class="status">Preparado para cargar CRM.</div>
-  <section class="grid" id="metrics"></section>
-
-  <section class="panel">
-    <div class="quick" id="quickFilters">
-      <button type="button" data-view="all" class="active" onclick="setQuickView('all')">Todo</button>
-      <button type="button" data-view="hot" onclick="setQuickView('hot')">Alta prioridad</button>
-      <button type="button" data-view="answered" onclick="setQuickView('answered')">Respuestas recibidas</button>
-      <button type="button" data-view="interested" onclick="setQuickView('interested')">Interesados</button>
-      <button type="button" data-view="dossier" onclick="setQuickView('dossier')">Dossier pendiente</button>
-      <button type="button" data-view="next" onclick="setQuickView('next')">Próximas acciones</button>
-      <button type="button" data-view="pendingMail" onclick="setQuickView('pendingMail')">Pendientes envío</button>
-    </div>
-
-    <div class="toolbar">
-      <div class="field"><label>Buscar</label><input id="q" placeholder="Organización, email, municipio, respuesta, notas..." oninput="renderTable()"></div>
-      <div class="field"><label>Campaña</label><select id="camp" onchange="renderTable()"><option value="">Todas</option></select></div>
-      <div class="field"><label>Prioridad</label><select id="prio" onchange="renderTable()"><option value="">Todas</option></select></div>
-      <div class="field"><label>Interés</label><select id="interes" onchange="renderTable()"><option value="">Todos</option></select></div>
-      <div class="field"><label>Respuesta</label><select id="resp" onchange="renderTable()"><option value="">Todas</option><option value="si">Con respuesta</option><option value="no">Sin respuesta</option></select></div>
-      <div class="field"><label>Dossier</label><select id="dossier" onchange="renderTable()"><option value="">Todos</option><option value="pendiente">Pendiente</option><option value="enviado">Enviado / borrador</option></select></div>
-    </div>
-
-    <div class="count" id="count"></div>
-    <div class="tableWrap"><table id="tbl"><thead></thead><tbody></tbody></table></div>
-    <div class="warn">Este panel solo lee datos del CRM. No modifica Google Sheets ni envía emails. El botón “Email” abre tu cliente de correo con el destinatario.</div>
-  </section>
+<header class="top"><div class="brand"><div class="logo">Ñ</div><div><h1>CRM V2 · Ñ Mayúscula</h1><div class="lead">Panel operativo conectado a Google Sheets. Estados de dossier separados: pendiente, borrador y enviado real.</div></div></div><div class="actions"><a class="btn dark" href="./crm.html">CRM estable</a><a class="btn dark" href="./">App principal</a><button class="btn gold" type="button" onclick="loadCRM()">Actualizar</button><button class="btn dark" type="button" onclick="downloadCSV()">Exportar vista CSV</button></div></header>
+<div id="status" class="status">Preparado para cargar CRM.</div>
+<section class="grid" id="metrics"></section>
+<section class="panel">
+<div class="quick" id="quickFilters">
+<button data-view="all" class="active" onclick="setQuickView('all')">Todo</button>
+<button data-view="hot" onclick="setQuickView('hot')">Alta prioridad</button>
+<button data-view="answered" onclick="setQuickView('answered')">Respuestas</button>
+<button data-view="interested" onclick="setQuickView('interested')">Interesados</button>
+<button data-view="dossierPending" onclick="setQuickView('dossierPending')">Dossier pendiente</button>
+<button data-view="dossierDraft" onclick="setQuickView('dossierDraft')">Borrador dossier</button>
+<button data-view="dossierSent" onclick="setQuickView('dossierSent')">Dossier enviado real</button>
+<button data-view="next" onclick="setQuickView('next')">Próximas acciones</button>
+<button data-view="pendingMail" onclick="setQuickView('pendingMail')">Pendientes envío</button>
+<button data-view="noEmail" onclick="setQuickView('noEmail')">Sin email</button>
 </div>
-
+<div class="toolbar">
+<div class="field"><label>Buscar</label><input id="q" placeholder="Organización, email, municipio, respuesta, notas..." oninput="renderTable()"></div>
+<div class="field"><label>Campaña</label><select id="camp" onchange="renderTable()"><option value="">Todas</option></select></div>
+<div class="field"><label>Prioridad</label><select id="prio" onchange="renderTable()"><option value="">Todas</option></select></div>
+<div class="field"><label>Interés</label><select id="interes" onchange="renderTable()"><option value="">Todos</option></select></div>
+<div class="field"><label>Respuesta</label><select id="resp" onchange="renderTable()"><option value="">Todas</option><option value="si">Con respuesta</option><option value="no">Sin respuesta</option></select></div>
+<div class="field"><label>Dossier</label><select id="dossier" onchange="renderTable()"><option value="">Todos</option><option value="pendiente">Pendiente</option><option value="borrador">Borrador</option><option value="enviado">Enviado real</option></select></div>
+<div class="field"><label>Email</label><select id="emailFilter" onchange="renderTable()"><option value="">Todos</option><option value="con">Con email</option><option value="sin">Sin email</option></select></div>
+</div>
+<div class="count" id="count"></div>
+<div class="tableWrap"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+<div class="warn">Lectura solamente: este panel no modifica Google Sheets ni envía emails. “Dossier enviado real” no incluye borradores.</div>
+</section>
+</div>
 <div class="modal" id="modal"><div class="modalBox"><div class="modalHead"><strong id="modalTitle">Detalle</strong><button class="close" type="button" onclick="closeModal()">Cerrar</button></div><div class="modalBody" id="modalBody"></div></div></div>
-
 <script>
-var API_URL = 'https://script.google.com/macros/s/AKfycbzf-J9po1859BUk4LWaJyvLI94UCJmvUi_BhL_zBOzljdgwD7_WfkEIzJ1AOvH4bfUcSw/exec';
-var rows = [];
-var visible = [];
-var quickView = 'all';
-
-var cols = ['Organización / Local','Campaña','Segmento','Municipio / Provincia','Email','Teléfono','Prioridad','Enviar','Estado envío','Fecha envío','Respuesta recibida','Fecha respuesta','Interés','Próxima acción','Fecha próxima acción','Enviar dossier','Estado dossier','Último email recibido'];
-
-var detailOrder = ['ClaveCRM','Campaña','Origen','Organización / Local','Tipo oportunidad','Segmento','Municipio / Provincia','Dirección','Email','Email CC','Teléfono','Web','Fuente URL','Prioridad','Enviar','Estado envío','Fecha envío','Error envío','Asunto enviado','Respuesta recibida','Fecha respuesta','Persona contacto','Teléfono contacto','Interés','Disponibilidad / fechas','Condiciones','Caché / presupuesto','Requisitos técnicos','Próxima acción','Fecha próxima acción','Notas seguimiento','Última importación','Observaciones origen','Último email recibido','Email remitente respuesta','Enviar dossier','Dossier enviado','Fecha envío dossier','Tipo respuesta dossier','Notas dossier','Estado dossier'];
-
+var API_URL='https://script.google.com/macros/s/AKfycbzf-J9po1859BUk4LWaJyvLI94UCJmvUi_BhL_zBOzljdgwD7_WfkEIzJ1AOvH4bfUcSw/exec';
+var rows=[],visible=[],quickView='all';
+var cols=['Organización / Local','Campaña','Segmento','Municipio / Provincia','Email','Teléfono','Prioridad','Enviar','Estado envío','Fecha envío','Respuesta recibida','Fecha respuesta','Interés','Próxima acción','Fecha próxima acción','Enviar dossier','Estado dossier','Dossier enviado','Fecha envío dossier','Último email recibido'];
+var detailOrder=['ClaveCRM','Campaña','Origen','Organización / Local','Tipo oportunidad','Segmento','Municipio / Provincia','Dirección','Email','Email CC','Teléfono','Web','Fuente URL','Prioridad','Enviar','Estado envío','Fecha envío','Error envío','Asunto enviado','Respuesta recibida','Fecha respuesta','Persona contacto','Teléfono contacto','Interés','Disponibilidad / fechas','Condiciones','Caché / presupuesto','Requisitos técnicos','Próxima acción','Fecha próxima acción','Notas seguimiento','Última importación','Observaciones origen','Último email recibido','Email remitente respuesta','Enviar dossier','Dossier enviado','Fecha envío dossier','Tipo respuesta dossier','Notas dossier','Estado dossier'];
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function norm(v){return String(v==null?'':v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
 function setStatus(html,type){var s=document.getElementById('status');s.innerHTML=html;s.className='status '+(type||'');}
-
-function isYes(v){
-  var n=norm(v);
-  return n==='si'||n==='sí'||n==='s'||n==='yes'||n==='true'||n==='1';
-}
-function isSent(r){
-  return norm(r['Estado envío']).indexOf('enviado')>-1 || String(r['Fecha envío']||'').trim()!=='';
-}
-function hasEmail(r){
-  return String(r['Email']||'').trim()!=='' || String(r['Email remitente respuesta']||'').trim()!=='';
-}
-function hasResponse(r){
-  return isYes(r['Respuesta recibida'])||String(r['Último email recibido']||'').trim()!==''||String(r['Fecha respuesta']||'').trim()!=='';
-}
-function isInterested(r){
-  var n=norm(r['Interés']);
-  return n.indexOf('alto')>-1||n.indexOf('medio')>-1||n.indexOf('interes')>-1||isYes(r['Interés']);
-}
+function isYes(v){var n=norm(v);return n==='si'||n==='sí'||n==='s'||n==='yes'||n==='true'||n==='1';}
+function isSent(r){return norm(r['Estado envío']).indexOf('enviado')>-1||String(r['Fecha envío']||'').trim()!=='';}
+function hasEmail(r){return String(r['Email']||'').trim()!==''||String(r['Email remitente respuesta']||'').trim()!=='';}
+function hasResponse(r){return isYes(r['Respuesta recibida'])||String(r['Último email recibido']||'').trim()!==''||String(r['Fecha respuesta']||'').trim()!=='';}
+function isInterested(r){var n=norm(r['Interés']);return n.indexOf('alto')>-1||n.indexOf('medio')>-1||n.indexOf('interes')>-1||isYes(r['Interés']);}
 function isHigh(r){return norm(r['Prioridad']).indexOf('alta')>-1;}
-function isDossierPending(r){
-  var estado=norm([r['Dossier enviado'],r['Fecha envío dossier'],r['Estado dossier']].join(' '));
-  return isYes(r['Enviar dossier'])&&estado.indexOf('si')===-1&&estado.indexOf('sí')===-1&&estado.indexOf('borrador')===-1&&String(r['Fecha envío dossier']||'').trim()==='';
-}
-function isDossierSent(r){
-  var estado=norm([r['Dossier enviado'],r['Fecha envío dossier'],r['Estado dossier']].join(' '));
-  return estado.indexOf('si')>-1||estado.indexOf('sí')>-1||estado.indexOf('borrador')>-1||String(r['Fecha envío dossier']||'').trim()!=='';
-}
-function isPendingMail(r){
-  return hasEmail(r)&&isYes(r['Enviar'])&&!isSent(r);
-}
+function dossierStatus(r){var estado=norm(r['Estado dossier']);var enviado=norm(r['Dossier enviado']);var fecha=String(r['Fecha envío dossier']||'').trim();if(estado.indexOf('borrador')>-1){return 'borrador';}if(isYes(enviado)||estado.indexOf('enviado')>-1||fecha!==''){return 'enviado';}if(isYes(r['Enviar dossier'])){return 'pendiente';}return '';}
+function isDossierPending(r){return dossierStatus(r)==='pendiente';}
+function isDossierDraft(r){return dossierStatus(r)==='borrador';}
+function isDossierSentReal(r){return dossierStatus(r)==='enviado';}
+function isPendingMail(r){return hasEmail(r)&&isYes(r['Enviar'])&&!isSent(r);}
 function hasNext(r){return String(r['Próxima acción']||'').trim()!=='';}
-
-function loadCRM(){
-  setStatus('Cargando CRM desde Google Sheets...');
-  var timedOut=false;
-  var timer=setTimeout(function(){timedOut=true;setStatus('La carga está tardando demasiado. Pulsa <strong>Actualizar</strong>.','error');},25000);
-  fetch(API_URL+'?action=crm&ts='+Date.now(),{cache:'no-store'})
-    .then(function(res){if(!res.ok){throw new Error('HTTP '+res.status);}return res.json();})
-    .then(function(json){
-      clearTimeout(timer);
-      if(!json||json.ok!==true){throw new Error((json&&json.error)?json.error:'La API no devolvió ok=true');}
-      rows=Array.isArray(json.data)?json.data:[];
-      setStatus('CRM cargado correctamente: <strong>'+rows.length+'</strong> registros. Última actualización: '+new Date().toLocaleString('es-ES'),'ok');
-      fillFilters();
-      renderMetrics();
-      renderTable();
-    })
-    .catch(function(e){clearTimeout(timer);if(!timedOut){setStatus('<strong>No se pudo leer la API.</strong><br>'+esc(e.message),'error');}});
-}
-
-function calcMetrics(data){
-  var total=data.length;
-  var enviados=data.filter(isSent).length;
-  var pendientesEnvio=data.filter(isPendingMail).length;
-  var respuestas=data.filter(hasResponse).length;
-  var interesados=data.filter(isInterested).length;
-  var dossierPendiente=data.filter(isDossierPending).length;
-  var dossierEnviado=data.filter(isDossierSent).length;
-  var altaPrioridad=data.filter(isHigh).length;
-  var prox=data.filter(hasNext).length;
-  var sinEmail=data.filter(function(r){return !hasEmail(r);}).length;
-
-  return {
-    total:total,
-    enviados:enviados,
-    pendientesEnvio:pendientesEnvio,
-    respuestas:respuestas,
-    interesados:interesados,
-    dossierPendiente:dossierPendiente,
-    dossierEnviado:dossierEnviado,
-    altaPrioridad:altaPrioridad,
-    prox:prox,
-    sinEmail:sinEmail,
-    ratioRespuesta:total?Math.round((respuestas/total)*100):0,
-    ratioInteres:respuestas?Math.round((interesados/respuestas)*100):0
-  };
-}
-
-function renderMetrics(){
-  var m=calcMetrics(rows);
-  var items=[
-    ['Total oportunidades',m.total,'Base CRM','all'],
-    ['Emails enviados',m.enviados,'Estado/fecha envío','all'],
-    ['Pendientes envío',m.pendientesEnvio,'Enviar = SI + no enviado','pendingMail'],
-    ['Respuestas',m.respuestas,(m.ratioRespuesta||0)+'% sobre total','answered'],
-    ['Interesados',m.interesados,(m.ratioInteres||0)+'% sobre respuestas','interested'],
-    ['Alta prioridad',m.altaPrioridad,'Seguimiento preferente','hot'],
-    ['Dossier pendiente',m.dossierPendiente,'Enviar dossier','dossier'],
-    ['Dossier enviado',m.dossierEnviado,'Enviado o borrador','all'],
-    ['Próximas acciones',m.prox,'Acciones abiertas','next'],
-    ['Sin email / revisar',m.sinEmail,'No computan como pendientes','all']
-  ];
-  document.getElementById('metrics').innerHTML=items.map(function(it){
-    return '<div class="metric" onclick="setQuickView(\''+it[3]+'\')"><span>'+esc(it[0])+'</span><strong>'+esc(it[1])+'</strong><div class="muted">'+esc(it[2])+'</div></div>';
-  }).join('');
-}
-
-function unique(col){
-  var seen={},arr=[];
-  rows.forEach(function(r){var v=String(r[col]||'').trim();if(v&&!seen[v]){seen[v]=true;arr.push(v);}});
-  return arr.sort(function(a,b){return a.localeCompare(b,'es');});
-}
-function fillSelect(id,values){
-  var s=document.getElementById(id);
-  var current=s.value;
-  var first=s.options[0].text;
-  var html='<option value="">'+esc(first)+'</option>';
-  values.forEach(function(v){html+='<option value="'+esc(v)+'">'+esc(v)+'</option>';});
-  s.innerHTML=html;s.value=current;
-}
+function loadCRM(){setStatus('Cargando CRM desde Google Sheets...');var timedOut=false;var timer=setTimeout(function(){timedOut=true;setStatus('La carga está tardando demasiado. Pulsa <strong>Actualizar</strong>.','error');},25000);fetch(API_URL+'?action=crm&ts='+Date.now(),{cache:'no-store'}).then(function(res){if(!res.ok){throw new Error('HTTP '+res.status);}return res.json();}).then(function(json){clearTimeout(timer);if(!json||json.ok!==true){throw new Error((json&&json.error)?json.error:'La API no devolvió ok=true');}rows=Array.isArray(json.data)?json.data:[];setStatus('CRM cargado correctamente: <strong>'+rows.length+'</strong> registros. Última actualización: '+new Date().toLocaleString('es-ES'),'ok');fillFilters();renderMetrics();renderTable();}).catch(function(e){clearTimeout(timer);if(!timedOut){setStatus('<strong>No se pudo leer la API.</strong><br>'+esc(e.message),'error');}});}
+function calcMetrics(data){var total=data.length;var enviados=data.filter(isSent).length;var pendientesEnvio=data.filter(isPendingMail).length;var respuestas=data.filter(hasResponse).length;var interesados=data.filter(isInterested).length;var dossierPendiente=data.filter(isDossierPending).length;var dossierBorrador=data.filter(isDossierDraft).length;var dossierEnviadoReal=data.filter(isDossierSentReal).length;var altaPrioridad=data.filter(isHigh).length;var prox=data.filter(hasNext).length;var sinEmail=data.filter(function(r){return !hasEmail(r);}).length;return{total:total,enviados:enviados,pendientesEnvio:pendientesEnvio,respuestas:respuestas,interesados:interesados,dossierPendiente:dossierPendiente,dossierBorrador:dossierBorrador,dossierEnviadoReal:dossierEnviadoReal,altaPrioridad:altaPrioridad,prox:prox,sinEmail:sinEmail,ratioRespuesta:total?Math.round(respuestas/total*100):0,ratioInteres:respuestas?Math.round(interesados/respuestas*100):0};}
+function renderMetrics(){var m=calcMetrics(rows);var items=[['Total oportunidades',m.total,'Base CRM','all'],['Emails enviados',m.enviados,'Estado/fecha envío','all'],['Pendientes envío',m.pendientesEnvio,'Enviar = SI + no enviado','pendingMail'],['Respuestas',m.respuestas,(m.ratioRespuesta||0)+'% sobre total','answered'],['Interesados',m.interesados,(m.ratioInteres||0)+'% sobre respuestas','interested'],['Alta prioridad',m.altaPrioridad,'Seguimiento preferente','hot'],['Dossier pendiente',m.dossierPendiente,'Solicitado, sin borrador ni envío','dossierPending'],['Borrador dossier',m.dossierBorrador,'Creado en Gmail, pendiente revisar','dossierDraft'],['Dossier enviado real',m.dossierEnviadoReal,'Enviado/fechado, sin borrador','dossierSent'],['Próximas acciones',m.prox,'Acciones abiertas','next'],['Sin email / revisar',m.sinEmail,'No computan como pendientes','noEmail']];document.getElementById('metrics').innerHTML=items.map(function(it){return '<div class="metric" onclick="setQuickView(\''+it[3]+'\')"><span>'+esc(it[0])+'</span><strong>'+esc(it[1])+'</strong><div class="muted">'+esc(it[2])+'</div></div>';}).join('');}
+function unique(col){var seen={},arr=[];rows.forEach(function(r){var v=String(r[col]||'').trim();if(v&&!seen[v]){seen[v]=true;arr.push(v);}});return arr.sort(function(a,b){return a.localeCompare(b,'es');});}
+function fillSelect(id,values){var s=document.getElementById(id),current=s.value,first=s.options[0].text;var html='<option value="">'+esc(first)+'</option>';values.forEach(function(v){html+='<option value="'+esc(v)+'">'+esc(v)+'</option>';});s.innerHTML=html;s.value=current;}
 function fillFilters(){fillSelect('camp',unique('Campaña'));fillSelect('prio',unique('Prioridad'));fillSelect('interes',unique('Interés'));}
-
-function setQuickView(v){
-  quickView=v;
-  var buttons=document.querySelectorAll('#quickFilters button');
-  for(var i=0;i<buttons.length;i++){buttons[i].classList.toggle('active',buttons[i].getAttribute('data-view')===v);}
-  renderTable();
-}
-function quickMatch(r){
-  if(quickView==='hot'){return isHigh(r);}
-  if(quickView==='answered'){return hasResponse(r);}
-  if(quickView==='interested'){return isInterested(r);}
-  if(quickView==='dossier'){return isDossierPending(r);}
-  if(quickView==='next'){return hasNext(r);}
-  if(quickView==='pendingMail'){return isPendingMail(r);}
-  return true;
-}
-function dossierMatch(r,mode){
-  if(!mode){return true;}
-  if(mode==='pendiente'){return isDossierPending(r);}
-  if(mode==='enviado'){return isDossierSent(r);}
-  return true;
-}
-
-function renderTable(){
-  var q=norm(document.getElementById('q').value);
-  var camp=document.getElementById('camp').value;
-  var prio=document.getElementById('prio').value;
-  var interes=document.getElementById('interes').value;
-  var resp=document.getElementById('resp').value;
-  var dossier=document.getElementById('dossier').value;
-  visible=rows.filter(function(r){
-    var text=norm(Object.keys(r).map(function(key){return r[key];}).join(' '));
-    var respOk=!resp||(resp==='si'?hasResponse(r):!hasResponse(r));
-    return quickMatch(r)&&(!q||text.indexOf(q)>-1)&&(!camp||r['Campaña']===camp)&&(!prio||r['Prioridad']===prio)&&(!interes||r['Interés']===interes)&&respOk&&dossierMatch(r,dossier);
-  });
-  document.getElementById('count').textContent='Mostrando '+visible.length+' de '+rows.length+' registros';
-  document.querySelector('#tbl thead').innerHTML='<tr>'+cols.map(function(c){return '<th>'+esc(c)+'</th>';}).join('')+'<th>Acciones</th></tr>';
-  document.querySelector('#tbl tbody').innerHTML=visible.map(function(r,i){
-    var email=String(r['Email remitente respuesta']||r['Email']||'').trim();
-    var mail=email?'<a class="mailBtn" href="mailto:'+esc(email)+'">Email</a>':'';
-    return '<tr>'+cols.map(function(c){return '<td>'+formatCell(c,r[c],r)+'</td>';}).join('')+'<td><button class="detailBtn" type="button" onclick="openDetail('+i+')">Ver</button>'+mail+'</td></tr>';
-  }).join('')||'<tr><td colspan="19" class="muted">No hay registros con esos filtros.</td></tr>';
-}
-
-function formatCell(c,v,r){
-  var n=norm(v);
-  if(c==='Prioridad'&&n.indexOf('alta')>-1){return '<span class="pill red">'+esc(v)+'</span>';}
-  if(c==='Respuesta recibida'&&hasResponse(r)){return '<span class="pill green">Sí</span>';}
-  if(c==='Estado envío'&&isSent(r)){return '<span class="pill green">'+esc(v||'Enviado')+'</span>';}
-  if(c==='Enviar'&&isYes(v)&&!isSent(r)){return '<span class="pill gold">'+esc(v)+'</span>';}
-  if(c==='Interés'&&isInterested(r)){return '<span class="pill gold">'+esc(v)+'</span>';}
-  if(c==='Estado dossier'&&n.indexOf('borrador')>-1){return '<span class="pill blue">'+esc(v)+'</span>';}
-  return esc(v);
-}
-
-function openDetail(i){
-  var r=visible[i];
-  var email=String(r['Email remitente respuesta']||r['Email']||'').trim();
-  var action=email?'<p><a class="mailBtn" href="mailto:'+esc(email)+'">Abrir email a '+esc(email)+'</a></p>':'';
-  document.getElementById('modalTitle').textContent=r['Organización / Local']||r['Email']||'Detalle CRM';
-  document.getElementById('modalBody').innerHTML=action+detailOrder.filter(function(k){return String(r[k]||'').trim()!=='';}).map(function(k){return '<div class="kv"><b>'+esc(k)+'</b><div>'+esc(r[k]).replace(/\n/g,'<br>')+'</div></div>';}).join('');
-  document.getElementById('modal').classList.add('open');
-}
+function setQuickView(v){quickView=v;var buttons=document.querySelectorAll('#quickFilters button');for(var i=0;i<buttons.length;i++){buttons[i].classList.toggle('active',buttons[i].getAttribute('data-view')===v);}renderTable();}
+function quickMatch(r){if(quickView==='hot'){return isHigh(r);}if(quickView==='answered'){return hasResponse(r);}if(quickView==='interested'){return isInterested(r);}if(quickView==='dossierPending'){return isDossierPending(r);}if(quickView==='dossierDraft'){return isDossierDraft(r);}if(quickView==='dossierSent'){return isDossierSentReal(r);}if(quickView==='next'){return hasNext(r);}if(quickView==='pendingMail'){return isPendingMail(r);}if(quickView==='noEmail'){return !hasEmail(r);}return true;}
+function dossierMatch(r,mode){if(!mode){return true;}if(mode==='pendiente'){return isDossierPending(r);}if(mode==='borrador'){return isDossierDraft(r);}if(mode==='enviado'){return isDossierSentReal(r);}return true;}
+function renderTable(){var q=norm(document.getElementById('q').value);var camp=document.getElementById('camp').value;var prio=document.getElementById('prio').value;var interes=document.getElementById('interes').value;var resp=document.getElementById('resp').value;var dossier=document.getElementById('dossier').value;var emailFilter=document.getElementById('emailFilter').value;visible=rows.filter(function(r){var text=norm(Object.keys(r).map(function(key){return r[key];}).join(' '));var respOk=!resp||(resp==='si'?hasResponse(r):!hasResponse(r));var emailOk=!emailFilter||(emailFilter==='con'?hasEmail(r):!hasEmail(r));return quickMatch(r)&&(!q||text.indexOf(q)>-1)&&(!camp||r['Campaña']===camp)&&(!prio||r['Prioridad']===prio)&&(!interes||r['Interés']===interes)&&respOk&&dossierMatch(r,dossier)&&emailOk;});document.getElementById('count').textContent='Mostrando '+visible.length+' de '+rows.length+' registros';document.querySelector('#tbl thead').innerHTML='<tr>'+cols.map(function(c){return '<th>'+esc(c)+'</th>';}).join('')+'<th>Acciones</th></tr>';document.querySelector('#tbl tbody').innerHTML=visible.map(function(r,i){var email=String(r['Email remitente respuesta']||r['Email']||'').trim();var mail=email?'<a class="mailBtn" href="mailto:'+esc(email)+'">Email</a>':'';return '<tr>'+cols.map(function(c){return '<td>'+formatCell(c,r[c],r)+'</td>';}).join('')+'<td><button class="detailBtn" type="button" onclick="openDetail('+i+')">Ver</button>'+mail+'</td></tr>';}).join('')||'<tr><td colspan="22" class="muted">No hay registros con esos filtros.</td></tr>';}
+function formatCell(c,v,r){var n=norm(v);if(c==='Prioridad'&&n.indexOf('alta')>-1){return '<span class="pill red">'+esc(v)+'</span>';}if(c==='Respuesta recibida'&&hasResponse(r)){return '<span class="pill green">Sí</span>';}if(c==='Estado envío'&&isSent(r)){return '<span class="pill green">'+esc(v||'Enviado')+'</span>';}if(c==='Enviar'&&isYes(v)&&!isSent(r)){return '<span class="pill goldp">'+esc(v)+'</span>';}if(c==='Interés'&&isInterested(r)){return '<span class="pill goldp">'+esc(v)+'</span>';}if(c==='Estado dossier'){var ds=dossierStatus(r);if(ds==='borrador'){return '<span class="pill blue">Borrador</span>';}if(ds==='enviado'){return '<span class="pill green">Enviado real</span>';}if(ds==='pendiente'){return '<span class="pill goldp">Pendiente</span>';}}return esc(v);}
+function openDetail(i){var r=visible[i];var email=String(r['Email remitente respuesta']||r['Email']||'').trim();var action=email?'<p><a class="mailBtn" href="mailto:'+esc(email)+'">Abrir email a '+esc(email)+'</a></p>':'';document.getElementById('modalTitle').textContent=r['Organización / Local']||r['Email']||'Detalle CRM';document.getElementById('modalBody').innerHTML=action+detailOrder.filter(function(k){return String(r[k]||'').trim()!=='';}).map(function(k){return '<div class="kv"><b>'+esc(k)+'</b><div>'+esc(r[k]).replace(/\n/g,'<br>')+'</div></div>';}).join('');document.getElementById('modal').classList.add('open');}
 function closeModal(){document.getElementById('modal').classList.remove('open');}
-
-function downloadCSV(){
-  var header=cols;
-  var list=visible.length?visible:rows;
-  var lines=[header].concat(list.map(function(r){return header.map(function(c){return r[c]||'';});})).map(function(row){return row.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(';');}).join('\n');
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([lines],{type:'text/csv;charset=utf-8'}));
-  a.download='crm-enhe-v2-corregido.csv';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(a.href);
-}
+function downloadCSV(){var header=cols;var list=visible.length?visible:rows;var lines=[header].concat(list.map(function(r){return header.map(function(c){return r[c]||'';});})).map(function(row){return row.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(';');}).join('\n');var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([lines],{type:'text/csv;charset=utf-8'}));a.download='crm-enhe-v2-vista.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);}
 window.addEventListener('keydown',function(e){if(e.key==='Escape'){closeModal();}});
 loadCRM();
 </script>
