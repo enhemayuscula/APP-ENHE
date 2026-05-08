@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CRM ENHE</title>
+  <style>
+    body{font-family:Arial,sans-serif;background:#111;color:#fff;padding:30px}
+    h1{color:#f3b83f}
+    .box{background:#222;padding:18px;border-radius:12px;margin:16px 0}
+    pre{background:#181818;padding:18px;border-radius:12px;overflow:auto;max-height:70vh;white-space:pre-wrap}
+    a{color:#f3b83f}
+  </style>
+</head>
+<body>
+  <h1>CRM conectado · Ñ Mayúscula</h1>
+  <p><a href="./">Volver a la app principal</a></p>
+  <div class="box" id="estado">Cargando datos del CRM...</div>
+  <pre id="salida"></pre>
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzf-J9po1859BUk4LWaJyvLI94UCJmvUi_BhL_zBOzljdgwD7_WfkEIzJ1AOvH4bfUcSw/exec?action=crm';
+    fetch(API_URL, { cache: 'no-store' })
+      .then(r => r.json())
+      .then(data => {
+        const registros = data && data.data ? data.data.length : 0;
+        document.getElementById('estado').innerHTML = 'CRM cargado correctamente. Registros: <strong>' + registros + '</strong>';
+        document.getElementById('salida').textContent = JSON.stringify(data, null, 2);
+      })
+      .catch(err => {
+        document.getElementById('estado').textContent = 'Error cargando CRM: ' + err.message;
+      });
+  </script>
+</body>
+</html>
