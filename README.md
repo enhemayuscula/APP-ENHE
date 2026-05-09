@@ -60,3 +60,14 @@ Cambios aplicados:
 - La migración respeta datos ya editados en localStorage y completa campos vacíos desde los datos iniciales.
 
 Nota: las tonalidades se dejan como pendientes de reconstrucción/validación para no introducir datos no confirmados. Las duraciones de directo aparecen como provisionales y deben validarse en ensayo.
+
+
+## Parche 4.2 · Tonalidades reconstruidas
+
+- Añadidas tonalidades de referencia por canción.
+- Añadidas propuestas de ensayo para Miguel, Esther y Lorenzo.
+- Añadidos enlaces de búsqueda Spotify/YouTube por tema.
+- Añadido enlace externo de acordes por tema cuando existe.
+- La migración rellena campos vacíos o placeholders antiguos sin borrar ediciones reales.
+
+Importante: los tonos quedan como reconstrucción provisional. Deben validarse en ensayo antes de tratarlos como tono definitivo de Ñ Mayúscula.

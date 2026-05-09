@@ -7,6 +7,17 @@ const tabs = [
 ];
 
 function clone(o){return JSON.parse(JSON.stringify(o));}
+function shouldSeedReplace(v){
+  if(v === undefined || v === null || v === '') return true;
+  const x = String(v).toLowerCase().trim();
+  return x === '—' ||
+    x.includes('pendiente validar') ||
+    x.includes('pendiente de reconstrucción') ||
+    x.includes('campo preparado para recuperar') ||
+    x.includes('tonalidades pendientes') ||
+    x.includes('urls por tema pendientes') ||
+    x.includes('provisional · revisar en ensayo');
+}
 function loadData(){
   let data=clone(INITIAL_DATA);
   try{
@@ -72,7 +83,7 @@ function migrateData(data){
     const match = data.repertoire.find(song => norm(song.titleCanonical||song.title) === norm(seedSong.titleCanonical||seedSong.title));
     if(match){
       Object.keys(seedSong).forEach(key=>{
-        if(match[key] === undefined || match[key] === null || match[key] === ''){
+        if(shouldSeedReplace(match[key])){
           match[key] = seedSong[key];
         }
       });
