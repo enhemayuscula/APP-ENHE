@@ -1,30 +1,41 @@
-# APP-ENHE
+# APP-ENHE · versión modular
 
-Repositorio inicial del proyecto **APP-ENHE**.
+Esta carpeta sustituye al `index.html` monolítico por una estructura más manejable.
 
-## Estado
+## Estructura
 
-Repositorio inicializado con una estructura base para comenzar el desarrollo.
+- `index.html`: estructura HTML de la app.
+- `css/styles.css`: estilos principales.
+- `js/assets.js`: rutas de archivos descargables y logo.
+- `js/data.js`: datos iniciales de la app.
+- `js/app.js`: lógica de CRM, setlist, dossier, presupuestos, importación/exportación y UI.
+- `assets/`: logo, dossier PDF, setlist PDF y Excel.
 
-## Estructura inicial
+## Subida a GitHub
 
-```text
+Sube todos los archivos y carpetas manteniendo esta estructura:
+
+```txt
 APP-ENHE/
-├── README.md
-├── .gitignore
-├── index.html
-├── assets/
-│   ├── css/
-│   │   └── styles.css
-│   └── js/
-│       └── app.js
-└── docs/
-    └── proyecto.md
+├─ index.html
+├─ css/
+│  ├─ styles.css
+│  └─ admin-guard.css
+├─ js/
+│  ├─ admin-guard.js
+│  ├─ assets.js
+│  ├─ data.js
+│  └─ app.js
+└─ assets/
+   ├─ logo-n-mayuscula.jpg
+   ├─ N_Mayuscula_dossier_comercial_FINAL_pulido.pdf
+   ├─ Setlist_N_Bloques_Estrategicos.pdf
+   └─ Ene_Mayuscula_CRM_MAESTRO_UNIFICADO_v2_columnas_distintas.xlsx
 ```
 
-## Próximos pasos recomendados
+> Importante: el `index.html` mantiene la llamada existente a `css/admin-guard.css` y `js/admin-guard.js`.
+> Si esos archivos ya estaban en el repo, no los borres. Si no estaban, la app seguirá funcionando salvo la protección/admin guard.
 
-1. Definir el objetivo exacto de la aplicación.
-2. Añadir diseño visual, textos e identidad de marca.
-3. Incorporar funcionalidades principales.
-4. Preparar despliegue web si procede.
+## Cambio aplicado
+
+No se ha reescrito funcionalidad a propósito. Se ha separado el monolito en archivos para que sea editable y mantenible.
