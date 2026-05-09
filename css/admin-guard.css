@@ -1,111 +1,96 @@
-/* EÑE MAYÚSCULA — ADMIN GUARD v1 */
-.enhe-admin-guard-bar {
-  position: sticky;
-  top: 0;
-  z-index: 99999;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  background: rgba(5, 5, 5, 0.92);
-  color: #fff8eb;
-  border-bottom: 1px solid rgba(243, 184, 63, 0.35);
-  backdrop-filter: blur(10px);
-  font-family: Arial, Helvetica, sans-serif;
-}
+/* APP-ENHE · Modo administrador local
+   Este archivo controla solo la interfaz de la app estática en GitHub Pages. */
 
-.enhe-admin-guard-left,
-.enhe-admin-guard-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.enhe-admin-mode {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.enhe-admin-mode.readonly {
-  color: #ffe3a3;
-  border: 1px solid rgba(243, 184, 63, 0.45);
-  background: rgba(243, 184, 63, 0.12);
-}
-
-.enhe-admin-mode.admin {
-  color: #caffdf;
-  border: 1px solid rgba(37, 211, 102, 0.45);
-  background: rgba(37, 211, 102, 0.14);
-}
-
-.enhe-admin-guard-bar button {
+.adminFab {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9999;
   border: 1px solid rgba(255,255,255,.18);
-  background: rgba(255,255,255,.09);
-  color: #fff8eb;
-  border-radius: 12px;
-  padding: 8px 12px;
-  font-weight: 900;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #f4a31c, #b26113);
+  color: #160d08;
+  font-weight: 800;
+  box-shadow: 0 14px 36px rgba(0,0,0,.45);
   cursor: pointer;
 }
 
-.enhe-admin-guard-bar button:hover {
-  background: rgba(243,184,63,.16);
-  color: #ffd76c;
+.adminFab.locked {
+  background: linear-gradient(135deg, #2d2a2a, #171313);
+  color: #f4a31c;
 }
 
-.enhe-admin-locked {
-  opacity: .45 !important;
-  cursor: not-allowed !important;
-  filter: grayscale(.35);
-}
-
-.enhe-admin-field-locked {
-  opacity: .78;
-  cursor: default;
-}
-
-.enhe-admin-guard-notice {
+.adminPanel {
   position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 100000;
-  max-width: 360px;
-  padding: 13px 15px;
-  border-radius: 14px;
-  color: #fff8eb;
-  background: rgba(17, 12, 12, .96);
-  border: 1px solid rgba(243, 184, 63, .4);
-  box-shadow: 0 18px 60px rgba(0,0,0,.42);
-  transform: translateY(20px);
-  opacity: 0;
+  right: 18px;
+  bottom: 70px;
+  z-index: 9998;
+  width: min(360px, calc(100vw - 36px));
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 16px;
+  background: rgba(24,18,18,.98);
+  color: #fff;
+  box-shadow: 0 20px 60px rgba(0,0,0,.55);
+  padding: 14px;
+  display: none;
+}
+
+.adminPanel.open {
+  display: block;
+}
+
+.adminPanel h4 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.adminPanel p {
+  margin: 0 0 12px;
+  color: rgba(255,255,255,.72);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.adminPanel .adminActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.adminPanel .adminActions button {
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 999px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.adminPanel .adminActions button.primary {
+  background: #f4a31c;
+  color: #160d08;
+  font-weight: 800;
+}
+
+.adminPanel .adminActions button.danger {
+  background: rgba(138,31,31,.75);
+  color: #fff;
+}
+
+.adminPanel .adminState {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(244,163,28,.15);
+  color: #f4a31c;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+body:not(.admin-enabled) [data-admin-only="true"] {
+  opacity: .45;
   pointer-events: none;
-  transition: .22s ease;
-  font-family: Arial, Helvetica, sans-serif;
-  line-height: 1.35;
-}
-
-.enhe-admin-guard-notice.show {
-  transform: translateY(0);
-  opacity: 1;
-}
-
-html.enhe-is-readonly [data-admin-only="true"] {
-  display: none !important;
-}
-
-html.enhe-is-admin [data-readonly-only="true"] {
-  display: none !important;
-}
-
-@media (max-width: 700px) {
-  .enhe-admin-guard-bar {
-    align-items: flex-start;
-    flex-direction: column;
-  }
 }

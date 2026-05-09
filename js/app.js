@@ -347,7 +347,22 @@ function taskFields(){return [['title','Tarea','text','span2'],['owner','Respons
 function renderTasks(){document.querySelector('#taskTable tbody').innerHTML=db.tasks.map(t=>`<tr><td><strong>${esc(t.title)}</strong></td><td>${esc(t.owner)}</td><td>${esc(t.due)}</td><td>${badge(t.status)}</td><td>${badge(t.priority)}</td><td>${esc(t.area)}</td><td>${esc(t.notes)}</td><td><button class="btn small gold" onclick="openTaskModal(${t.id})">Editar</button> <button class="btn small red" onclick="deleteRecord('tasks',${t.id})">Borrar</button></td></tr>`).join('')||'<tr><td colspan="8">Sin tareas.</td></tr>';}
 function openTaskModal(id=null){const item=id?db.tasks.find(x=>x.id===id):{status:'Pendiente',priority:'Media'};modalContext={type:'task',id};document.getElementById('modalTitle').textContent=id?'Editar tarea':'Nueva tarea';document.getElementById('modalBody').innerHTML=renderForm(taskFields(), item)+`<div class="hr"></div><div class="actions"><button class="btn gold" onclick="saveTask()">Guardar</button><button class="btn dark" onclick="closeModal()">Cancelar</button></div>`;openModal();}
 function saveTask(){const obj=readForm(taskFields()); if(modalContext.id){const idx=db.tasks.findIndex(x=>x.id===modalContext.id);db.tasks[idx]=Object.assign({},db.tasks[idx],obj);}else{obj.id=nextId(db.tasks);db.tasks.push(obj);} closeModal();saveData();}
-function downloadBlob(filename, blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},800);}
+function downloadBlob(filename, blob){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=filename;
+  a.rel='noopener';
+  a.style.display='none';
+  document.body.appendChild(a);
+  try{
+    a.click();
+  }catch(err){
+    window.open(url,'_blank');
+    alert('No se ha podido iniciar la descarga automática. Se ha abierto el archivo en una pestaña nueva para guardarlo manualmente.');
+  }
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1500);
+}
 function downloadStatic(url, filename){const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();}
 function downloadDossier(){downloadStatic(DOSSIER_PDF_URL,'N_Mayuscula_dossier_comercial_FINAL_pulido.pdf');}
 function downloadXlsx(){downloadStatic(XLSX_URL,'Ene_Mayuscula_CRM_MAESTRO_UNIFICADO_v2_columnas_distintas.xlsx');}
