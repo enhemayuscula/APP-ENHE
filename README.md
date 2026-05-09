@@ -71,3 +71,23 @@ Nota: las tonalidades se dejan como pendientes de reconstrucción/validación pa
 - La migración rellena campos vacíos o placeholders antiguos sin borrar ediciones reales.
 
 Importante: los tonos quedan como reconstrucción provisional. Deben validarse en ensayo antes de tratarlos como tono definitivo de Ñ Mayúscula.
+
+
+## Versión v1.1 · PWA instalable
+
+Esta versión permite instalar APP-ENHE como app en móvil desde GitHub Pages.
+
+Archivos añadidos:
+- `manifest.json`
+- `sw.js`
+- `icons/icon-192.png`
+- `icons/icon-512.png`
+- `icons/maskable-512.png`
+- `icons/apple-touch-icon.png`
+
+Uso recomendado:
+1. Abrir `https://enhemayuscula.github.io/APP-ENHE/`
+2. En Android: Chrome → menú de tres puntos → Instalar app / Añadir a pantalla de inicio.
+3. En iPhone: Safari → compartir → Añadir a pantalla de inicio.
+
+La app entra por defecto en modo usuario / solo lectura. El modo administrador se activa con la clave interna definida en la app.
