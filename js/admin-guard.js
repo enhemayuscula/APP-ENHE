@@ -10,6 +10,7 @@
     'deleteRecord',
     'openConcertModal',
     'saveConcert',
+    'loadConcertPosterFile',
     'createConcertFromBudget',
     'openSongModal',
     'saveSong',
@@ -38,6 +39,7 @@
     'deleteRecord',
     'openConcertModal',
     'saveConcert',
+    'loadConcertPosterFile',
     'createConcertFromBudget',
     'openSongModal',
     'saveSong',
@@ -196,6 +198,7 @@
       labelText.includes('backup') ||
       labelText.includes('importar') ||
       labelText.includes('cargar archivo') ||
+      labelText.includes('subir cartel') ||
       labelText.includes('restaurar') ||
       labelText.includes('+ contacto') ||
       labelText.includes('+ concierto') ||

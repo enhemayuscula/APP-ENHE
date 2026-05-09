@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ñ Mayúscula · Control profesional de conciertos, CRM y setlist</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1a0f0a">
+<meta name="theme-color" content="#120608">
 <meta name="application-name" content="Ñ Mayúscula">
 <meta name="apple-mobile-web-app-title" content="Ñ Mayúscula">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -85,8 +85,11 @@
   </section>
 
   <section class="tab" id="concerts">
-    <div class="sectionTitle"><div><h3>Conciertos y producción</h3><p>Agenda real de actuaciones, presupuestos, anticipos, cobros y necesidades.</p></div><button class="btn gold" onclick="openConcertModal()">+ Concierto</button></div>
+    <div class="sectionTitle"><div><h3>Conciertos y producción</h3><p>Agenda real de actuaciones, presupuestos, anticipos, cobros, carteles y necesidades.</p></div><button class="btn gold" onclick="openConcertModal()">+ Concierto</button></div>
     <div class="grid four" id="concertKpis"></div>
+    <div class="sectionTitle"><div><h3>Carteles de conciertos</h3><p>Próximos y pasados. El cartel se gestiona desde la ficha de cada concierto.</p></div><button class="btn dark" onclick="openPosterHelp()">Cómo añadir cartel</button></div>
+    <div id="concertPosterGrid" class="posterBoard"></div>
+    <div class="sectionTitle"><div><h3>Agenda y control interno</h3></div></div>
     <div class="tableWrap"><table id="concertTable"><thead><tr><th>Fecha</th><th>Evento</th><th>Lugar</th><th>Tipo</th><th>Estado</th><th>Caché</th><th>Anticipo</th><th>Cobrado</th><th>Pendiente</th><th>Acciones</th></tr></thead><tbody></tbody></table></div>
   </section>
 

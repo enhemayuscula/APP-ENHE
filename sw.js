@@ -1,5 +1,5 @@
-/* APP-ENHE · PWA service worker v1.1 */
-const CACHE_NAME = "app-enhe-pwa-v1-1-0";
+/* APP-ENHE · PWA service worker v1.2 */
+const CACHE_NAME = "app-enhe-pwa-v1-2-0";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -11,6 +11,9 @@ const APP_SHELL = [
   "./js/app.js",
   "./js/admin-guard.js",
   "./assets/logo-n-mayuscula.jpg",
+  "./assets/n-mayuscula-stage-bg.jpg",
+  "./assets/posters/cartel-cien-x-cien-2026-06-16.jpg",
+  "./assets/posters/cartel-cien-x-cien-2026-06-16-thumb.jpg",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/maskable-512.png",

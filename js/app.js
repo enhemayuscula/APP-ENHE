@@ -94,6 +94,46 @@ function migrateData(data){
   });
 
   data.repertoire.sort((a,b)=>(Number(a.order)||Number(a.id)||0)-(Number(b.order)||Number(b.id)||0));
+
+  data.concerts = Array.isArray(data.concerts) ? data.concerts : [];
+  const defaultConcert = {
+    id: 0,
+    date: '',
+    time: '',
+    eventName: '',
+    venue: '',
+    city: '',
+    type: 'Sala',
+    status: 'Pre-reserva',
+    fee: 0,
+    deposit: 0,
+    paid: 0,
+    sound: '',
+    contactId: 0,
+    posterUrl: '',
+    posterThumbUrl: '',
+    posterTitle: '',
+    publicInfo: '',
+    notes: ''
+  };
+  data.concerts = data.concerts.map((concert, idx)=>Object.assign({}, defaultConcert, {id: idx+1}, concert || {}));
+  const seedConcerts = Array.isArray(INITIAL_DATA.concerts) ? INITIAL_DATA.concerts : [];
+  seedConcerts.forEach(seedConcert=>{
+    const match = data.concerts.find(concert =>
+      norm(concert.date) === norm(seedConcert.date) &&
+      norm(concert.eventName) === norm(seedConcert.eventName) &&
+      norm(concert.venue) === norm(seedConcert.venue)
+    );
+    if(match){
+      Object.keys(seedConcert).forEach(key=>{
+        if(shouldSeedReplace(match[key])) match[key] = seedConcert[key];
+      });
+    }else{
+      data.concerts.push(Object.assign({}, defaultConcert, seedConcert, {id: nextId(data.concerts)}));
+    }
+  });
+  data.concerts.sort((a,b)=>String(a.date||'9999-99-99').localeCompare(String(b.date||'9999-99-99')) || String(a.time||'99:99').localeCompare(String(b.time||'99:99')));
+
   return data;
 }
 function saveData(){localStorage.setItem(STORE_KEY, JSON.stringify(db)); refreshAll();}
@@ -113,9 +153,11 @@ function statusClass(s){
   return 'status s-gray';
 }
 function badge(s){return `<span class="${statusClass(s)}">${esc(s||'—')}</span>`;}
-function setTab(id){
+function setTab(id, opts={}){
+  const section = document.getElementById(id);
+  if(!section) return;
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-  document.getElementById(id)?.classList.add('active');
+  section.classList.add('active');
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active', b.dataset.tab===id));
   if(id==='crm') renderCRM();
   if(id==='gmail') renderGmail();
@@ -127,6 +169,20 @@ function setTab(id){
   if(id==='dossier') renderDossier();
   if(id==='templates') {renderContactOptions();renderTemplates();}
   if(id==='tasks') renderTasks();
+  if(opts.updateUrl !== false){
+    try{
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', id);
+      window.history.replaceState({}, '', url);
+    }catch(e){}
+  }
+  if(opts.scroll !== false){
+    requestAnimationFrame(()=>{
+      section.scrollIntoView({behavior:'smooth', block:'start'});
+      section.setAttribute('tabindex','-1');
+      try{ section.focus({preventScroll:true}); }catch(e){}
+    });
+  }
 }
 function renderNav(){
   const nav=document.getElementById('nav');
@@ -322,21 +378,106 @@ function renderGmail(){
   }).join('')||'<tr><td colspan="6">Sin respuestas.</td></tr>';
 }
 function concertFields(){return [
-  ['date','Fecha','date'],['time','Hora','time'],['eventName','Evento','text','span2'],['venue','Sala / lugar','text','span2'],['city','Ciudad','text'],['type','Tipo','select','', ['Sala','Boda Madrid','Boda premium completa','Fiesta privada','Ayuntamiento','Empresa','Otro']],['status','Estado','select','', ['Pre-reserva','Presupuesto enviado','Confirmado','Realizado','Cancelado']],['fee','Caché total','number'],['deposit','Anticipo','number'],['paid','Cobrado adicional','number'],['sound','Sonido/iluminación','text'],['contactId','ID contacto CRM','number'],['notes','Notas producción','textarea','span4']
+  ['date','Fecha','date'],['time','Hora','time'],['eventName','Evento','text','span2'],['venue','Sala / lugar','text','span2'],['city','Ciudad','text'],['type','Tipo','select','', ['Sala','Boda Madrid','Boda premium completa','Fiesta privada','Ayuntamiento','Empresa','Otro']],['status','Estado','select','', ['Pre-reserva','Presupuesto enviado','Confirmado','Realizado','Cancelado']],['fee','Caché total','number'],['deposit','Anticipo','number'],['paid','Cobrado adicional','number'],['sound','Sonido/iluminación','text'],['contactId','ID contacto CRM','number'],['posterTitle','Título del cartel','text','span2'],['posterUrl','URL / ruta del cartel','text','span2'],['posterThumbUrl','URL / ruta miniatura','text','span2'],['publicInfo','Texto público / entrada / dirección','textarea','span4'],['notes','Notas producción','textarea','span4']
 ];}
+function concertIsPast(concert){
+  if(!concert.date) return false;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const d = new Date(String(concert.date)+'T00:00:00');
+  return !Number.isNaN(d.getTime()) && d < today;
+}
+function concertPosterSrc(concert){
+  return concert.posterThumbUrl || concert.posterUrl || '';
+}
+function renderConcertPosters(arr){
+  const box=document.getElementById('concertPosterGrid');
+  if(!box) return;
+  const withPoster=(arr||[]).filter(x=>concertPosterSrc(x)||x.posterUrl);
+  const upcoming=withPoster.filter(x=>!concertIsPast(x));
+  const past=withPoster.filter(x=>concertIsPast(x));
+  const renderGroup=(title,rows)=> rows.length ? `
+    <div class="posterGroup">
+      <h4>${esc(title)}</h4>
+      <div class="posterGrid">
+        ${rows.map(x=>{
+          const src=concertPosterSrc(x);
+          const full=x.posterUrl||src;
+          return `<article class="posterCard">
+            ${src?`<a href="${esc(full)}" target="_blank" rel="noopener"><img src="${esc(src)}" alt="${esc(x.posterTitle||x.eventName||'Cartel concierto')}"></a>`:`<div class="posterEmpty">Sin cartel</div>`}
+            <div class="posterInfo">
+              <strong>${esc(x.posterTitle||x.eventName||'Concierto')}</strong>
+              <span>${esc([x.date,x.time].filter(Boolean).join(' · '))}</span>
+              <span>${esc([x.venue,x.city].filter(Boolean).join(' · '))}</span>
+              ${x.publicInfo?`<p>${esc(x.publicInfo)}</p>`:''}
+              <div class="actions">
+                <button class="btn small gold" onclick="openConcertModal(${x.id})">Editar</button>
+                ${full?`<a class="btn small dark" href="${esc(full)}" target="_blank" rel="noopener">Abrir cartel</a>`:''}
+              </div>
+            </div>
+          </article>`;
+        }).join('')}
+      </div>
+    </div>` : '';
+  box.innerHTML = renderGroup('Próximos conciertos', upcoming) + renderGroup('Conciertos pasados', past) || `<div class="card"><p class="muted">Todavía no hay carteles cargados. Entra como admin, edita un concierto y pega una URL/ruta de cartel o usa “Subir cartel al navegador”.</p></div>`;
+}
 function renderConcerts(){
   const arr=db.concerts||[];
   const total=arr.reduce((s,x)=>s+Number(x.fee||0),0), deposit=arr.reduce((s,x)=>s+Number(x.deposit||0)+Number(x.paid||0),0), pending=Math.max(0,total-deposit);
   document.getElementById('concertKpis').innerHTML=[
     ['Conciertos', arr.length],['Facturación prevista', eur(total)],['Cobrado/anticipos', eur(deposit)],['Pendiente', eur(pending)]
   ].map(k=>`<div class="card kpi"><strong>${k[1]}</strong><span>${k[0]}</span></div>`).join('');
+  renderConcertPosters(arr);
   document.querySelector('#concertTable tbody').innerHTML=arr.map(x=>{const paid=Number(x.deposit||0)+Number(x.paid||0), pending=Math.max(0,Number(x.fee||0)-paid);return `<tr><td>${esc(x.date)} ${esc(x.time||'')}</td><td><strong>${esc(x.eventName)}</strong><br><span style="color:var(--muted)">${esc(compact(x.notes,80))}</span></td><td>${esc(x.venue)}<br><span style="color:var(--muted)">${esc(x.city)}</span></td><td>${esc(x.type)}</td><td>${badge(x.status)}</td><td>${eur(x.fee)}</td><td>${eur(x.deposit)}</td><td>${eur(x.paid)}</td><td>${eur(pending)}</td><td><button class="btn small gold" onclick="openConcertModal(${x.id})">Editar</button> <button class="btn small red" onclick="deleteRecord('concerts',${x.id})">Borrar</button></td></tr>`}).join('')||'<tr><td colspan="10" class="muted">Todavía no hay conciertos creados. Usa “+ Concierto” o la calculadora de presupuesto.</td></tr>';
+}
+function posterUploadBlock(item){
+  const current = item?.posterUrl || item?.posterThumbUrl || '';
+  return `<div class="hr"></div>
+  <div class="posterUploader">
+    <h4>Cartel del concierto</h4>
+    <p class="muted">Puedes pegar una ruta/URL en el campo “URL / ruta del cartel” o cargar una imagen local. La carga local se guarda en este navegador y entra en el backup JSON.</p>
+    ${current?`<img class="posterPreview" src="${esc(current)}" alt="Cartel actual">`:''}
+    <label class="btn dark">Subir cartel al navegador
+      <input type="file" accept="image/*" style="display:none" onchange="loadConcertPosterFile(this.files[0])">
+    </label>
+    <div class="notice" style="margin-top:10px">Para un cartel común a toda la banda, lo más limpio es subir la imagen a <code>assets/posters/</code> en GitHub y pegar aquí la ruta.</div>
+  </div>`;
+}
+function loadConcertPosterFile(file){
+  if(!file) return;
+  const maxSide = 1200;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const img = new Image();
+    img.onload = function(){
+      const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      const root=document.getElementById('modalBody');
+      const poster=root.querySelector('[name="posterUrl"]');
+      const thumb=root.querySelector('[name="posterThumbUrl"]');
+      if(poster) poster.value=dataUrl;
+      if(thumb) thumb.value=dataUrl;
+      const preview=root.querySelector('.posterPreview');
+      if(preview) preview.src=dataUrl;
+      else {
+        const uploader=root.querySelector('.posterUploader');
+        if(uploader) uploader.insertAdjacentHTML('afterbegin', `<img class="posterPreview" src="${dataUrl}" alt="Cartel cargado">`);
+      }
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 function openConcertModal(id=null,preset=null){
   const item=id?db.concerts.find(x=>x.id===id):(preset||{status:'Pre-reserva',type:'Sala',fee:0,deposit:0,paid:0});
   modalContext={type:'concert',id};
   document.getElementById('modalTitle').textContent=id?'Editar concierto':'Nuevo concierto';
-  document.getElementById('modalBody').innerHTML=renderForm(concertFields(), item)+`<div class="hr"></div><div class="actions"><button class="btn gold" onclick="saveConcert()">Guardar</button><button class="btn dark" onclick="closeModal()">Cancelar</button></div>`;
+  document.getElementById('modalBody').innerHTML=renderForm(concertFields(), item)+posterUploadBlock(item)+`<div class="hr"></div><div class="actions"><button class="btn gold" onclick="saveConcert()">Guardar</button><button class="btn dark" onclick="closeModal()">Cancelar</button></div>`;
   openModal();
 }
 function saveConcert(){const obj=readForm(concertFields());['fee','deposit','paid','contactId'].forEach(k=>obj[k]=Number(obj[k]||0)); if(modalContext.id){const idx=db.concerts.findIndex(x=>x.id===modalContext.id);db.concerts[idx]=Object.assign({},db.concerts[idx],obj);}else{obj.id=nextId(db.concerts);db.concerts.push(obj);} closeModal();saveData();}
@@ -370,6 +511,13 @@ function calcBudget(){
 }
 function copyBudgetText(){calcBudget();copyText(document.getElementById('budgetCopy').textContent);}
 function createConcertFromBudget(){const b=calcBudget();openConcertModal(null,{date:b.date,eventName:b.name||'Evento pendiente',type:'Sala',status:'Presupuesto enviado',fee:b.total,deposit:b.total?b.total/2:0,paid:0,notes:b.lines.join(' | ')})}
+
+
+function openPosterHelp(){
+  document.getElementById('modalTitle').textContent='Cómo añadir carteles';
+  document.getElementById('modalBody').innerHTML=`<div class="notice">Modo recomendado: sube el cartel a <strong>assets/posters/</strong> en GitHub y pega la ruta en el concierto. Ejemplo: <code>assets/posters/cartel-cien-x-cien-2026-06-16.jpg</code>.</div><p>También puedes editar un concierto y usar “Subir cartel al navegador”. Esa imagen queda guardada en este navegador y se conserva si haces backup JSON.</p><div class="actions"><button class="btn gold" onclick="closeModal()">Entendido</button></div>`;
+  openModal();
+}
 
 function setlistRows(){
   const st=db.strategicSetlist || INITIAL_DATA.strategicSetlist || {blocks:[]};
@@ -795,4 +943,12 @@ function safeImportCRMFile(file){
 
 function copyText(txt){navigator.clipboard?.writeText(txt).then(()=>alert('Copiado.')).catch(()=>{const t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();alert('Copiado.');});}
 window.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
-renderNav();refreshAll();setTab('dashboard');
+function initialTabFromUrl(){
+  try{
+    const raw = new URL(window.location.href).searchParams.get('tab') || '';
+    const map = {songs:'repertoire', canciones:'repertoire', repertorio:'repertoire', export:'importExport', exportar:'importExport'};
+    const id = map[raw] || raw;
+    return tabs.some(t=>t[0]===id) ? id : 'dashboard';
+  }catch(e){ return 'dashboard'; }
+}
+renderNav();refreshAll();setTab(initialTabFromUrl(), {scroll:false, updateUrl:false});

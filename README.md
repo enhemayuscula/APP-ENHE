@@ -91,3 +91,15 @@ Uso recomendado:
 3. En iPhone: Safari → compartir → Añadir a pantalla de inicio.
 
 La app entra por defecto en modo usuario / solo lectura. El modo administrador se activa con la clave interna definida en la app.
+
+
+## v1.2 · Navegación, carteles y estilo
+
+Cambios:
+- Al pulsar una opción del menú, la app se desplaza automáticamente a la sección activa.
+- Estilo visual reforzado en negro, granate y dorado, alineado con el cartel de Ñ Mayúscula.
+- Fondo principal con imagen de escenario.
+- Módulo de carteles en Conciertos: próximos y pasados.
+- Ficha de concierto ampliada con cartel, miniatura y texto público.
+- Cartel inicial incluido: Sala Cien x Cien · 16 junio · 22:00 h.
+- Caché PWA actualizado a v1.2 para forzar renovación de archivos.
