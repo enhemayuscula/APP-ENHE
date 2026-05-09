@@ -2,7 +2,7 @@ const STORE_KEY = 'n_mayuscula_control_pro_v3';
 let db = loadData();
 let filteredCRM = [];
 const tabs = [
-  ['dashboard','Panel','●'],['crm','CRM','●'],['followup','Seguimiento','●'],['gmail','Gmail','●'],['concerts','Conciertos','●'],['rehearsals','Ensayos','●'],
+  ['dashboard','Panel','●'],['crm','CRM','●'],['followup','Seguimiento','●'],['gmail','Gmail','●'],['concerts','Conciertos','●'],['rehearsals','Ensayos','●'],['local','Local ensayo','●'],
   ['budget','Presupuesto','●'],['repertoire','Canciones','●'],['setlist','Setlist','●'],['dossier','Dossier','●'],['templates','Plantillas','●'],['tasks','Tareas','●'],['importExport','Exportar','●']
 ];
 
@@ -111,6 +111,7 @@ function migrateData(data){
   data.repertoire.sort((a,b)=>(Number(a.order)||Number(a.id)||0)-(Number(b.order)||Number(b.id)||0));
 
   data.concerts = Array.isArray(data.concerts) ? data.concerts : [];
+  data.localPayments = Array.isArray(data.localPayments) ? data.localPayments : [];
   const defaultConcert = {
     id: 0,
     date: '',
@@ -306,7 +307,7 @@ function crmFromSheetRow(row, id, index){
     dossierResponseType: pick(row,['Tipo respuesta dossier','dossierResponseType']),
     dossierNotes: pick(row,['Notas dossier','dossierNotes']),
     dossierStatus: pick(row,['Estado dossier','dossierStatus']),
-    raw
+    raw: row
   };
 }
 function applyCRMFromSheetRows(rows){
@@ -448,7 +449,7 @@ function mapConcertRow(row,i){
     notes: pick(row,['notas_produccion','Notas producción','notes','notas','Notas']),
     attendance: memberAttendanceFromRow(row),
     attendanceNotes: pick(row,['attendanceNotes','notas_asistencia','Notas asistencia']),
-    raw
+    raw: row
   };
 }
 function applyConcertsFromSheet(rows){
@@ -476,7 +477,7 @@ function mapRehearsalRow(row,i){
     songIds: allSongs ? [] : parseSongIds(pick(row,['temas_ids','Temas IDs','songIds'])),
     songTitles: pick(row,['temas_texto','Temas texto','Temas','songs']),
     attendance: memberAttendanceFromRow(row),
-    raw
+    raw: row
   };
 }
 function applyRehearsalsFromSheet(rows){
@@ -520,7 +521,7 @@ function mapSongRow(row,i){
     notes: pick(row,['notas_interpretacion','Notas interpretación','notes']),
     internalNotes: pick(row,['notas_internas','Notas internas','internalNotes']),
     validatedAt: pick(row,['validado_en_ensayo','Validado en ensayo','validatedAt']),
-    raw
+    raw: row
   };
 }
 function applySongsFromSheet(rows){
@@ -560,9 +561,29 @@ function applySetlistFromSheet(rows){
   };
   return items.length;
 }
+
+function mapLocalPaymentRow(row,i){
+  return {
+    id: Number(pick(row,['id','ID'])) || i+1,
+    month: pick(row,['Mes','mes','month']),
+    memberId: pick(row,['ID Miembro','id_miembro','miembro_id']),
+    name: pick(row,['Nombre','nombre','miembro']),
+    amount: Number(String(pick(row,['Cuota','cuota','importe'])||'').replace(/[^\d.,-]/g,'').replace(',','.')) || 0,
+    paid: pick(row,['Pagado','pagado','estado']) || 'NO',
+    paidDate: pick(row,['Fecha pago','fecha_pago']),
+    updatedAt: pick(row,['Última actualización','actualizado_en']),
+    notes: pick(row,['Notas','notas']),
+    raw: row
+  };
+}
+function applyLocalPaymentsFromSheet(rows){
+  const items=rows.map(mapLocalPaymentRow).filter(x=>x.month || x.name || x.memberId);
+  if(items.length) db.localPayments=items;
+  return items.length;
+}
 function applyAllFromGoogleSheetPayload(payload){
   if(!payload || payload.ok===false) throw new Error(payload?.error || 'Respuesta no válida de Apps Script.');
-  const report={crm:0, concerts:0, rehearsals:0, songs:0, setlist:0};
+  const report={crm:0, concerts:0, rehearsals:0, songs:0, setlist:0, local:0};
 
   const crmSheet = findPayloadSheet(payload, ['CRM','CRM_GENERAL','CRM GENERAL','CRM_MAESTRO','CRM MAESTRO'], GOOGLE_SHEET_MASTER.gid) || firstSheetByRows(payload, rowsLookLikeCRM);
   const concertSheet = findPayloadSheet(payload, ['CONCIERTOS','Conciertos','BOLOS','Bolos','EVENTOS','Eventos']) || firstSheetByRows(payload, rowsLookLikeConcerts);
@@ -585,7 +606,20 @@ function applyAllFromGoogleSheetPayload(payload){
   const setlistRows=rowsFromPayloadSheet(setlistSheet);
   if(setlistRows.length) report.setlist=applySetlistFromSheet(setlistRows);
 
-  if(Array.isArray(payload.formacion) && payload.formacion.length){
+  const localSheet = findPayloadSheet(payload, ['PAGOS_LOCAL','LOCAL_ENSAYO_PAGOS','Pagos local','Local ensayo']);
+  const localRows = Array.isArray(payload?.data?.pagosLocal) ? payload.data.pagosLocal : rowsFromPayloadSheet(localSheet);
+  if(localRows.length) report.local=applyLocalPaymentsFromSheet(localRows);
+
+  const formacionPayload = Array.isArray(payload?.data?.miembros) ? payload.data.miembros : payload.formacion;
+  if(Array.isArray(formacionPayload) && formacionPayload.length){
+    db.bandMembers=formacionPayload.map(m=>({
+      id: norm(m.id||m.nombre||m.name).includes('miguel') ? 'miguel_voz' : (m.id || norm(m.nombre||m.name).replace(/[^a-z0-9]/g,'_')),
+      name: m.nombre || m.name || '',
+      role: m.rol || m.role || m.instrumento || ''
+    })).filter(x=>x.name);
+  }
+
+  if(false && Array.isArray(payload.formacion) && payload.formacion.length){
     db.bandMembers=payload.formacion.map(m=>({
       id: norm(m.nombre||m.name).includes('miguel') ? 'miguel_voz' : norm(m.nombre||m.name).replace(/[^a-z0-9]/g,'_'),
       name: m.nombre || m.name || '',
@@ -619,8 +653,8 @@ async function syncCRMFromGoogleSheet(opts={}){
     const report=applyAllFromGoogleSheetPayload(payload);
     saveData();
     refreshAll();
-    sheetStatus(`Google Sheet sincronizada. CRM: ${report.crm}. Conciertos: ${report.concerts}. Ensayos: ${report.rehearsals}. Canciones: ${report.songs}.`, 'ok');
-    if(!silent) alert(`Datos actualizados desde Google Sheet.\nCRM: ${report.crm}\nConciertos: ${report.concerts}\nEnsayos: ${report.rehearsals}\nCanciones: ${report.songs}`);
+    sheetStatus(`Google Sheet sincronizada. CRM: ${report.crm}. Conciertos: ${report.concerts}. Ensayos: ${report.rehearsals}. Canciones: ${report.songs}. Local: ${report.local || 0}.`, 'ok');
+    if(!silent) alert(`Datos actualizados desde Google Sheet.\nCRM: ${report.crm}\nConciertos: ${report.concerts}\nEnsayos: ${report.rehearsals}\nCanciones: ${report.songs}\nLocal ensayo: ${report.local || 0}`);
     return true;
   }catch(err){
     db.sheetSync = Object.assign({}, db.sheetSync||{}, {status:'error', error:String(err.message||err), updatedAt:new Date().toISOString(), endpoint: GOOGLE_SHEET_MASTER.appsScriptUrl});
@@ -651,6 +685,7 @@ function setTab(id, opts={}){
   if(id==='followup') renderFollowup();
   if(id==='concerts') renderConcerts();
   if(id==='rehearsals') renderRehearsals();
+  if(id==='local') renderLocalPayments();
   if(id==='budget') calcBudget();
   if(id==='repertoire') renderRepertoire();
   if(id==='setlist') renderSetlist();
@@ -712,7 +747,7 @@ function refreshAll(){
   document.getElementById('sideLoaded').innerHTML=`${db.crm.length} contactos · ${db.gmailResponses.length} respuestas Gmail<br>Última importación: ${esc(db.createdFrom.lastImport || '—')}`;
   document.getElementById('heroBadges').innerHTML=[
     `${db.crm.length} contactos CRM`,`${countBy(db.crm,'campaign','Salas')} salas`,`${countBy(db.crm,'campaign','Eventos/Bodas/Festejos')} eventos/bodas/festejos`,
-    `${db.gmailResponses.length} respuestas Gmail`,`${(db.rehearsals||[]).length} ensayos`,`${db.repertoire.length} canciones`,`${setlistRows().length} temas setlist`,`${db.templates.length} plantillas`
+    `${db.gmailResponses.length} respuestas Gmail`,`${(db.rehearsals||[]).length} ensayos`,`${(db.localPayments||[]).length} pagos local`,`${db.repertoire.length} canciones`,`${setlistRows().length} temas setlist`,`${db.templates.length} plantillas`
   ].map(x=>`<span class="badge">${esc(x)}</span>`).join('');
   fillFilters();
   renderDashboard();
@@ -721,6 +756,7 @@ function refreshAll(){
   renderGmail();
   renderConcerts();
   renderRehearsals();
+  renderLocalPayments();
   renderBudgetUI();
   renderRepertoire();
   renderSetlist();
@@ -1187,6 +1223,41 @@ function renderRehearsals(){
   }).join('') || '<tr><td colspan="8" class="muted">Todavía no hay ensayos creados. Entra como administrador para añadir el primero.</td></tr>';
   renderConcertAttendancePanel();
 }
+
+function renderLocalPayments(){
+  const section=document.getElementById('local');
+  if(!section)return;
+  db.localPayments = Array.isArray(db.localPayments) ? db.localPayments : [];
+  const rows=db.localPayments.slice().sort((a,b)=>String(b.month||'').localeCompare(String(a.month||'')) || String(a.name||'').localeCompare(String(b.name||'')));
+  const currentMonth = new Date().toISOString().slice(0,7);
+  const monthRows = rows.filter(r=>String(r.month||'')===currentMonth);
+  const baseRows = monthRows.length ? monthRows : rows;
+  const total = baseRows.reduce((a,r)=>a+(Number(r.amount)||0),0);
+  const paid = baseRows.filter(r=>['si','sí','pagado','pagada','ok'].includes(norm(r.paid))).reduce((a,r)=>a+(Number(r.amount)||0),0);
+  const pending = Math.max(0, total-paid);
+  const kpis=document.getElementById('localKpis');
+  if(kpis) kpis.innerHTML=[
+    ['Mes control', baseRows[0]?.month || currentMonth],
+    ['Cuotas', baseRows.length],
+    ['Total controlado', total.toFixed(2)+' €'],
+    ['Pagado', paid.toFixed(2)+' €'],
+    ['Pendiente', pending.toFixed(2)+' €']
+  ].map(k=>`<div class="card kpi"><strong>${esc(k[1])}</strong><span>${esc(k[0])}</span></div>`).join('');
+  const tbody=document.querySelector('#localTable tbody');
+  if(tbody) tbody.innerHTML=rows.map(r=>{
+    const paidNorm=norm(r.paid);
+    const st=paidNorm==='si'||paidNorm==='sí'||paidNorm==='pagado'||paidNorm==='ok'?'Pagado':'Pendiente';
+    return `<tr>
+      <td>${esc(r.month||'—')}</td>
+      <td><strong>${esc(r.name||r.memberId||'—')}</strong><br><small>${esc(r.memberId||'')}</small></td>
+      <td>${esc((Number(r.amount)||0).toFixed(2))} €</td>
+      <td>${badge(st)}</td>
+      <td>${esc(r.paidDate||'—')}</td>
+      <td>${esc(compact(r.notes||'',120))}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" class="muted">No hay cuotas del local cargadas en PAGOS_LOCAL.</td></tr>';
+}
+
 function fillSelectKeep(el, options, current){
   if(!el)return;
   el.innerHTML=options;
