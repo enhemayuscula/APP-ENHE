@@ -3,11 +3,41 @@ let db = loadData();
 let filteredCRM = [];
 const tabs = [
   ['dashboard','Panel','●'],['crm','CRM','●'],['followup','Seguimiento','●'],['gmail','Gmail','●'],['concerts','Conciertos','●'],
-  ['budget','Presupuesto','●'],['setlist','Setlist','●'],['dossier','Dossier','●'],['templates','Plantillas','●'],['tasks','Tareas','●'],['importExport','Exportar','●']
+  ['budget','Presupuesto','●'],['repertoire','Canciones','●'],['setlist','Setlist','●'],['dossier','Dossier','●'],['templates','Plantillas','●'],['tasks','Tareas','●'],['importExport','Exportar','●']
 ];
 
 function clone(o){return JSON.parse(JSON.stringify(o));}
-function loadData(){try{const raw=localStorage.getItem(STORE_KEY);if(raw){return Object.assign(clone(INITIAL_DATA), JSON.parse(raw));}}catch(e){} return clone(INITIAL_DATA);}
+function loadData(){
+  let data=clone(INITIAL_DATA);
+  try{
+    const raw=localStorage.getItem(STORE_KEY);
+    if(raw){
+      data=Object.assign(clone(INITIAL_DATA), JSON.parse(raw));
+    }
+  }catch(e){}
+  return migrateData(data);
+}
+function migrateData(data){
+  data.repertoire = Array.isArray(data.repertoire) ? data.repertoire : [];
+  data.artistReferences = Array.isArray(data.artistReferences) ? data.artistReferences : [];
+  data.repertoire = data.repertoire.map((song,idx)=>Object.assign({
+    id: idx+1,
+    title: '',
+    artist: '',
+    singer: '',
+    duration: '',
+    tone: '',
+    spotifyUrl: '',
+    youtubeUrl: '',
+    chordsUrl: '',
+    chordsText: '',
+    lyricsNotes: '',
+    block: 'Bloque 1',
+    status: 'Activo',
+    notes: ''
+  }, song || {}));
+  return data;
+}
 function saveData(){localStorage.setItem(STORE_KEY, JSON.stringify(db)); refreshAll();}
 function resetData(){if(confirm('¿Restaurar los datos iniciales importados del Excel? Se perderán cambios locales de esta app.')){localStorage.removeItem(STORE_KEY);db=clone(INITIAL_DATA);refreshAll();}}
 function esc(v){return String(v??'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
@@ -34,6 +64,7 @@ function setTab(id){
   if(id==='followup') renderFollowup();
   if(id==='concerts') renderConcerts();
   if(id==='budget') calcBudget();
+  if(id==='repertoire') renderRepertoire();
   if(id==='setlist') renderSetlist();
   if(id==='dossier') renderDossier();
   if(id==='templates') {renderContactOptions();renderTemplates();}
@@ -57,7 +88,7 @@ function refreshAll(){
   document.getElementById('sideLoaded').innerHTML=`${db.crm.length} contactos · ${db.gmailResponses.length} respuestas Gmail<br>Última importación: ${esc(db.createdFrom.lastImport || '—')}`;
   document.getElementById('heroBadges').innerHTML=[
     `${db.crm.length} contactos CRM`,`${countBy(db.crm,'campaign','Salas')} salas`,`${countBy(db.crm,'campaign','Eventos/Bodas/Festejos')} eventos/bodas/festejos`,
-    `${db.gmailResponses.length} respuestas Gmail`,`${setlistRows().length} temas setlist`,`${db.templates.length} plantillas`
+    `${db.gmailResponses.length} respuestas Gmail`,`${db.repertoire.length} canciones`,`${setlistRows().length} temas setlist`,`${db.templates.length} plantillas`
   ].map(x=>`<span class="badge">${esc(x)}</span>`).join('');
   fillFilters();
   renderDashboard();
@@ -66,6 +97,7 @@ function refreshAll(){
   renderGmail();
   renderConcerts();
   renderBudgetUI();
+  renderRepertoire();
   renderSetlist();
   renderDossier();
   renderContactOptions();
@@ -305,14 +337,141 @@ function renderSetlist(){
 function exportSetlistCSV(){const rows=setlistRows(); if(!rows.length){alert('No hay setlist cargado.');return;} const headers=[{label:'#',key:'order'},{label:'Tema',key:'title'},{label:'Voz',key:'vocal'},{label:'Bloque',key:'blockName'},{label:'Duración bloque',key:'blockDuration'},{label:'Objetivo',key:'blockObjective'},{label:'Control escenario',key:'stageControl'}]; downloadBlob('n_mayuscula_setlist_estrategico.csv', new Blob([toCSV(rows,headers)],{type:'text/csv;charset=utf-8'}));}
 function downloadSetlistPDF(){downloadStatic(SETLIST_PDF_URL,'Setlist_N_Bloques_Estrategicos.pdf');}
 
-function renderRepertoire(){
-  document.getElementById('artists').innerHTML=db.artistReferences.map(a=>`<span class="pill">${esc(a)}</span>`).join('');
-  renderBars('repBars', counts(db.repertoire,'block'));
-  document.querySelector('#repTable tbody').innerHTML=db.repertoire.map(s=>`<tr><td><strong>${esc(s.title)}</strong></td><td>${esc(s.artist)}</td><td>${esc(s.singer)}</td><td>${esc(s.duration)}</td><td>${esc(s.block)}</td><td>${badge(s.status)}</td><td>${esc(s.notes)}</td><td><button class="btn small gold" onclick="openSongModal(${s.id})">Editar</button> <button class="btn small red" onclick="deleteRecord('repertoire',${s.id})">Borrar</button></td></tr>`).join('');
+
+function fillRepertoireFilters(){
+  const fill=(id,values,label)=>{
+    const el=document.getElementById(id); if(!el)return;
+    const current=el.value;
+    el.innerHTML=`<option value="">${label}</option>`+[...new Set(values.filter(Boolean).map(String))].sort((a,b)=>a.localeCompare(b,'es')).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+    el.value=current;
+  };
+  fill('fRepBlock', db.repertoire.map(s=>s.block), 'Bloque');
+  fill('fRepStatus', db.repertoire.map(s=>s.status), 'Estado');
+  fill('fRepSinger', db.repertoire.map(s=>s.singer), 'Voz');
 }
-function songFields(){return [['title','Tema','text','span2'],['artist','Artista','text'],['singer','Cantante','text'],['duration','Duración','text'],['block','Bloque','select','', ['Bloque 1','Bloque 2','Bloque 3','Cierre','Reserva']],['status','Estado','select','', ['Activo','Ensayo','Reserva','Descartado']],['notes','Notas','textarea','span4']];}
-function openSongModal(id=null){const item=id?db.repertoire.find(x=>x.id===id):{block:'Bloque 1',status:'Activo'};modalContext={type:'song',id};document.getElementById('modalTitle').textContent=id?'Editar canción':'Nueva canción';document.getElementById('modalBody').innerHTML=renderForm(songFields(), item)+`<div class="hr"></div><div class="actions"><button class="btn gold" onclick="saveSong()">Guardar</button><button class="btn dark" onclick="closeModal()">Cancelar</button></div>`;openModal();}
-function saveSong(){const obj=readForm(songFields()); if(modalContext.id){const idx=db.repertoire.findIndex(x=>x.id===modalContext.id);db.repertoire[idx]=Object.assign({},db.repertoire[idx],obj);}else{obj.id=nextId(db.repertoire);db.repertoire.push(obj);} closeModal();saveData();}
+function repertoireFiltered(){
+  const q=norm(document.getElementById('qRep')?.value||'');
+  const block=document.getElementById('fRepBlock')?.value||'';
+  const status=document.getElementById('fRepStatus')?.value||'';
+  const singer=document.getElementById('fRepSinger')?.value||'';
+  return (db.repertoire||[]).filter(s=>{
+    const blob=[s.title,s.artist,s.singer,s.duration,s.tone,s.block,s.status,s.spotifyUrl,s.youtubeUrl,s.chordsUrl,s.chordsText,s.lyricsNotes,s.notes].join(' ');
+    return (!q||norm(blob).includes(q)) && (!block||s.block===block) && (!status||s.status===status) && (!singer||s.singer===singer);
+  });
+}
+function songLinkButtons(s){
+  const links=[];
+  if(s.spotifyUrl)links.push(`<a class="btn small dark" target="_blank" rel="noopener" href="${esc(s.spotifyUrl)}">Spotify</a>`);
+  if(s.youtubeUrl)links.push(`<a class="btn small dark" target="_blank" rel="noopener" href="${esc(s.youtubeUrl)}">YouTube</a>`);
+  if(s.chordsUrl)links.push(`<a class="btn small dark" target="_blank" rel="noopener" href="${esc(s.chordsUrl)}">Acordes</a>`);
+  return links.length?`<div class="songLinks">${links.join('')}</div>`:'—';
+}
+function renderRepertoire(){
+  const artists=document.getElementById('artists');
+  if(!artists)return;
+  fillRepertoireFilters();
+  artists.innerHTML=(db.artistReferences||[]).map(a=>`<span class="pill">${esc(a)}</span>`).join('');
+  renderBars('repBars', counts(db.repertoire||[],'block'));
+  const rows=repertoireFiltered();
+  const tbody=document.querySelector('#repTable tbody');
+  if(!tbody)return;
+  tbody.innerHTML=rows.map(s=>`<tr>
+    <td><strong>${esc(s.title)}</strong></td>
+    <td>${esc(s.artist)}</td>
+    <td>${esc(s.singer||'—')}</td>
+    <td>${esc(s.duration||'—')}</td>
+    <td>${esc(s.tone||'—')}</td>
+    <td>${esc(s.block||'—')}</td>
+    <td>${badge(s.status||'—')}</td>
+    <td>${songLinkButtons(s)}</td>
+    <td>${(s.chordsText||s.lyricsNotes||s.chordsUrl)?'<span class="status s-blue">Ficha</span>':'—'}</td>
+    <td>${esc(compact(s.notes||s.lyricsNotes||'',70))}</td>
+    <td>
+      <button class="btn small dark" onclick="viewSongModal(${s.id})">Ver</button>
+      <button class="btn small gold" onclick="openSongModal(${s.id})">Editar</button>
+      <button class="btn small red" onclick="deleteRecord('repertoire',${s.id})">Borrar</button>
+    </td>
+  </tr>`).join('');
+}
+function songFields(){return [
+  ['title','Tema','text','span2'],
+  ['artist','Artista / versión','text','span2'],
+  ['singer','Voz principal','text'],
+  ['duration','Duración','text'],
+  ['tone','Tono','text'],
+  ['block','Bloque','select','', ['Bloque 1','Bloque 2','Bloque 3','Cierre','Reserva']],
+  ['status','Estado','select','', ['Activo','Ensayo','Reserva','Descartado']],
+  ['spotifyUrl','Enlace Spotify','url','span2'],
+  ['youtubeUrl','Enlace YouTube','url','span2'],
+  ['chordsUrl','Enlace externo acordes / letra / tabla','url','span4'],
+  ['chordsText','Letra / acordes / tablatura / estructura','textarea','span4'],
+  ['lyricsNotes','Notas de interpretación / letra','textarea','span4'],
+  ['notes','Notas internas','textarea','span4']
+];}
+function openSongModal(id=null){
+  const item=id?db.repertoire.find(x=>x.id===id):{block:'Bloque 1',status:'Activo'};
+  modalContext={type:'song',id};
+  document.getElementById('modalTitle').textContent=id?'Editar canción':'Nueva canción';
+  document.getElementById('modalBody').innerHTML=renderForm(songFields(), item)+`<div class="hr"></div><div class="actions"><button class="btn gold" onclick="saveSong()">Guardar</button><button class="btn dark" onclick="closeModal()">Cancelar</button>${id?`<button class="btn red" onclick="deleteRecord('repertoire',${id})">Borrar</button>`:''}</div>`;
+  openModal();
+}
+function viewSongModal(id){
+  const s=db.repertoire.find(x=>x.id===id);
+  if(!s)return;
+  document.getElementById('modalTitle').textContent=s.title||'Ficha de canción';
+  document.getElementById('modalBody').innerHTML=`
+    <div class="detailGrid">
+      <div class="detailItem"><small>Tema</small><div><strong>${esc(s.title||'—')}</strong></div></div>
+      <div class="detailItem"><small>Artista / versión</small><div>${esc(s.artist||'—')}</div></div>
+      <div class="detailItem"><small>Voz principal</small><div>${esc(s.singer||'—')}</div></div>
+      <div class="detailItem"><small>Duración</small><div>${esc(s.duration||'—')}</div></div>
+      <div class="detailItem"><small>Tono</small><div>${esc(s.tone||'—')}</div></div>
+      <div class="detailItem"><small>Bloque / estado</small><div>${esc(s.block||'—')} · ${esc(s.status||'—')}</div></div>
+    </div>
+    <div class="hr"></div>
+    <div class="card light"><h4>Enlaces</h4>${songLinkButtons(s)}</div>
+    <div class="hr"></div>
+    <div class="detailItem"><small>Letra / acordes / tablatura / estructura</small><div class="songCode">${esc(s.chordsText||'—')}</div></div>
+    <div class="detailItem" style="margin-top:12px"><small>Notas de interpretación / letra</small><div>${esc(s.lyricsNotes||'—')}</div></div>
+    <div class="detailItem" style="margin-top:12px"><small>Notas internas</small><div>${esc(s.notes||'—')}</div></div>
+    <div class="hr"></div>
+    <div class="actions"><button class="btn gold" onclick="openSongModal(${s.id})">Editar</button><button class="btn dark" onclick="closeModal()">Cerrar</button></div>
+  `;
+  openModal();
+}
+function saveSong(){
+  const obj=readForm(songFields());
+  if(modalContext.id){
+    const idx=db.repertoire.findIndex(x=>x.id===modalContext.id);
+    db.repertoire[idx]=Object.assign({},db.repertoire[idx],obj);
+  }else{
+    obj.id=nextId(db.repertoire);
+    db.repertoire.push(obj);
+  }
+  closeModal();
+  saveData();
+}
+function repertoireHeaders(){return [
+  {label:'ID',key:'id'},
+  {label:'Tema',key:'title'},
+  {label:'Artista / versión',key:'artist'},
+  {label:'Voz principal',key:'singer'},
+  {label:'Duración',key:'duration'},
+  {label:'Tono',key:'tone'},
+  {label:'Bloque',key:'block'},
+  {label:'Estado',key:'status'},
+  {label:'Spotify',key:'spotifyUrl'},
+  {label:'YouTube',key:'youtubeUrl'},
+  {label:'Enlace acordes/letra',key:'chordsUrl'},
+  {label:'Letra/acordes/tablatura',key:'chordsText'},
+  {label:'Notas interpretación/letra',key:'lyricsNotes'},
+  {label:'Notas internas',key:'notes'}
+];}
+function exportRepertoireCSV(){
+  const rows=repertoireFiltered().length?repertoireFiltered():(db.repertoire||[]);
+  if(!rows.length){alert('No hay canciones cargadas.');return;}
+  downloadBlob('n_mayuscula_canciones_repertorio.csv', new Blob([toCSV(rows,repertoireHeaders())],{type:'text/csv;charset=utf-8'}));
+}
 function renderDossier(){
   const b=db.brand;
   document.getElementById('proposalCards').innerHTML=b.proposal.map(x=>`<div class="card light"><h4>${esc(x.title)}</h4><p>${esc(x.text)}</p></div>`).join('');

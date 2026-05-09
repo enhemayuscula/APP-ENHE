@@ -110,6 +110,59 @@
     </div>
   </section>
 
+
+  <section class="tab" id="repertoire">
+    <div class="sectionTitle">
+      <div>
+        <h3>Canciones y repertorio</h3>
+        <p>Ficha de trabajo por tema: duración, tono, enlaces, notas y material de letra/acordes para ensayo.</p>
+      </div>
+      <div class="actions">
+        <button class="btn gold" onclick="openSongModal()">+ Canción</button>
+        <button class="btn dark" onclick="exportRepertoireCSV()">Exportar CSV canciones</button>
+      </div>
+    </div>
+
+    <div class="grid two">
+      <div class="card">
+        <h4>Referencias de repertorio</h4>
+        <div class="pillList" id="artists"></div>
+      </div>
+      <div class="card">
+        <h4>Estado del repertorio</h4>
+        <div id="repBars"></div>
+      </div>
+    </div>
+
+    <div class="filters" style="margin-top:14px">
+      <input id="qRep" placeholder="Buscar tema, artista, tono, notas, enlaces o acordes..." oninput="renderRepertoire()">
+      <select id="fRepBlock" onchange="renderRepertoire()"><option value="">Bloque</option></select>
+      <select id="fRepStatus" onchange="renderRepertoire()"><option value="">Estado</option></select>
+      <select id="fRepSinger" onchange="renderRepertoire()"><option value="">Voz</option></select>
+    </div>
+
+    <div class="tableWrap">
+      <table id="repTable">
+        <thead>
+          <tr>
+            <th>Tema</th>
+            <th>Artista</th>
+            <th>Voz</th>
+            <th>Duración</th>
+            <th>Tono</th>
+            <th>Bloque</th>
+            <th>Estado</th>
+            <th>Links</th>
+            <th>Material</th>
+            <th>Notas</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
   <section class="tab" id="setlist">
     <div class="sectionTitle"><div><h3>Setlist estratégico por bloques</h3><p>Orden de concierto pensado para mantener curva de energía, voces y control de escenario.</p></div><div class="actions"><button class="btn gold" onclick="downloadSetlistPDF()">Descargar PDF setlist</button><button class="btn dark" onclick="exportSetlistCSV()">Exportar CSV</button></div></div>
     <div class="setlistHead">

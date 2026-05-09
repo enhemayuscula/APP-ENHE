@@ -86,3 +86,8 @@ tr:hover td{background:rgba(255,255,255,.035)}
   .hero h2{font-size:28px}
 }
 @media(max-width:640px){main{padding:14px}.filters{grid-template-columns:1fr}.nav{grid-template-columns:1fr}.hero{padding:18px}.desktopHint{display:none}.mobileOnly{display:block}}
+
+
+.songLinks{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.songCode{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;line-height:1.45;background:rgba(0,0,0,.22);padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.08);max-height:360px;overflow:auto}
+#repTable td{vertical-align:top}

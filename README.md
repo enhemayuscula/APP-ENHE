@@ -39,3 +39,12 @@ APP-ENHE/
 ## Cambio aplicado
 
 No se ha reescrito funcionalidad a propósito. Se ha separado el monolito en archivos para que sea editable y mantenible.
+
+
+
+## Roles de acceso
+
+- **Usuario**: modo por defecto. Permite consultar la app sin editar, importar, exportar ni hacer backup.
+- **Administrador**: pulsar `Acceso admin` e introducir la clave configurada para activar edición, importación, exportación y backup en ese navegador.
+
+Nota: APP-ENHE está publicada en GitHub Pages como app estática. Este control bloquea la interfaz y evita cambios accidentales, pero no equivale a un sistema de usuarios con servidor.
