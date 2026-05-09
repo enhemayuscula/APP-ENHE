@@ -10,6 +10,10 @@
     'deleteRecord',
     'openConcertModal',
     'saveConcert',
+    'openRehearsalModal',
+    'saveRehearsal',
+    'saveConcertAttendance',
+    'exportRehearsalsCSV',
     'loadConcertPosterFile',
     'createConcertFromBudget',
     'openSongModal',
@@ -39,6 +43,10 @@
     'deleteRecord',
     'openConcertModal',
     'saveConcert',
+    'openRehearsalModal',
+    'saveRehearsal',
+    'saveConcertAttendance',
+    'exportRehearsalsCSV',
     'loadConcertPosterFile',
     'createConcertFromBudget',
     'openSongModal',
@@ -202,13 +210,19 @@
       labelText.includes('restaurar') ||
       labelText.includes('+ contacto') ||
       labelText.includes('+ concierto') ||
+      labelText.includes('+ ensayo') ||
       labelText.includes('+ tarea') ||
       labelText.includes('editar') ||
       labelText.includes('borrar') ||
       labelText.includes('abrir email') ||
       labelText.includes('preparar email') ||
       labelText.includes('copiar presupuesto') ||
-      labelText.includes('crear concierto')
+      labelText.includes('crear concierto') ||
+      labelText.includes('guardar confirmación') ||
+      labelText.includes('exportar csv ensayos') ||
+      labelText.includes('marcar todos') ||
+      labelText.includes('usar setlist actual') ||
+      labelText.includes('limpiar')
     )){
       return true;
     }
@@ -319,6 +333,7 @@
         <button type="button" id="adminBackup">Backup JSON</button>
         <button type="button" id="adminExportCRM">CRM CSV</button>
         <button type="button" id="adminExportFiltered">CRM filtrado</button>
+        <button type="button" id="adminOpenRehearsals">Abrir Ensayos</button>
         <button type="button" class="danger" id="adminLock">Salir de admin</button>
       </div>
     `;
@@ -331,6 +346,7 @@
     document.getElementById('adminBackup').addEventListener('click', function(){ callWhenReady('exportJSON'); });
     document.getElementById('adminExportCRM').addEventListener('click', function(){ callWhenReady('exportCSV', ['crm']); });
     document.getElementById('adminExportFiltered').addEventListener('click', function(){ callWhenReady('exportFilteredCRM'); });
+    document.getElementById('adminOpenRehearsals').addEventListener('click', function(){ if(typeof window.setTab === 'function') window.setTab('rehearsals'); });
     document.getElementById('adminLock').addEventListener('click', function(){ setAdmin(false); });
 
     document.addEventListener('click', interceptLockedClick, true);

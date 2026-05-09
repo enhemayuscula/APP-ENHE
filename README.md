@@ -103,3 +103,23 @@ Cambios:
 - Ficha de concierto ampliada con cartel, miniatura y texto público.
 - Cartel inicial incluido: Sala Cien x Cien · 16 junio · 22:00 h.
 - Caché PWA actualizado a v1.2 para forzar renovación de archivos.
+
+
+## APP-ENHE v1.3 · Ensayos y asistencia
+
+Cambios aplicados:
+- Nuevo menú **Ensayos**.
+- Calendario de ensayos con fecha, horario, lugar, objetivo, estado y notas.
+- Selección de temas por ensayo:
+  - marcar todo el repertorio,
+  - usar setlist actual,
+  - marcar temas individuales,
+  - limpiar selección.
+- Control de asistencia al ensayo por miembro de la banda.
+- Panel de confirmación de asistencia a concierto:
+  - en modo usuario permite copiar mensaje para WhatsApp,
+  - en modo administrador permite guardar la confirmación recibida.
+- En modo usuario se ocultan los controles de administrador para que no induzcan a error.
+
+Limitación importante:
+APP-ENHE sigue siendo una app estática en GitHub Pages. Los datos que se guardan se guardan en el navegador local. Para asistencia compartida en tiempo real haría falta una base de datos o un formulario externo conectado a Google Sheets, Supabase, Firebase o similar.

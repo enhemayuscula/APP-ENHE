@@ -289,3 +289,111 @@ code{
   .hero h2{font-size:25px}
   .posterGrid{grid-template-columns:1fr}
 }
+
+
+/* Ensayos y asistencia · v1.3 */
+.attendanceGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(145px,1fr));
+  gap:10px;
+}
+.attendanceChip{
+  padding:11px;
+  border-radius:14px;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,214,107,.16);
+}
+.attendanceChip strong,
+.attendanceChip small,
+.attendanceChip em{
+  display:block;
+}
+.attendanceChip small{
+  color:var(--muted);
+  margin:2px 0 6px;
+}
+.attendanceChip em{
+  color:#ffd36a;
+  font-size:12px;
+  margin-top:6px;
+  font-style:normal;
+}
+.attendanceEditGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:12px;
+}
+.attendanceEditItem{
+  padding:12px;
+  border-radius:15px;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,214,107,.14);
+}
+.attendanceEditItem label{
+  display:block;
+  color:#ffdf8a;
+  font-size:12px;
+  margin-bottom:7px;
+  font-weight:700;
+}
+.attendanceEditItem select,
+.attendanceEditItem input{
+  width:100%;
+  margin-bottom:8px;
+}
+.rehearsalSelector{
+  padding:14px;
+  border-radius:18px;
+  background:rgba(0,0,0,.16);
+  border:1px solid rgba(255,214,107,.16);
+}
+.rehearsalSelector h4{
+  margin:0 0 10px;
+  color:#ffdf8a;
+}
+.songCheckList{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:8px;
+  max-height:360px;
+  overflow:auto;
+  padding-right:6px;
+}
+.songCheck{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  padding:10px;
+  border-radius:14px;
+  border:1px solid rgba(255,214,107,.12);
+  background:rgba(255,255,255,.045);
+  color:var(--text);
+}
+.songCheck input{
+  width:auto;
+  margin-top:3px;
+}
+.songCheck span{
+  display:block;
+}
+.songCheck strong,
+.songCheck small{
+  display:block;
+}
+.songCheck small{
+  color:var(--muted);
+  margin-top:2px;
+}
+.songCheck.all{
+  background:linear-gradient(90deg,rgba(228,165,45,.16),rgba(178,34,31,.08));
+  border-color:rgba(255,214,107,.24);
+  margin-bottom:10px;
+}
+.detailItem.span2{
+  grid-column:span 2;
+}
+@media(max-width:640px){
+  .songCheckList{grid-template-columns:1fr;max-height:420px}
+  .attendanceEditGrid{grid-template-columns:1fr}
+}
+

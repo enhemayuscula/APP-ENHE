@@ -93,6 +93,68 @@
     <div class="tableWrap"><table id="concertTable"><thead><tr><th>Fecha</th><th>Evento</th><th>Lugar</th><th>Tipo</th><th>Estado</th><th>Caché</th><th>Anticipo</th><th>Cobrado</th><th>Pendiente</th><th>Acciones</th></tr></thead><tbody></tbody></table></div>
   </section>
 
+
+  <section class="tab" id="rehearsals">
+    <div class="sectionTitle">
+      <div>
+        <h3>Ensayos y asistencia</h3>
+        <p>Calendario de ensayos, horario, temas previstos y confirmación de asistencia para ensayos y conciertos.</p>
+      </div>
+      <div class="actions">
+        <button class="btn gold" onclick="openRehearsalModal()">+ Ensayo</button>
+        <button class="btn dark" onclick="exportRehearsalsCSV()">Exportar CSV ensayos</button>
+      </div>
+    </div>
+
+    <div class="grid three" id="rehearsalKpis"></div>
+
+    <div class="grid two">
+      <div class="card">
+        <h4>Próximos ensayos</h4>
+        <div id="nextRehearsals"></div>
+      </div>
+
+      <div class="card">
+        <h4>Confirmar asistencia a concierto</h4>
+        <p class="muted">En modo usuario se puede copiar un mensaje para WhatsApp. En modo administrador también se puede registrar la confirmación recibida.</p>
+        <div class="formGrid">
+          <div class="field span2"><label>Concierto</label><select id="attendanceConcertSelect" onchange="renderConcertAttendancePanel()"></select></div>
+          <div class="field"><label>Miembro</label><select id="attendanceMemberSelect" onchange="renderConcertAttendancePanel()"></select></div>
+          <div class="field"><label>Estado</label><select id="attendanceStatusSelect" onchange="renderConcertAttendancePanel()"><option>Confirmo asistencia</option><option>Pendiente de confirmar</option><option>No puedo asistir</option><option>Llego más tarde</option><option>Necesito revisar horario</option></select></div>
+          <div class="field span4"><label>Notas</label><input id="attendanceNotesInput" placeholder="Ej. llego directo, necesito hora de prueba, pendiente trabajo..." oninput="renderConcertAttendancePanel()"></div>
+        </div>
+        <div class="actions" style="margin-top:12px">
+          <button class="btn gold" onclick="copyConcertAttendanceMessage()">Copiar WhatsApp</button>
+          <button class="btn dark" onclick="saveConcertAttendance()">Guardar confirmación</button>
+        </div>
+        <div class="hr"></div>
+        <div id="concertAttendanceSummary"></div>
+      </div>
+    </div>
+
+    <div class="sectionTitle">
+      <div><h3>Calendario de ensayos</h3><p>Vista de trabajo. La selección de temas de cada ensayo puede tomar todo el repertorio o marcar temas concretos.</p></div>
+    </div>
+    <div class="tableWrap">
+      <table id="rehearsalTable">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Horario</th>
+            <th>Lugar</th>
+            <th>Objetivo</th>
+            <th>Temas</th>
+            <th>Asistencia</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+
   <section class="tab" id="budget">
     <div class="sectionTitle"><div><h3>Calculadora de presupuesto 2026</h3><p>Basada en las tarifas orientativas del dossier comercial.</p></div></div>
     <div class="grid two">

@@ -2,7 +2,7 @@ const STORE_KEY = 'n_mayuscula_control_pro_v3';
 let db = loadData();
 let filteredCRM = [];
 const tabs = [
-  ['dashboard','Panel','●'],['crm','CRM','●'],['followup','Seguimiento','●'],['gmail','Gmail','●'],['concerts','Conciertos','●'],
+  ['dashboard','Panel','●'],['crm','CRM','●'],['followup','Seguimiento','●'],['gmail','Gmail','●'],['concerts','Conciertos','●'],['rehearsals','Ensayos','●'],
   ['budget','Presupuesto','●'],['repertoire','Canciones','●'],['setlist','Setlist','●'],['dossier','Dossier','●'],['templates','Plantillas','●'],['tasks','Tareas','●'],['importExport','Exportar','●']
 ];
 
@@ -31,6 +31,14 @@ function loadData(){
 function migrateData(data){
   data.repertoire = Array.isArray(data.repertoire) ? data.repertoire : [];
   data.artistReferences = Array.isArray(data.artistReferences) ? data.artistReferences : [];
+  data.bandMembers = Array.isArray(data.bandMembers) && data.bandMembers.length ? data.bandMembers : [
+    {id:'miguel_voz',name:'Miguel',role:'Voz'},
+    {id:'esther',name:'Esther',role:'Voz'},
+    {id:'lorenzo',name:'Lorenzo',role:'Guitarra solista'},
+    {id:'oscar',name:'Oscar',role:'Guitarra rítmica'},
+    {id:'miguel_bajo',name:'Miguel',role:'Bajo'},
+    {id:'pepe',name:'Pepe',role:'Batería'}
+  ];
 
   const defaultSong = {
     id: 0,
@@ -114,6 +122,8 @@ function migrateData(data){
     posterThumbUrl: '',
     posterTitle: '',
     publicInfo: '',
+    attendance: {},
+    attendanceNotes: '',
     notes: ''
   };
   data.concerts = data.concerts.map((concert, idx)=>Object.assign({}, defaultConcert, {id: idx+1}, concert || {}));
@@ -133,6 +143,50 @@ function migrateData(data){
     }
   });
   data.concerts.sort((a,b)=>String(a.date||'9999-99-99').localeCompare(String(b.date||'9999-99-99')) || String(a.time||'99:99').localeCompare(String(b.time||'99:99')));
+
+  const defaultAttendance = {};
+  data.bandMembers.forEach(m=>{ defaultAttendance[m.id] = {status:'Pendiente', notes:''}; });
+
+  const defaultRehearsal = {
+    id: 0,
+    date: '',
+    startTime: '',
+    endTime: '',
+    place: '',
+    status: 'Pendiente',
+    objective: '',
+    allSongs: false,
+    songIds: [],
+    notes: '',
+    attendance: clone(defaultAttendance)
+  };
+  data.rehearsals = Array.isArray(data.rehearsals) ? data.rehearsals : [];
+  data.rehearsals = data.rehearsals.map((r,idx)=>{
+    const item = Object.assign({}, defaultRehearsal, {id: idx+1}, r || {});
+    item.songIds = Array.isArray(item.songIds) ? item.songIds.map(Number).filter(Boolean) : [];
+    item.allSongs = item.allSongs === true || item.allSongs === 'true';
+    item.attendance = Object.assign({}, clone(defaultAttendance), item.attendance || {});
+    data.bandMembers.forEach(m=>{
+      if(typeof item.attendance[m.id] === 'string'){
+        item.attendance[m.id] = {status:item.attendance[m.id], notes:''};
+      }else{
+        item.attendance[m.id] = Object.assign({status:'Pendiente', notes:''}, item.attendance[m.id] || {});
+      }
+    });
+    return item;
+  });
+  data.rehearsals.sort((a,b)=>String(a.date||'9999-99-99').localeCompare(String(b.date||'9999-99-99')) || String(a.startTime||'99:99').localeCompare(String(b.startTime||'99:99')));
+
+  data.concerts.forEach(c=>{
+    c.attendance = c.attendance || {};
+    data.bandMembers.forEach(m=>{
+      if(typeof c.attendance[m.id] === 'string'){
+        c.attendance[m.id] = {status:c.attendance[m.id], notes:''};
+      }else{
+        c.attendance[m.id] = Object.assign({status:'Pendiente', notes:''}, c.attendance[m.id] || {});
+      }
+    });
+  });
 
   return data;
 }
@@ -163,6 +217,7 @@ function setTab(id, opts={}){
   if(id==='gmail') renderGmail();
   if(id==='followup') renderFollowup();
   if(id==='concerts') renderConcerts();
+  if(id==='rehearsals') renderRehearsals();
   if(id==='budget') calcBudget();
   if(id==='repertoire') renderRepertoire();
   if(id==='setlist') renderSetlist();
@@ -192,6 +247,7 @@ function tabCount(id){
   if(id==='crm')return db.crm.length;
   if(id==='gmail')return db.gmailResponses.length;
   if(id==='concerts')return db.concerts.length;
+  if(id==='rehearsals')return (db.rehearsals||[]).length;
   if(id==='tasks')return db.tasks.length;
   if(id==='repertoire')return db.repertoire.length;
   if(id==='setlist')return setlistRows().length;
@@ -202,7 +258,7 @@ function refreshAll(){
   document.getElementById('sideLoaded').innerHTML=`${db.crm.length} contactos · ${db.gmailResponses.length} respuestas Gmail<br>Última importación: ${esc(db.createdFrom.lastImport || '—')}`;
   document.getElementById('heroBadges').innerHTML=[
     `${db.crm.length} contactos CRM`,`${countBy(db.crm,'campaign','Salas')} salas`,`${countBy(db.crm,'campaign','Eventos/Bodas/Festejos')} eventos/bodas/festejos`,
-    `${db.gmailResponses.length} respuestas Gmail`,`${db.repertoire.length} canciones`,`${setlistRows().length} temas setlist`,`${db.templates.length} plantillas`
+    `${db.gmailResponses.length} respuestas Gmail`,`${(db.rehearsals||[]).length} ensayos`,`${db.repertoire.length} canciones`,`${setlistRows().length} temas setlist`,`${db.templates.length} plantillas`
   ].map(x=>`<span class="badge">${esc(x)}</span>`).join('');
   fillFilters();
   renderDashboard();
@@ -210,6 +266,7 @@ function refreshAll(){
   renderFollowup();
   renderGmail();
   renderConcerts();
+  renderRehearsals();
   renderBudgetUI();
   renderRepertoire();
   renderSetlist();
@@ -481,6 +538,280 @@ function openConcertModal(id=null,preset=null){
   openModal();
 }
 function saveConcert(){const obj=readForm(concertFields());['fee','deposit','paid','contactId'].forEach(k=>obj[k]=Number(obj[k]||0)); if(modalContext.id){const idx=db.concerts.findIndex(x=>x.id===modalContext.id);db.concerts[idx]=Object.assign({},db.concerts[idx],obj);}else{obj.id=nextId(db.concerts);db.concerts.push(obj);} closeModal();saveData();}
+
+function bandMembers(){
+  return Array.isArray(db.bandMembers) && db.bandMembers.length ? db.bandMembers : [
+    {id:'miguel_voz',name:'Miguel',role:'Voz'},
+    {id:'esther',name:'Esther',role:'Voz'},
+    {id:'lorenzo',name:'Lorenzo',role:'Guitarra solista'},
+    {id:'oscar',name:'Oscar',role:'Guitarra rítmica'},
+    {id:'miguel_bajo',name:'Miguel',role:'Bajo'},
+    {id:'pepe',name:'Pepe',role:'Batería'}
+  ];
+}
+function memberLabel(id){
+  const m=bandMembers().find(x=>x.id===id);
+  return m ? `${m.name} · ${m.role}` : id;
+}
+function memberOptions(value=''){
+  return bandMembers().map(m=>`<option value="${esc(m.id)}" ${m.id===value?'selected':''}>${esc(m.name)} · ${esc(m.role)}</option>`).join('');
+}
+function attendanceOptions(value='Pendiente'){
+  return ['Pendiente','Confirmado','Duda','No asiste','Llega tarde','Necesita revisar horario'].map(v=>`<option ${v===value?'selected':''}>${esc(v)}</option>`).join('');
+}
+function attendanceSummary(attendance){
+  const a=attendance||{};
+  const members=bandMembers();
+  const confirmed=members.filter(m=>norm(a[m.id]?.status).includes('confirm')).length;
+  const no=members.filter(m=>norm(a[m.id]?.status).includes('no asiste')).length;
+  const doubt=members.filter(m=>['duda','necesita revisar horario','llega tarde'].some(x=>norm(a[m.id]?.status).includes(x))).length;
+  const pending=Math.max(0,members.length-confirmed-no-doubt);
+  return {confirmed,no,doubt,pending,total:members.length};
+}
+function attendancePills(attendance){
+  const a=attendance||{};
+  return `<div class="attendanceGrid">`+bandMembers().map(m=>{
+    const item=a[m.id]||{status:'Pendiente',notes:''};
+    return `<div class="attendanceChip"><strong>${esc(m.name)}</strong><small>${esc(m.role)}</small>${badge(item.status||'Pendiente')}${item.notes?`<em>${esc(compact(item.notes,60))}</em>`:''}</div>`;
+  }).join('')+`</div>`;
+}
+function rehearsalFields(){return [
+  ['date','Fecha','date'],
+  ['startTime','Hora inicio','time'],
+  ['endTime','Hora fin','time'],
+  ['place','Lugar / local','text','span2'],
+  ['status','Estado','select','', ['Pendiente','Confirmado','Movido','Cancelado','Realizado']],
+  ['objective','Objetivo del ensayo','text','span4'],
+  ['notes','Notas','textarea','span4']
+];}
+function rehearsalSongs(item){
+  if(item?.allSongs) return db.repertoire||[];
+  const ids=(item?.songIds||[]).map(Number);
+  return (db.repertoire||[]).filter(s=>ids.includes(Number(s.id)));
+}
+function rehearsalSongChecklist(item){
+  const selected=(item?.songIds||[]).map(Number);
+  const allSongs = item?.allSongs === true;
+  const rows=(db.repertoire||[]).map(s=>{
+    const checked=allSongs || selected.includes(Number(s.id));
+    return `<label class="songCheck"><input type="checkbox" data-rehearsal-song value="${esc(s.id)}" ${checked?'checked':''}> <span><strong>${esc(s.title)}</strong><small>${esc(s.artist||'')} · ${esc(s.currentKey||s.tone||'tono pendiente')} · ${esc(s.singer||s.leadVocal||'voz pendiente')}</small></span></label>`;
+  }).join('');
+  return `<div class="hr"></div>
+    <div class="rehearsalSelector">
+      <h4>Temas previstos</h4>
+      <label class="songCheck all"><input type="checkbox" id="rehearsalAllSongs" ${allSongs?'checked':''}> <span><strong>Trabajar todo el repertorio</strong><small>Útil para ensayos generales o repaso completo.</small></span></label>
+      <div class="actions" style="margin:10px 0">
+        <button type="button" class="btn small gold" onclick="setRehearsalSongsMode('all')">Marcar todos</button>
+        <button type="button" class="btn small dark" onclick="setRehearsalSongsMode('setlist')">Usar setlist actual</button>
+        <button type="button" class="btn small red" onclick="setRehearsalSongsMode('clear')">Limpiar</button>
+      </div>
+      <div class="songCheckList">${rows || '<p class="muted">No hay canciones cargadas.</p>'}</div>
+    </div>`;
+}
+function rehearsalAttendanceEditor(item){
+  const a=item?.attendance||{};
+  return `<div class="hr"></div><h4>Asistencia al ensayo</h4><div class="attendanceEditGrid">`+bandMembers().map(m=>{
+    const itemA=a[m.id]||{status:'Pendiente',notes:''};
+    return `<div class="attendanceEditItem">
+      <label>${esc(m.name)} · ${esc(m.role)}</label>
+      <select data-rehearsal-attendance="${esc(m.id)}">${attendanceOptions(itemA.status||'Pendiente')}</select>
+      <input data-rehearsal-attendance-note="${esc(m.id)}" placeholder="Notas" value="${esc(itemA.notes||'')}">
+    </div>`;
+  }).join('')+`</div>`;
+}
+function setRehearsalSongsMode(mode){
+  const all=document.getElementById('rehearsalAllSongs');
+  const checks=[...document.querySelectorAll('[data-rehearsal-song]')];
+  if(mode==='all'){
+    if(all) all.checked=true;
+    checks.forEach(ch=>ch.checked=true);
+  }
+  if(mode==='clear'){
+    if(all) all.checked=false;
+    checks.forEach(ch=>ch.checked=false);
+  }
+  if(mode==='setlist'){
+    if(all) all.checked=false;
+    const titles=new Set(setlistRows().map(x=>norm(x.title)));
+    checks.forEach(ch=>{
+      const song=db.repertoire.find(s=>Number(s.id)===Number(ch.value));
+      ch.checked=!!song && titles.has(norm(song.title));
+    });
+  }
+}
+function openRehearsalModal(id=null){
+  const defaultAttendance={};
+  bandMembers().forEach(m=>defaultAttendance[m.id]={status:'Pendiente',notes:''});
+  const item=id?db.rehearsals.find(x=>x.id===id):{status:'Pendiente',allSongs:false,songIds:[],attendance:defaultAttendance};
+  modalContext={type:'rehearsal',id};
+  document.getElementById('modalTitle').textContent=id?'Editar ensayo':'Nuevo ensayo';
+  document.getElementById('modalBody').innerHTML=renderForm(rehearsalFields(), item)+rehearsalSongChecklist(item)+rehearsalAttendanceEditor(item)+`<div class="hr"></div><div class="actions"><button class="btn gold" onclick="saveRehearsal()">Guardar</button><button class="btn dark" onclick="closeModal()">Cancelar</button>${id?`<button class="btn red" onclick="deleteRecord('rehearsals',${id})">Borrar</button>`:''}</div>`;
+  openModal();
+}
+function saveRehearsal(){
+  const obj=readForm(rehearsalFields());
+  obj.allSongs=!!document.getElementById('rehearsalAllSongs')?.checked;
+  obj.songIds=obj.allSongs?[]:[...document.querySelectorAll('[data-rehearsal-song]:checked')].map(x=>Number(x.value)).filter(Boolean);
+  obj.attendance={};
+  bandMembers().forEach(m=>{
+    const st=document.querySelector(`[data-rehearsal-attendance="${m.id}"]`)?.value||'Pendiente';
+    const notes=document.querySelector(`[data-rehearsal-attendance-note="${m.id}"]`)?.value||'';
+    obj.attendance[m.id]={status:st,notes};
+  });
+  if(modalContext.id){
+    const idx=db.rehearsals.findIndex(x=>x.id===modalContext.id);
+    db.rehearsals[idx]=Object.assign({},db.rehearsals[idx],obj);
+  }else{
+    obj.id=nextId(db.rehearsals||[]);
+    db.rehearsals.push(obj);
+  }
+  closeModal();
+  saveData();
+}
+function viewRehearsalModal(id){
+  const r=(db.rehearsals||[]).find(x=>x.id===id);
+  if(!r)return;
+  const songs=rehearsalSongs(r);
+  document.getElementById('modalTitle').textContent='Ensayo · '+(r.date||'sin fecha');
+  document.getElementById('modalBody').innerHTML=`
+    <div class="detailGrid">
+      <div class="detailItem"><small>Fecha</small><div><strong>${esc(r.date||'—')}</strong></div></div>
+      <div class="detailItem"><small>Horario</small><div>${esc([r.startTime,r.endTime].filter(Boolean).join(' - ')||'—')}</div></div>
+      <div class="detailItem"><small>Lugar</small><div>${esc(r.place||'—')}</div></div>
+      <div class="detailItem"><small>Estado</small><div>${badge(r.status||'Pendiente')}</div></div>
+      <div class="detailItem span2"><small>Objetivo</small><div>${esc(r.objective||'—')}</div></div>
+      <div class="detailItem span2"><small>Notas</small><div>${esc(r.notes||'—')}</div></div>
+    </div>
+    <div class="hr"></div>
+    <h4>Temas previstos</h4>
+    ${r.allSongs?'<p><strong>Todo el repertorio.</strong></p>':songs.length?`<div class="pillList">${songs.map(s=>`<span class="pill">${esc(s.title)}</span>`).join('')}</div>`:'<p class="muted">Sin temas seleccionados.</p>'}
+    <div class="hr"></div>
+    <h4>Asistencia al ensayo</h4>
+    ${attendancePills(r.attendance)}
+    <div class="hr"></div>
+    <div class="actions"><button class="btn gold" onclick="openRehearsalModal(${r.id})">Editar</button><button class="btn dark" onclick="closeModal()">Cerrar</button></div>`;
+  openModal();
+}
+function renderRehearsals(){
+  const section=document.getElementById('rehearsals');
+  if(!section)return;
+  db.rehearsals = Array.isArray(db.rehearsals) ? db.rehearsals : [];
+  const today=new Date().toISOString().slice(0,10);
+  const upcoming=db.rehearsals.filter(r=>!r.date || r.date>=today).sort((a,b)=>String(a.date||'9999-99-99').localeCompare(String(b.date||'9999-99-99')) || String(a.startTime||'99:99').localeCompare(String(b.startTime||'99:99')));
+  const confirmed=db.rehearsals.filter(r=>norm(r.status).includes('confirm')).length;
+  const pending=db.rehearsals.filter(r=>norm(r.status).includes('pend')).length;
+  const totalSongs=(db.repertoire||[]).length;
+  const kpis=document.getElementById('rehearsalKpis');
+  if(kpis) kpis.innerHTML=[
+    ['Ensayos', db.rehearsals.length],
+    ['Próximos', upcoming.length],
+    ['Confirmados', confirmed],
+    ['Canciones disponibles', totalSongs],
+    ['Pendientes', pending],
+    ['Miembros', bandMembers().length]
+  ].map(k=>`<div class="card kpi"><strong>${esc(k[1])}</strong><span>${esc(k[0])}</span></div>`).join('');
+  const next=document.getElementById('nextRehearsals');
+  if(next) next.innerHTML=upcoming.slice(0,5).map(r=>{
+    const songs=rehearsalSongs(r);
+    const sum=attendanceSummary(r.attendance);
+    return `<div class="detailItem"><small>${esc(r.date||'Sin fecha')} · ${esc([r.startTime,r.endTime].filter(Boolean).join(' - ')||'sin horario')}</small><div><strong>${esc(r.place||'Lugar pendiente')}</strong><br><span style="color:var(--muted)">${esc(r.objective||'Objetivo pendiente')} · ${r.allSongs?'Todo el repertorio':songs.length+' temas'} · ${sum.confirmed}/${sum.total} confirmados</span></div><div class="actions" style="margin-top:8px"><button class="btn small dark" onclick="viewRehearsalModal(${r.id})">Ver</button><button class="btn small gold" onclick="openRehearsalModal(${r.id})">Editar</button></div></div>`;
+  }).join('') || '<p class="muted">No hay ensayos creados todavía.</p>';
+  const tbody=document.querySelector('#rehearsalTable tbody');
+  if(tbody) tbody.innerHTML=db.rehearsals.map(r=>{
+    const songs=rehearsalSongs(r);
+    const sum=attendanceSummary(r.attendance);
+    return `<tr>
+      <td><strong>${esc(r.date||'—')}</strong></td>
+      <td>${esc([r.startTime,r.endTime].filter(Boolean).join(' - ')||'—')}</td>
+      <td>${esc(r.place||'—')}</td>
+      <td>${esc(compact(r.objective||r.notes||'—',90))}</td>
+      <td>${r.allSongs?'Todo el repertorio':(songs.length?songs.length+' temas':'—')}<br><small>${esc(songs.slice(0,3).map(s=>s.title).join(' · '))}${songs.length>3?'…':''}</small></td>
+      <td>${sum.confirmed}/${sum.total} confirmados<br><small>${sum.pending} pendientes · ${sum.doubt} dudas · ${sum.no} no</small></td>
+      <td>${badge(r.status||'Pendiente')}</td>
+      <td><button class="btn small dark" onclick="viewRehearsalModal(${r.id})">Ver</button> <button class="btn small gold" onclick="openRehearsalModal(${r.id})">Editar</button> <button class="btn small red" onclick="deleteRecord('rehearsals',${r.id})">Borrar</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="8" class="muted">Todavía no hay ensayos creados. Entra como administrador para añadir el primero.</td></tr>';
+  renderConcertAttendancePanel();
+}
+function fillSelectKeep(el, options, current){
+  if(!el)return;
+  el.innerHTML=options;
+  if(current && [...el.options].some(o=>o.value===current)) el.value=current;
+}
+function renderConcertAttendancePanel(){
+  const concertSelect=document.getElementById('attendanceConcertSelect');
+  if(!concertSelect)return;
+  const prevConcert=concertSelect.value;
+  const concerts=(db.concerts||[]).slice().sort((a,b)=>String(a.date||'9999-99-99').localeCompare(String(b.date||'9999-99-99')));
+  fillSelectKeep(concertSelect, concerts.map(c=>`<option value="${esc(c.id)}">${esc(c.date||'sin fecha')} · ${esc(c.eventName||c.venue||'Concierto')}</option>`).join(''), prevConcert);
+  const memberSelect=document.getElementById('attendanceMemberSelect');
+  const prevMember=memberSelect?.value||'';
+  fillSelectKeep(memberSelect, memberOptions(prevMember), prevMember);
+  const c=concerts.find(x=>Number(x.id)===Number(concertSelect.value)) || concerts[0];
+  if(c && !concertSelect.value) concertSelect.value=c.id;
+  const mId=memberSelect?.value || bandMembers()[0]?.id;
+  const saved=c?.attendance?.[mId] || {};
+  const summary=document.getElementById('concertAttendanceSummary');
+  if(summary){
+    summary.innerHTML=c?`
+      <div class="detailItem"><small>Concierto seleccionado</small><div><strong>${esc(c.date||'sin fecha')} · ${esc(c.eventName||'Concierto')}</strong><br><span style="color:var(--muted)">${esc(c.venue||'')} ${c.city?'· '+esc(c.city):''}</span></div></div>
+      <div class="hr"></div>
+      <h4>Estado guardado por miembro</h4>
+      ${attendancePills(c.attendance)}
+      ${saved.notes?`<p class="muted">Nota guardada de ${esc(memberLabel(mId))}: ${esc(saved.notes)}</p>`:''}
+    `:'<p class="muted">No hay conciertos creados todavía.</p>';
+  }
+}
+function selectedConcertForAttendance(){
+  const id=Number(document.getElementById('attendanceConcertSelect')?.value||0);
+  return (db.concerts||[]).find(c=>Number(c.id)===id) || (db.concerts||[])[0];
+}
+function copyConcertAttendanceMessage(){
+  const c=selectedConcertForAttendance();
+  if(!c){alert('No hay concierto seleccionado.');return;}
+  const mId=document.getElementById('attendanceMemberSelect')?.value || bandMembers()[0]?.id;
+  const status=document.getElementById('attendanceStatusSelect')?.value || 'Confirmo asistencia';
+  const notes=document.getElementById('attendanceNotesInput')?.value || '';
+  const msg=[
+    'Ñ Mayúscula · Confirmación de asistencia',
+    `Concierto: ${c.date||'fecha pendiente'} · ${c.eventName||c.venue||'concierto'}`,
+    `Lugar: ${[c.venue,c.city].filter(Boolean).join(' · ')||'pendiente'}`,
+    `Miembro: ${memberLabel(mId)}`,
+    `Estado: ${status}`,
+    notes?`Notas: ${notes}`:'Notas: —'
+  ].join('\n');
+  copyText(msg);
+}
+function saveConcertAttendance(){
+  const c=selectedConcertForAttendance();
+  if(!c){alert('No hay concierto seleccionado.');return;}
+  const mId=document.getElementById('attendanceMemberSelect')?.value || bandMembers()[0]?.id;
+  const status=document.getElementById('attendanceStatusSelect')?.value || 'Pendiente';
+  const notes=document.getElementById('attendanceNotesInput')?.value || '';
+  c.attendance=c.attendance||{};
+  c.attendance[mId]={status,notes,updatedAt:new Date().toISOString()};
+  saveData();
+  alert('Confirmación guardada en este navegador.');
+}
+function rehearsalHeaders(){return [
+  {label:'ID',key:'id'},
+  {label:'Fecha',key:'date'},
+  {label:'Inicio',key:'startTime'},
+  {label:'Fin',key:'endTime'},
+  {label:'Lugar',key:'place'},
+  {label:'Estado',key:'status'},
+  {label:'Objetivo',key:'objective'},
+  {label:'Todos los temas',key:o=>o.allSongs?'Sí':'No'},
+  {label:'Temas',key:o=>o.allSongs?'Todo el repertorio':rehearsalSongs(o).map(s=>s.title).join(' | ')},
+  {label:'Asistencia',key:o=>bandMembers().map(m=>`${m.name} ${m.role}: ${(o.attendance?.[m.id]?.status)||'Pendiente'}`).join(' | ')},
+  {label:'Notas',key:'notes'}
+];}
+function exportRehearsalsCSV(){
+  const rows=db.rehearsals||[];
+  if(!rows.length){alert('No hay ensayos cargados.');return;}
+  downloadBlob('n_mayuscula_ensayos.csv', new Blob([toCSV(rows,rehearsalHeaders())],{type:'text/csv;charset=utf-8'}));
+}
+
 function renderBudgetUI(){
   const box=document.getElementById('extrasBox'); if(!box)return;
   box.innerHTML=db.tariffs.extras.map(e=>`<label style="display:flex;gap:8px;align-items:center;color:var(--text);font-size:13px"><input type="checkbox" data-extra="${e.id}" onchange="calcBudget()" style="width:auto"> ${esc(e.name)} ${e.kind==='fixed'?`(+${eur(e.amount)})`:'(consultar)'}</label>`).join('');
@@ -946,7 +1277,7 @@ window.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 function initialTabFromUrl(){
   try{
     const raw = new URL(window.location.href).searchParams.get('tab') || '';
-    const map = {songs:'repertoire', canciones:'repertoire', repertorio:'repertoire', export:'importExport', exportar:'importExport'};
+    const map = {songs:'repertoire', canciones:'repertoire', repertorio:'repertoire', ensayos:'rehearsals', ensayo:'rehearsals', rehearsals:'rehearsals', export:'importExport', exportar:'importExport'};
     const id = map[raw] || raw;
     return tabs.some(t=>t[0]===id) ? id : 'dashboard';
   }catch(e){ return 'dashboard'; }

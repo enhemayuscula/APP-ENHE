@@ -166,3 +166,26 @@ body.admin-enabled .adminLockedControl {
     width: calc(100vw - 24px);
   }
 }
+
+
+/* v1.3 · En modo usuario los controles de administrador no se muestran.
+   El usuario consulta; el administrador edita, importa, exporta y guarda. */
+body.user-readonly [data-admin-lock="true"],
+body.user-readonly .adminLockedControl {
+  display: none !important;
+}
+
+body.user-readonly #adminFab,
+body.user-readonly #adminPanel,
+body.user-readonly #adminModeBadge {
+  display: initial;
+}
+
+body.user-readonly #adminPanel {
+  display: none;
+}
+
+body.user-readonly #adminPanel.open {
+  display: block;
+}
+
