@@ -48,3 +48,15 @@ No se ha reescrito funcionalidad a propósito. Se ha separado el monolito en arc
 - **Administrador**: pulsar `Acceso admin` e introducir la clave configurada para activar edición, importación, exportación y backup en ese navegador.
 
 Nota: APP-ENHE está publicada en GitHub Pages como app estática. Este control bloquea la interfaz y evita cambios accidentales, pero no equivale a un sistema de usuarios con servidor.
+
+
+## Parche repertorio enriquecido v4.1
+
+Cambios aplicados:
+- Se reconstruye el módulo Canciones/Repertorio con los 26 temas del setlist estratégico.
+- Se añaden campos de trabajo por canción: duración directo, duración original, tono original, tono actual, tono de ensayo, tonos propuestos para Miguel, Esther y Lorenzo, capo, BPM, estructura, letra/acordes/tablatura, enlaces Spotify/YouTube/acordes y fuente de validación.
+- Se incorpora la playlist general de Spotify aportada para Ñ Mayúscula.
+- Se añade carga de URLs por lote para pegar referencias de Spotify, YouTube o acordes por tema.
+- La migración respeta datos ya editados en localStorage y completa campos vacíos desde los datos iniciales.
+
+Nota: las tonalidades se dejan como pendientes de reconstrucción/validación para no introducir datos no confirmados. Las duraciones de directo aparecen como provisionales y deben validarse en ensayo.

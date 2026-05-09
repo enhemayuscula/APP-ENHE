@@ -20,22 +20,69 @@ function loadData(){
 function migrateData(data){
   data.repertoire = Array.isArray(data.repertoire) ? data.repertoire : [];
   data.artistReferences = Array.isArray(data.artistReferences) ? data.artistReferences : [];
-  data.repertoire = data.repertoire.map((song,idx)=>Object.assign({
-    id: idx+1,
+
+  const defaultSong = {
+    id: 0,
+    order: '',
     title: '',
+    titleCanonical: '',
     artist: '',
+    versionReference: '',
     singer: '',
+    leadVocal: '',
     duration: '',
+    durationLive: '',
+    durationOriginal: '',
+    durationStatus: '',
     tone: '',
+    originalKey: '',
+    currentKey: '',
+    rehearsalKey: '',
+    keyStatus: '',
+    keyMiguel: '',
+    keyEsther: '',
+    keyLorenzo: '',
+    transposeNotes: '',
+    capo: '',
+    bpm: '',
+    block: 'Bloque 1',
+    blockNumber: '',
+    blockObjective: '',
+    stageControl: '',
+    status: 'Activo',
+    spotifyPlaylistUrl: '',
     spotifyUrl: '',
     youtubeUrl: '',
     chordsUrl: '',
     chordsText: '',
+    structure: '',
     lyricsNotes: '',
-    block: 'Bloque 1',
-    status: 'Activo',
-    notes: ''
+    notes: '',
+    sourceNotes: ''
+  };
+
+  data.repertoire = data.repertoire.map((song,idx)=>Object.assign({}, defaultSong, {
+    id: idx+1
   }, song || {}));
+
+  // Importante: si el navegador tenía una versión antigua en localStorage,
+  // completamos desde INITIAL_DATA sin borrar ediciones existentes.
+  const seed = Array.isArray(INITIAL_DATA.repertoire) ? INITIAL_DATA.repertoire : [];
+  seed.forEach(seedSong=>{
+    const match = data.repertoire.find(song => norm(song.titleCanonical||song.title) === norm(seedSong.titleCanonical||seedSong.title));
+    if(match){
+      Object.keys(seedSong).forEach(key=>{
+        if(match[key] === undefined || match[key] === null || match[key] === ''){
+          match[key] = seedSong[key];
+        }
+      });
+    }else{
+      const next = nextId(data.repertoire);
+      data.repertoire.push(Object.assign({}, defaultSong, seedSong, {id: next}));
+    }
+  });
+
+  data.repertoire.sort((a,b)=>(Number(a.order)||Number(a.id)||0)-(Number(b.order)||Number(b.id)||0));
   return data;
 }
 function saveData(){localStorage.setItem(STORE_KEY, JSON.stringify(db)); refreshAll();}
@@ -347,7 +394,7 @@ function fillRepertoireFilters(){
   };
   fill('fRepBlock', db.repertoire.map(s=>s.block), 'Bloque');
   fill('fRepStatus', db.repertoire.map(s=>s.status), 'Estado');
-  fill('fRepSinger', db.repertoire.map(s=>s.singer), 'Voz');
+  fill('fRepSinger', db.repertoire.map(s=>s.singer||s.leadVocal), 'Voz');
 }
 function repertoireFiltered(){
   const q=norm(document.getElementById('qRep')?.value||'');
@@ -355,13 +402,21 @@ function repertoireFiltered(){
   const status=document.getElementById('fRepStatus')?.value||'';
   const singer=document.getElementById('fRepSinger')?.value||'';
   return (db.repertoire||[]).filter(s=>{
-    const blob=[s.title,s.artist,s.singer,s.duration,s.tone,s.block,s.status,s.spotifyUrl,s.youtubeUrl,s.chordsUrl,s.chordsText,s.lyricsNotes,s.notes].join(' ');
-    return (!q||norm(blob).includes(q)) && (!block||s.block===block) && (!status||s.status===status) && (!singer||s.singer===singer);
+    const blob=[
+      s.title,s.titleCanonical,s.artist,s.versionReference,s.singer,s.leadVocal,
+      s.duration,s.durationLive,s.durationOriginal,s.durationStatus,
+      s.tone,s.originalKey,s.currentKey,s.rehearsalKey,s.keyStatus,
+      s.keyMiguel,s.keyEsther,s.keyLorenzo,s.transposeNotes,s.capo,s.bpm,
+      s.block,s.status,s.spotifyPlaylistUrl,s.spotifyUrl,s.youtubeUrl,s.chordsUrl,
+      s.chordsText,s.structure,s.lyricsNotes,s.notes,s.sourceNotes
+    ].join(' ');
+    return (!q||norm(blob).includes(q)) && (!block||s.block===block) && (!status||s.status===status) && (!singer||(s.singer||s.leadVocal)===singer);
   });
 }
 function songLinkButtons(s){
   const links=[];
-  if(s.spotifyUrl)links.push(`<a class="btn small dark" target="_blank" rel="noopener" href="${esc(s.spotifyUrl)}">Spotify</a>`);
+  if(s.spotifyUrl)links.push(`<a class="btn small dark" target="_blank" rel="noopener" href="${esc(s.spotifyUrl)}">Spotify tema</a>`);
+  if(s.spotifyPlaylistUrl)links.push(`<a class="btn small dark" target="_blank" rel="noopener" href="${esc(s.spotifyPlaylistUrl)}">Playlist</a>`);
   if(s.youtubeUrl)links.push(`<a class="btn small dark" target="_blank" rel="noopener" href="${esc(s.youtubeUrl)}">YouTube</a>`);
   if(s.chordsUrl)links.push(`<a class="btn small dark" target="_blank" rel="noopener" href="${esc(s.chordsUrl)}">Acordes</a>`);
   return links.length?`<div class="songLinks">${links.join('')}</div>`:'—';
@@ -370,22 +425,32 @@ function renderRepertoire(){
   const artists=document.getElementById('artists');
   if(!artists)return;
   fillRepertoireFilters();
+
+  const playlistUrl = db.createdFrom?.spotifyPlaylistUrl || db.repertoire?.find(x=>x.spotifyPlaylistUrl)?.spotifyPlaylistUrl || '';
+  const playlistBox = document.getElementById('spotifyPlaylistBox');
+  if(playlistBox){
+    playlistBox.innerHTML = playlistUrl
+      ? `<p>Playlist de referencia cargada para el repertorio de Ñ.</p><div class="actions"><a class="btn gold" target="_blank" rel="noopener" href="${esc(playlistUrl)}">Abrir playlist Spotify</a><button class="btn dark" onclick="copyText('${esc(playlistUrl)}')">Copiar URL</button></div>`
+      : `<p>No hay playlist general cargada todavía.</p>`;
+  }
+
   artists.innerHTML=(db.artistReferences||[]).map(a=>`<span class="pill">${esc(a)}</span>`).join('');
   renderBars('repBars', counts(db.repertoire||[],'block'));
   const rows=repertoireFiltered();
   const tbody=document.querySelector('#repTable tbody');
   if(!tbody)return;
   tbody.innerHTML=rows.map(s=>`<tr>
-    <td><strong>${esc(s.title)}</strong></td>
-    <td>${esc(s.artist)}</td>
-    <td>${esc(s.singer||'—')}</td>
-    <td>${esc(s.duration||'—')}</td>
-    <td>${esc(s.tone||'—')}</td>
+    <td><strong>${esc(s.title)}</strong><br><small>#${esc(s.order||s.id||'—')}</small></td>
+    <td>${esc(s.artist||'—')}</td>
+    <td>${esc(s.singer||s.leadVocal||'—')}</td>
+    <td>${esc(s.durationLive||s.duration||'—')}<br><small>${esc(s.durationStatus||'')}</small></td>
+    <td>${esc(s.currentKey||s.tone||'—')}<br><small>${esc(s.keyStatus||'')}</small></td>
+    <td><small>Miguel</small> ${esc(s.keyMiguel||'—')}<br><small>Esther</small> ${esc(s.keyEsther||'—')}<br><small>Lorenzo</small> ${esc(s.keyLorenzo||'—')}</td>
     <td>${esc(s.block||'—')}</td>
     <td>${badge(s.status||'—')}</td>
     <td>${songLinkButtons(s)}</td>
-    <td>${(s.chordsText||s.lyricsNotes||s.chordsUrl)?'<span class="status s-blue">Ficha</span>':'—'}</td>
-    <td>${esc(compact(s.notes||s.lyricsNotes||'',70))}</td>
+    <td>${(s.chordsText||s.structure||s.lyricsNotes||s.chordsUrl)?'<span class="status s-blue">Ficha</span>':'—'}</td>
+    <td>${esc(compact(s.notes||s.transposeNotes||s.lyricsNotes||'',80))}</td>
     <td>
       <button class="btn small dark" onclick="viewSongModal(${s.id})">Ver</button>
       <button class="btn small gold" onclick="openSongModal(${s.id})">Editar</button>
@@ -396,20 +461,37 @@ function renderRepertoire(){
 function songFields(){return [
   ['title','Tema','text','span2'],
   ['artist','Artista / versión','text','span2'],
+  ['versionReference','Referencia concreta / versión','text','span2'],
   ['singer','Voz principal','text'],
-  ['duration','Duración','text'],
-  ['tone','Tono','text'],
-  ['block','Bloque','select','', ['Bloque 1','Bloque 2','Bloque 3','Cierre','Reserva']],
+  ['leadVocal','Voz asignada','select','', ['Miguel','Esther','Lorenzo','Ambos','Por decidir']],
+  ['durationLive','Duración directo / ensayo','text'],
+  ['durationOriginal','Duración original','text'],
+  ['durationStatus','Estado duración','select','', ['Confirmada','Provisional · revisar en ensayo','Pendiente validar']],
+  ['tone','Tono visible','text'],
+  ['originalKey','Tono original','text'],
+  ['currentKey','Tono actual banda','text'],
+  ['rehearsalKey','Tono propuesto ensayo','text'],
+  ['keyStatus','Estado tonalidad','select','', ['Confirmada','Provisional','Pendiente de reconstrucción','Pendiente validar']],
+  ['keyMiguel','Tono propuesto Miguel','text'],
+  ['keyEsther','Tono propuesto Esther','text'],
+  ['keyLorenzo','Tono propuesto Lorenzo','text'],
+  ['transposeNotes','Notas de transporte / criterio vocal','textarea','span4'],
+  ['capo','Cejilla / capo','text'],
+  ['bpm','BPM','text'],
+  ['block','Bloque','text','span2'],
   ['status','Estado','select','', ['Activo','Ensayo','Reserva','Descartado']],
-  ['spotifyUrl','Enlace Spotify','url','span2'],
-  ['youtubeUrl','Enlace YouTube','url','span2'],
+  ['spotifyPlaylistUrl','Playlist Spotify general','url','span4'],
+  ['spotifyUrl','Enlace Spotify del tema','url','span2'],
+  ['youtubeUrl','Enlace YouTube / referencia','url','span2'],
   ['chordsUrl','Enlace externo acordes / letra / tabla','url','span4'],
-  ['chordsText','Letra / acordes / tablatura / estructura','textarea','span4'],
+  ['structure','Estructura del tema','textarea','span4'],
+  ['chordsText','Letra / acordes / tablatura / tabla de code','textarea','span4'],
   ['lyricsNotes','Notas de interpretación / letra','textarea','span4'],
+  ['sourceNotes','Fuente / validación','textarea','span4'],
   ['notes','Notas internas','textarea','span4']
 ];}
 function openSongModal(id=null){
-  const item=id?db.repertoire.find(x=>x.id===id):{block:'Bloque 1',status:'Activo'};
+  const item=id?db.repertoire.find(x=>x.id===id):{block:'Bloque 1',status:'Activo',durationStatus:'Pendiente validar',keyStatus:'Pendiente validar',spotifyPlaylistUrl:db.createdFrom?.spotifyPlaylistUrl||''};
   modalContext={type:'song',id};
   document.getElementById('modalTitle').textContent=id?'Editar canción':'Nueva canción';
   document.getElementById('modalBody').innerHTML=renderForm(songFields(), item)+`<div class="hr"></div><div class="actions"><button class="btn gold" onclick="saveSong()">Guardar</button><button class="btn dark" onclick="closeModal()">Cancelar</button>${id?`<button class="btn red" onclick="deleteRecord('repertoire',${id})">Borrar</button>`:''}</div>`;
@@ -423,16 +505,25 @@ function viewSongModal(id){
     <div class="detailGrid">
       <div class="detailItem"><small>Tema</small><div><strong>${esc(s.title||'—')}</strong></div></div>
       <div class="detailItem"><small>Artista / versión</small><div>${esc(s.artist||'—')}</div></div>
-      <div class="detailItem"><small>Voz principal</small><div>${esc(s.singer||'—')}</div></div>
-      <div class="detailItem"><small>Duración</small><div>${esc(s.duration||'—')}</div></div>
-      <div class="detailItem"><small>Tono</small><div>${esc(s.tone||'—')}</div></div>
+      <div class="detailItem"><small>Voz principal</small><div>${esc(s.singer||s.leadVocal||'—')}</div></div>
+      <div class="detailItem"><small>Duración directo</small><div>${esc(s.durationLive||s.duration||'—')} <small>${esc(s.durationStatus||'')}</small></div></div>
+      <div class="detailItem"><small>Duración original</small><div>${esc(s.durationOriginal||'—')}</div></div>
+      <div class="detailItem"><small>Tono actual banda</small><div>${esc(s.currentKey||s.tone||'—')} <small>${esc(s.keyStatus||'')}</small></div></div>
+      <div class="detailItem"><small>Tono original</small><div>${esc(s.originalKey||'—')}</div></div>
+      <div class="detailItem"><small>Tono propuesto ensayo</small><div>${esc(s.rehearsalKey||'—')}</div></div>
+      <div class="detailItem"><small>Propuesta Miguel</small><div>${esc(s.keyMiguel||'—')}</div></div>
+      <div class="detailItem"><small>Propuesta Esther</small><div>${esc(s.keyEsther||'—')}</div></div>
+      <div class="detailItem"><small>Propuesta Lorenzo</small><div>${esc(s.keyLorenzo||'—')}</div></div>
       <div class="detailItem"><small>Bloque / estado</small><div>${esc(s.block||'—')} · ${esc(s.status||'—')}</div></div>
     </div>
     <div class="hr"></div>
     <div class="card light"><h4>Enlaces</h4>${songLinkButtons(s)}</div>
     <div class="hr"></div>
-    <div class="detailItem"><small>Letra / acordes / tablatura / estructura</small><div class="songCode">${esc(s.chordsText||'—')}</div></div>
+    <div class="detailItem"><small>Notas de transporte / criterio vocal</small><div>${esc(s.transposeNotes||'—')}</div></div>
+    <div class="detailItem" style="margin-top:12px"><small>Estructura</small><div class="songCode">${esc(s.structure||'—')}</div></div>
+    <div class="detailItem" style="margin-top:12px"><small>Letra / acordes / tablatura / tabla de code</small><div class="songCode">${esc(s.chordsText||'—')}</div></div>
     <div class="detailItem" style="margin-top:12px"><small>Notas de interpretación / letra</small><div>${esc(s.lyricsNotes||'—')}</div></div>
+    <div class="detailItem" style="margin-top:12px"><small>Fuente / validación</small><div>${esc(s.sourceNotes||'—')}</div></div>
     <div class="detailItem" style="margin-top:12px"><small>Notas internas</small><div>${esc(s.notes||'—')}</div></div>
     <div class="hr"></div>
     <div class="actions"><button class="btn gold" onclick="openSongModal(${s.id})">Editar</button><button class="btn dark" onclick="closeModal()">Cerrar</button></div>
@@ -441,11 +532,15 @@ function viewSongModal(id){
 }
 function saveSong(){
   const obj=readForm(songFields());
+  obj.duration = obj.durationLive || obj.duration || '';
+  obj.tone = obj.currentKey || obj.tone || '';
+  obj.leadVocal = obj.leadVocal || obj.singer || '';
   if(modalContext.id){
     const idx=db.repertoire.findIndex(x=>x.id===modalContext.id);
     db.repertoire[idx]=Object.assign({},db.repertoire[idx],obj);
   }else{
     obj.id=nextId(db.repertoire);
+    obj.order=obj.order||obj.id;
     db.repertoire.push(obj);
   }
   closeModal();
@@ -453,24 +548,78 @@ function saveSong(){
 }
 function repertoireHeaders(){return [
   {label:'ID',key:'id'},
+  {label:'Orden',key:'order'},
   {label:'Tema',key:'title'},
   {label:'Artista / versión',key:'artist'},
+  {label:'Referencia concreta',key:'versionReference'},
   {label:'Voz principal',key:'singer'},
-  {label:'Duración',key:'duration'},
-  {label:'Tono',key:'tone'},
+  {label:'Voz asignada',key:'leadVocal'},
+  {label:'Duración directo',key:'durationLive'},
+  {label:'Duración original',key:'durationOriginal'},
+  {label:'Estado duración',key:'durationStatus'},
+  {label:'Tono visible',key:'tone'},
+  {label:'Tono original',key:'originalKey'},
+  {label:'Tono actual banda',key:'currentKey'},
+  {label:'Tono propuesto ensayo',key:'rehearsalKey'},
+  {label:'Estado tonalidad',key:'keyStatus'},
+  {label:'Tono Miguel',key:'keyMiguel'},
+  {label:'Tono Esther',key:'keyEsther'},
+  {label:'Tono Lorenzo',key:'keyLorenzo'},
+  {label:'Notas transporte',key:'transposeNotes'},
+  {label:'Cejilla / capo',key:'capo'},
+  {label:'BPM',key:'bpm'},
   {label:'Bloque',key:'block'},
   {label:'Estado',key:'status'},
-  {label:'Spotify',key:'spotifyUrl'},
+  {label:'Playlist Spotify',key:'spotifyPlaylistUrl'},
+  {label:'Spotify tema',key:'spotifyUrl'},
   {label:'YouTube',key:'youtubeUrl'},
   {label:'Enlace acordes/letra',key:'chordsUrl'},
+  {label:'Estructura',key:'structure'},
   {label:'Letra/acordes/tablatura',key:'chordsText'},
   {label:'Notas interpretación/letra',key:'lyricsNotes'},
+  {label:'Fuente / validación',key:'sourceNotes'},
   {label:'Notas internas',key:'notes'}
 ];}
 function exportRepertoireCSV(){
   const rows=repertoireFiltered().length?repertoireFiltered():(db.repertoire||[]);
   if(!rows.length){alert('No hay canciones cargadas.');return;}
   downloadBlob('n_mayuscula_canciones_repertorio.csv', new Blob([toCSV(rows,repertoireHeaders())],{type:'text/csv;charset=utf-8'}));
+}
+function openSongLinksImportModal(){
+  document.getElementById('modalTitle').textContent='Cargar URLs por lote';
+  document.getElementById('modalBody').innerHTML=`
+    <p>Pega una línea por tema. Formato recomendado con tabuladores:</p>
+    <div class="copyBox">Tema\tSpotify\tYouTube\tAcordes</div>
+    <textarea id="bulkSongLinks" class="bigText" placeholder="La chica de ayer\thttps://open.spotify.com/...\thttps://youtube.com/...\thttps://..."></textarea>
+    <div class="hr"></div>
+    <div class="actions"><button class="btn gold" onclick="applySongLinksImport()">Aplicar URLs</button><button class="btn dark" onclick="closeModal()">Cancelar</button></div>
+  `;
+  openModal();
+}
+function splitBulkLine(line){
+  if(line.includes('\t')) return line.split('\t').map(x=>x.trim());
+  if(line.includes(';')) return line.split(';').map(x=>x.trim());
+  return line.split(',').map(x=>x.trim());
+}
+function applySongLinksImport(){
+  const raw=document.getElementById('bulkSongLinks')?.value||'';
+  const lines=raw.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  let updated=0, missing=[];
+  lines.forEach((line,idx)=>{
+    const parts=splitBulkLine(line);
+    if(idx===0 && norm(parts[0]).includes('tema')) return;
+    const [title,spotify,youtube,chords]=parts;
+    if(!title)return;
+    const song=(db.repertoire||[]).find(s=>norm(s.title)===norm(title)||norm(s.titleCanonical)===norm(title));
+    if(!song){missing.push(title);return;}
+    if(spotify) song.spotifyUrl=spotify;
+    if(youtube) song.youtubeUrl=youtube;
+    if(chords) song.chordsUrl=chords;
+    updated++;
+  });
+  closeModal();
+  saveData();
+  alert(`URLs actualizadas: ${updated}${missing.length?`\nNo encontradas: ${missing.join(', ')}`:''}`);
 }
 function renderDossier(){
   const b=db.brand;

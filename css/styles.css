@@ -91,3 +91,8 @@ tr:hover td{background:rgba(255,255,255,.035)}
 .songLinks{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .songCode{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;line-height:1.45;background:rgba(0,0,0,.22);padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.08);max-height:360px;overflow:auto}
 #repTable td{vertical-align:top}
+
+
+.bigText{width:100%;min-height:260px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.2);color:var(--text);padding:12px;resize:vertical}
+#spotifyPlaylistBox p{margin-top:0;color:var(--muted);font-size:13px;line-height:1.4}
+#repTable small{color:var(--muted);font-size:11px}

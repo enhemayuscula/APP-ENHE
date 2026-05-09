@@ -119,11 +119,16 @@
       </div>
       <div class="actions">
         <button class="btn gold" onclick="openSongModal()">+ Canción</button>
+        <button class="btn dark" onclick="openSongLinksImportModal()">Cargar URLs por lote</button>
         <button class="btn dark" onclick="exportRepertoireCSV()">Exportar CSV canciones</button>
       </div>
     </div>
 
-    <div class="grid two">
+    <div class="grid three">
+      <div class="card">
+        <h4>Playlist Spotify</h4>
+        <div id="spotifyPlaylistBox"></div>
+      </div>
       <div class="card">
         <h4>Referencias de repertorio</h4>
         <div class="pillList" id="artists"></div>
@@ -149,7 +154,8 @@
             <th>Artista</th>
             <th>Voz</th>
             <th>Duración</th>
-            <th>Tono</th>
+            <th>Tono actual</th>
+            <th>Tonos propuestos</th>
             <th>Bloque</th>
             <th>Estado</th>
             <th>Links</th>
