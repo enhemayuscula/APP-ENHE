@@ -36,9 +36,16 @@ function migrateData(data){
     {id:'esther',name:'Esther',role:'Voz'},
     {id:'lorenzo',name:'Lorenzo',role:'Guitarra solista'},
     {id:'oscar',name:'Oscar',role:'Guitarra rítmica'},
-    {id:'miguel_bajo',name:'Miguel',role:'Bajo'},
+    {id:'jeffrey',name:'Jeffrey',role:'Bajo'},
     {id:'pepe',name:'Pepe',role:'Batería'}
   ];
+
+  data.bandMembers = data.bandMembers.map(m => {
+    if((m.id === 'miguel_bajo') || (m.name === 'Miguel' && /bajo/i.test(String(m.role||'')))) {
+      return {id:'jeffrey', name:'Jeffrey', role:'Bajo'};
+    }
+    return m;
+  });
 
   const defaultSong = {
     id: 0,
@@ -197,6 +204,432 @@ function norm(v){return String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/
 function eur(n){n=Number(n||0);return n? n.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0}) : '—';}
 function compact(v,n=95){v=String(v??'').trim(); return v.length>n ? v.slice(0,n-1)+'…' : v;}
 function nextId(arr){return (arr||[]).reduce((m,x)=>Math.max(m, Number(x.id)||0),0)+1;}
+
+const GOOGLE_SHEET_MASTER = {
+  spreadsheetId: '1mrffAdGxfzRL602XHD4Uw-EKiYBgZ4PgLuVuOFPxEGU',
+  gid: '2128742185',
+  userUrl: 'https://docs.google.com/spreadsheets/d/1mrffAdGxfzRL602XHD4Uw-EKiYBgZ4PgLuVuOFPxEGU/edit?gid=2128742185#gid=2128742185',
+  csvUrl: 'https://docs.google.com/spreadsheets/d/1mrffAdGxfzRL602XHD4Uw-EKiYBgZ4PgLuVuOFPxEGU/export?format=csv&gid=2128742185',
+  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbwMPx0moS9-P_RI6s8K4q1aFA7ZaiAvtwpq3IKnoph-MHVTTzQzC4wHNNfo9SIQDe22fQ/exec'
+};
+
+function sheetStatus(msg, type='info'){
+  const els=[document.getElementById('sheetSyncStatus'), document.getElementById('sheetSyncStatusExport')].filter(Boolean);
+  if(!els.length) return;
+  els.forEach(el=>{
+    el.className = 'notice ' + (type==='ok'?'ok':type==='bad'?'bad':'');
+    el.innerHTML = msg;
+  });
+}
+function parseCSV(text){
+  const rows=[]; let row=[]; let cur=''; let q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i], n=text[i+1];
+    if(q){
+      if(c==='"' && n==='"'){cur+='"';i++;}
+      else if(c==='"'){q=false;}
+      else cur+=c;
+    }else{
+      if(c==='"') q=true;
+      else if(c===','){row.push(cur);cur='';}
+      else if(c==='\n'){row.push(cur);rows.push(row);row=[];cur='';}
+      else if(c==='\r'){}
+      else cur+=c;
+    }
+  }
+  row.push(cur); rows.push(row);
+  return rows.filter(r=>r.some(v=>String(v||'').trim()!==''));
+}
+function normalizeHeader(h){
+  return norm(String(h||'').replace(/\s+/g,' '));
+}
+function rowObjectFromHeaders(headers,row){
+  const o={};
+  headers.forEach((h,i)=>{o[String(h||'').trim()]=row[i]??'';});
+  return o;
+}
+function pick(row, names){
+  const keys=Object.keys(row);
+  for(const name of names){
+    const target=normalizeHeader(name);
+    const found=keys.find(k=>normalizeHeader(k)===target);
+    if(found!==undefined) return row[found] ?? '';
+  }
+  return '';
+}
+function crmFromSheetRow(row, id, index){
+  const raw = row || {};
+  return {
+    id: Number(pick(row,['id','ID'])) || id,
+    sheetRow: Number(pick(row,['sheetRow','Fila','Nº fila','rowNumber'])) || index + 2,
+    claveCRM: pick(row,['ClaveCRM','Clave CRM','claveCRM']),
+    campaign: pick(row,['Campaña','campaign','origen','Origen','tipo_evento','Tipo evento']) || 'CRM Google Sheet',
+    origin: pick(row,['Origen','origin','fuente','Fuente']),
+    organization: pick(row,[
+      'Organización / Local','Organizacion / Local','Organización','Organizacion','Local','Empresa','organization',
+      'empresa_entidad','Empresa / entidad','Entidad','sala_lugar','Sala / lugar','Sala','Lugar','contacto','Contacto'
+    ]),
+    opportunityType: pick(row,['Tipo oportunidad','Tipo de oportunidad','opportunityType','tipo_evento','Tipo evento','Evento']),
+    segment: pick(row,['Segmento','segment']),
+    municipality: pick(row,['Municipio / Provincia','Municipio','Provincia','Ciudad','city','municipality','ciudad']),
+    address: pick(row,['Dirección','Direccion','address','direccion']),
+    email: pick(row,['Email','Correo','Correo electrónico','email']),
+    emailCc: pick(row,['Email CC','CC','emailCc']),
+    phone: pick(row,['Teléfono','Telefono','phone','telefono','WhatsApp']),
+    web: pick(row,['Web','web']),
+    sourceUrl: pick(row,['Fuente URL','URL fuente','sourceUrl']),
+    priority: pick(row,['Prioridad','priority']) || 'Media',
+    send: pick(row,['Enviar','send']) || 'Revisar',
+    sendStatus: pick(row,['Estado envío','Estado envio','sendStatus','estado','Estado']) || 'Pendiente',
+    sendDate: pick(row,['Fecha envío','Fecha envio','sendDate']),
+    sendError: pick(row,['Error envío','Error envio','sendError']),
+    sentSubject: pick(row,['Asunto enviado','sentSubject']),
+    responseReceived: pick(row,['Respuesta recibida','responseReceived']),
+    responseDate: pick(row,['Fecha respuesta','responseDate']),
+    contactPerson: pick(row,['Persona contacto','Persona de contacto','contactPerson','contacto','Contacto']),
+    contactPhone: pick(row,['Teléfono contacto','Telefono contacto','contactPhone']),
+    interest: pick(row,['Interés','Interes','interest']),
+    availability: pick(row,['Disponibilidad / fechas','Disponibilidad','Fechas','availability','fecha_evento','Fecha evento','ventana_fecha','Ventana fecha']),
+    conditions: pick(row,['Condiciones','conditions']),
+    budget: pick(row,['Caché / presupuesto','Cache / presupuesto','Presupuesto','budget','importe_o_rango','Importe o rango']),
+    technicalRequirements: pick(row,['Requisitos técnicos','Requisitos tecnicos','technicalRequirements']),
+    nextAction: pick(row,['Próxima acción','Proxima accion','nextAction','siguiente_paso','Siguiente paso']) || 'Revisar siguiente paso',
+    nextActionDate: pick(row,['Fecha próxima acción','Fecha proxima accion','nextActionDate','fecha_siguiente_paso','Fecha siguiente paso']),
+    followNotes: pick(row,['Notas seguimiento','followNotes','notas','Notas']),
+    lastImport: pick(row,['Última importación','Ultima importacion','lastImport','actualizado_en','Actualizado en']),
+    originNotes: pick(row,['Observaciones origen','originNotes']),
+    lastEmailReceived: pick(row,['Último email recibido','Ultimo email recibido','lastEmailReceived','ultima_respuesta_email','Última respuesta email']),
+    responseSender: pick(row,['Email remitente respuesta','responseSender']),
+    sendDossier: pick(row,['Enviar dossier','sendDossier']),
+    dossierSent: pick(row,['Dossier enviado','dossierSent']),
+    dossierSendDate: pick(row,['Fecha envío dossier','Fecha envio dossier','dossierSendDate']),
+    dossierResponseType: pick(row,['Tipo respuesta dossier','dossierResponseType']),
+    dossierNotes: pick(row,['Notas dossier','dossierNotes']),
+    dossierStatus: pick(row,['Estado dossier','dossierStatus']),
+    raw
+  };
+}
+function applyCRMFromSheetRows(rows){
+  if(!rows.length) throw new Error('La hoja no contiene filas útiles.');
+  const headers = rows[0].map(h=>String(h||'').trim());
+  const items = rows.slice(1)
+    .map((r,i)=>rowObjectFromHeaders(headers,r))
+    .map((row,i)=>crmFromSheetRow(row,i+1,i))
+    .filter(x=>x.organization || x.email || x.phone || x.contactPerson || x.campaign);
+  if(!items.length) throw new Error('No se han detectado registros CRM útiles en la hoja.');
+  db.crm = items;
+  db.createdFrom.googleSheetUserUrl = GOOGLE_SHEET_MASTER.userUrl;
+  db.createdFrom.lastImport = new Date().toLocaleString('es-ES') + ' · Google Sheet maestro';
+  db.sheetSync = {
+    source: 'Google Sheet maestro',
+    spreadsheetId: GOOGLE_SHEET_MASTER.spreadsheetId,
+    gid: GOOGLE_SHEET_MASTER.gid,
+    records: items.length,
+    updatedAt: new Date().toISOString(),
+    status: 'ok'
+  };
+}
+function appEnheEndpointUrl(params={}){
+  const url = new URL(GOOGLE_SHEET_MASTER.appsScriptUrl);
+  Object.entries(params).forEach(([k,v])=>url.searchParams.set(k, v));
+  url.searchParams.set('ts', String(Date.now()));
+  return url.toString();
+}
+function appsScriptJSONP(params={}){
+  return new Promise((resolve,reject)=>{
+    if(!GOOGLE_SHEET_MASTER.appsScriptUrl) return reject(new Error('No hay URL /exec de Apps Script configurada.'));
+    const cb='APP_ENHE_JSONP_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const script=document.createElement('script');
+    const timeout=setTimeout(()=>{
+      cleanup();
+      reject(new Error('Tiempo agotado leyendo Apps Script.'));
+    }, 25000);
+    function cleanup(){
+      clearTimeout(timeout);
+      try{delete window[cb];}catch(e){window[cb]=undefined;}
+      script.remove();
+    }
+    window[cb]=function(payload){
+      cleanup();
+      resolve(payload);
+    };
+    script.onerror=function(){
+      cleanup();
+      reject(new Error('No se pudo cargar el endpoint de Apps Script.'));
+    };
+    script.src=appEnheEndpointUrl(Object.assign({}, params, {callback:cb}));
+    document.head.appendChild(script);
+  });
+}
+function sheetListFromPayload(payload){
+  if(!payload || !payload.sheets) return [];
+  return Object.entries(payload.sheets).map(([key,value])=>Object.assign({key}, value || {}));
+}
+function sameSheetName(a,b){
+  return norm(String(a||'')).replace(/[^a-z0-9]/g,'') === norm(String(b||'')).replace(/[^a-z0-9]/g,'');
+}
+function findPayloadSheet(payload, names=[], gid=''){
+  const sheets=sheetListFromPayload(payload);
+  if(gid){
+    const byGid=sheets.find(s=>String(s.gid||'')===String(gid));
+    if(byGid) return byGid;
+  }
+  for(const name of names){
+    const exact=sheets.find(s=>sameSheetName(s.name||s.key, name));
+    if(exact) return exact;
+  }
+  for(const name of names){
+    const partial=sheets.find(s=>sameSheetName(s.name||s.key, name) || sameSheetName(name, s.name||s.key));
+    if(partial) return partial;
+  }
+  return null;
+}
+function rowsFromPayloadSheet(sheet){
+  return sheet && Array.isArray(sheet.rows) ? sheet.rows : [];
+}
+function rowsLookLikeCRM(rows){
+  return rows.some(r=>pick(r,['Email','email','Correo','telefono','Teléfono','Empresa','Organización','empresa_entidad','Campaña','campaign','contacto']));
+}
+function rowsLookLikeConcerts(rows){
+  return rows.some(r=>pick(r,['fecha','Fecha','titulo','Título','sala_lugar','Sala / lugar','eventName','Concierto','cartel_url']));
+}
+function rowsLookLikeSongs(rows){
+  return rows.some(r=>pick(r,['titulo','Título','title','Tema','artista','Artista','tono_actual_banda','tono_propuesto_miguel']));
+}
+function rowsLookLikeRehearsals(rows){
+  return rows.some(r=>pick(r,['fecha','Fecha','hora_inicio','Hora inicio','temas_ids','temas_texto','objetivo','Ensayo']));
+}
+function firstSheetByRows(payload, predicate){
+  return sheetListFromPayload(payload).find(s=>predicate(rowsFromPayloadSheet(s)));
+}
+function applyCRMObjectsFromSheet(rows){
+  const items=rows
+    .map((row,i)=>crmFromSheetRow(row,i+1,i))
+    .filter(x=>x.organization || x.email || x.phone || x.contactPerson || x.campaign);
+  if(items.length) db.crm=items;
+  return items.length;
+}
+function memberAttendanceFromRow(row, prefix='asistencia_'){
+  const ids=['miguel_voz','esther','lorenzo','oscar','jeffrey','pepe'];
+  const aliases={
+    miguel_voz:['asistencia_miguel','Miguel','Asistencia Miguel'],
+    esther:['asistencia_esther','Esther','Asistencia Esther'],
+    lorenzo:['asistencia_lorenzo','Lorenzo','Asistencia Lorenzo'],
+    oscar:['asistencia_oscar','Oscar','Asistencia Oscar'],
+    jeffrey:['asistencia_jeffrey','Jeffrey','Asistencia Jeffrey'],
+    pepe:['asistencia_pepe','Pepe','Asistencia Pepe']
+  };
+  const attendance={};
+  ids.forEach(id=>{
+    const st=pick(row, aliases[id]) || 'Pendiente';
+    attendance[id]={status:st||'Pendiente', notes:''};
+  });
+  return attendance;
+}
+function mapConcertRow(row,i){
+  return {
+    id: Number(pick(row,['id','ID'])) || i+1,
+    date: String(pick(row,['fecha','Fecha','date','Fecha evento'])||'').slice(0,10),
+    time: String(pick(row,['hora','Hora','time'])||'').slice(0,5),
+    eventName: pick(row,['titulo','Título','eventName','Concierto','Evento']) || 'Concierto Ñ Mayúscula',
+    venue: pick(row,['sala_lugar','Sala / lugar','venue','Sala','Lugar','lugar']),
+    city: pick(row,['ciudad','Ciudad','city']),
+    type: pick(row,['tipo','Tipo','type']) || 'Concierto',
+    status: pick(row,['estado','Estado','status']) || 'Pendiente',
+    fee: Number(String(pick(row,['fee','caché','Cache','Importe','importe','importe_o_rango'])||'').replace(/[^\d.,-]/g,'').replace(',','.')) || 0,
+    deposit: Number(String(pick(row,['deposit','anticipo','Anticipo'])||'').replace(/[^\d.,-]/g,'').replace(',','.')) || 0,
+    paid: Number(String(pick(row,['paid','cobrado','Cobrado'])||'').replace(/[^\d.,-]/g,'').replace(',','.')) || 0,
+    sound: pick(row,['sound','sonido','Sonido']),
+    contactId: Number(pick(row,['contactId','contacto_id'])) || 0,
+    posterUrl: pick(row,['cartel_url','Cartel URL','posterUrl','poster_url']),
+    posterThumbUrl: pick(row,['cartel_thumb_url','posterThumbUrl','poster_thumb_url']) || pick(row,['cartel_url','posterUrl']),
+    posterTitle: pick(row,['cartel_titulo','Cartel título','posterTitle']),
+    publicInfo: pick(row,['notas_publicas','Notas públicas','publicInfo','entrada','Entrada','direccion','Dirección']),
+    notes: pick(row,['notas_produccion','Notas producción','notes','notas','Notas']),
+    attendance: memberAttendanceFromRow(row),
+    attendanceNotes: pick(row,['attendanceNotes','notas_asistencia','Notas asistencia']),
+    raw
+  };
+}
+function applyConcertsFromSheet(rows){
+  const items=rows.map(mapConcertRow).filter(x=>x.date || x.eventName || x.venue || x.posterUrl);
+  if(items.length) db.concerts=items;
+  return items.length;
+}
+function parseSongIds(value){
+  const text=String(value||'').trim();
+  if(!text) return [];
+  return text.split(/[;,|]/).map(x=>Number(String(x).trim())).filter(Boolean);
+}
+function mapRehearsalRow(row,i){
+  const allSongs=norm(pick(row,['todos_los_temas','Todos los temas','allSongs'])).includes('si') || norm(pick(row,['temas_ids','temas_ids'])).includes('todos');
+  return {
+    id: Number(pick(row,['id','ID'])) || i+1,
+    date: String(pick(row,['fecha','Fecha','date'])||'').slice(0,10),
+    startTime: String(pick(row,['hora_inicio','Hora inicio','startTime'])||'').slice(0,5),
+    endTime: String(pick(row,['hora_fin','Hora fin','endTime'])||'').slice(0,5),
+    place: pick(row,['lugar','Lugar','place','local','Local']),
+    status: pick(row,['estado','Estado','status']) || 'Pendiente',
+    objective: pick(row,['objetivo','Objetivo','objective']),
+    notes: pick(row,['notas','Notas','notes']),
+    allSongs,
+    songIds: allSongs ? [] : parseSongIds(pick(row,['temas_ids','Temas IDs','songIds'])),
+    songTitles: pick(row,['temas_texto','Temas texto','Temas','songs']),
+    attendance: memberAttendanceFromRow(row),
+    raw
+  };
+}
+function applyRehearsalsFromSheet(rows){
+  const items=rows.map(mapRehearsalRow).filter(x=>x.date || x.place || x.objective || x.songIds.length || x.songTitles);
+  if(items.length) db.rehearsals=items;
+  return items.length;
+}
+function mapSongRow(row,i){
+  return {
+    id: Number(pick(row,['id','ID'])) || i+1,
+    order: Number(pick(row,['orden','Orden','order'])) || i+1,
+    title: pick(row,['titulo','Título','title','Tema']) || 'Tema sin título',
+    titleCanonical: norm(pick(row,['titulo','Título','title','Tema'])).toUpperCase(),
+    artist: pick(row,['artista','Artista','artist']),
+    versionReference: pick(row,['versionReference','referencia','Referencia']),
+    singer: pick(row,['voz_principal','Voz principal','singer','Voz']),
+    leadVocal: pick(row,['voz_asignada','Voz asignada','leadVocal','voz_principal']),
+    duration: pick(row,['duracion_directo','Duración directo','duration','duracion','Duración']),
+    durationLive: pick(row,['duracion_directo','Duración directo','durationLive','duration']),
+    durationOriginal: pick(row,['duracion_original','Duración original','durationOriginal']),
+    durationStatus: pick(row,['durationStatus','estado_duracion','Estado duración']) || 'Google Sheet',
+    tone: pick(row,['tono_actual_banda','Tono actual banda','tone','tono','Tono']),
+    originalKey: pick(row,['tono_original','Tono original','originalKey']),
+    currentKey: pick(row,['tono_actual_banda','Tono actual banda','currentKey','tone']),
+    rehearsalKey: pick(row,['tono_propuesto_ensayo','Tono propuesto ensayo','rehearsalKey']),
+    keyStatus: pick(row,['keyStatus','estado_tono','Estado tono']) || 'Google Sheet',
+    keyMiguel: pick(row,['tono_propuesto_miguel','Tono propuesto Miguel','keyMiguel']),
+    keyEsther: pick(row,['tono_propuesto_esther','Tono propuesto Esther','keyEsther']),
+    keyLorenzo: pick(row,['tono_propuesto_lorenzo','Tono propuesto Lorenzo','keyLorenzo']),
+    transposeNotes: pick(row,['notas_transporte','Notas transporte','transposeNotes']),
+    capo: pick(row,['capo','Capo','cejilla','Cejilla']),
+    bpm: pick(row,['bpm','BPM']),
+    block: pick(row,['bloque','Bloque','block']),
+    status: pick(row,['estado','Estado','status']) || 'Activo',
+    spotifyUrl: pick(row,['spotify_url','Spotify','spotifyUrl']),
+    spotifyPlaylistUrl: db.createdFrom?.spotifyPlaylistUrl || '',
+    youtubeUrl: pick(row,['youtube_url','YouTube','youtubeUrl']),
+    chordsUrl: pick(row,['acordes_url','Acordes URL','chordsUrl']),
+    structure: pick(row,['estructura','Estructura','structure']),
+    chordsText: pick(row,['tablatura','Tabla','letra_acordes','Letra acordes','chordsText']),
+    notes: pick(row,['notas_interpretacion','Notas interpretación','notes']),
+    internalNotes: pick(row,['notas_internas','Notas internas','internalNotes']),
+    validatedAt: pick(row,['validado_en_ensayo','Validado en ensayo','validatedAt']),
+    raw
+  };
+}
+function applySongsFromSheet(rows){
+  const items=rows.map(mapSongRow).filter(x=>x.title && x.title!=='Tema sin título');
+  if(items.length) db.repertoire=items;
+  return items.length;
+}
+function applySetlistFromSheet(rows){
+  const items=rows.map((row,i)=>({
+    order:Number(pick(row,['orden','Orden','order'])) || i+1,
+    title:pick(row,['titulo','Título','title','Tema']),
+    vocal:pick(row,['voz','Voz','vocal']),
+    key:pick(row,['tono','Tono','key']),
+    duration:pick(row,['duracion','Duración','duration']),
+    block:pick(row,['bloque','Bloque','block']) || 'Setlist',
+    notes:pick(row,['notas','Notas','notes'])
+  })).filter(x=>x.title);
+  if(!items.length) return 0;
+  db.strategicSetlist = {
+    title:'Setlist desde Google Sheet',
+    subtitle:'Datos sincronizados desde Google Sheet maestro',
+    musicDuration:'',
+    agileDuration:'',
+    extendedDuration:'',
+    legend:unique(items.map(x=>x.vocal).filter(Boolean)),
+    rule:'Validar orden definitivo antes de cada concierto.',
+    finalMandatory:'',
+    promoterReading:'Setlist de trabajo sincronizado desde Google Sheet.',
+    blocks:[{
+      id:1,
+      name:'SETLIST',
+      objective:'Orden de concierto cargado desde Google Sheet.',
+      musicDuration:'',
+      stageControl:'',
+      songs:items
+    }]
+  };
+  return items.length;
+}
+function applyAllFromGoogleSheetPayload(payload){
+  if(!payload || payload.ok===false) throw new Error(payload?.error || 'Respuesta no válida de Apps Script.');
+  const report={crm:0, concerts:0, rehearsals:0, songs:0, setlist:0};
+
+  const crmSheet = findPayloadSheet(payload, ['CRM','CRM_GENERAL','CRM GENERAL','CRM_MAESTRO','CRM MAESTRO'], GOOGLE_SHEET_MASTER.gid) || firstSheetByRows(payload, rowsLookLikeCRM);
+  const concertSheet = findPayloadSheet(payload, ['CONCIERTOS','Conciertos','BOLOS','Bolos','EVENTOS','Eventos']) || firstSheetByRows(payload, rowsLookLikeConcerts);
+  const rehearsalSheet = findPayloadSheet(payload, ['ENSAYOS','Ensayos','CALENDARIO_ENSAYOS','Calendario ensayos']) || firstSheetByRows(payload, rowsLookLikeRehearsals);
+  const songsSheet = findPayloadSheet(payload, ['CANCIONES','Canciones','REPERTORIO','Repertorio']) || firstSheetByRows(payload, rowsLookLikeSongs);
+  const setlistSheet = findPayloadSheet(payload, ['SETLIST','Setlist','SETLIST_CONCIERTO','Setlist concierto']);
+
+  const crmRows=rowsFromPayloadSheet(crmSheet);
+  if(crmRows.length) report.crm=applyCRMObjectsFromSheet(crmRows);
+
+  const concertRows=rowsFromPayloadSheet(concertSheet);
+  if(concertRows.length) report.concerts=applyConcertsFromSheet(concertRows);
+
+  const rehearsalRows=rowsFromPayloadSheet(rehearsalSheet);
+  if(rehearsalRows.length) report.rehearsals=applyRehearsalsFromSheet(rehearsalRows);
+
+  const songRows=rowsFromPayloadSheet(songsSheet);
+  if(songRows.length) report.songs=applySongsFromSheet(songRows);
+
+  const setlistRows=rowsFromPayloadSheet(setlistSheet);
+  if(setlistRows.length) report.setlist=applySetlistFromSheet(setlistRows);
+
+  if(Array.isArray(payload.formacion) && payload.formacion.length){
+    db.bandMembers=payload.formacion.map(m=>({
+      id: norm(m.nombre||m.name).includes('miguel') ? 'miguel_voz' : norm(m.nombre||m.name).replace(/[^a-z0-9]/g,'_'),
+      name: m.nombre || m.name || '',
+      role: m.rol || m.role || ''
+    })).filter(x=>x.name);
+  }
+
+  db.createdFrom.googleSheetUserUrl = GOOGLE_SHEET_MASTER.userUrl;
+  db.createdFrom.lastImport = new Date().toLocaleString('es-ES') + ' · Google Sheet maestro';
+  db.sheetSync = {
+    source: 'Google Sheet maestro / Apps Script',
+    spreadsheetId: GOOGLE_SHEET_MASTER.spreadsheetId,
+    gid: GOOGLE_SHEET_MASTER.gid,
+    records: report.crm,
+    concerts: report.concerts,
+    rehearsals: report.rehearsals,
+    songs: report.songs,
+    setlist: report.setlist,
+    updatedAt: new Date().toISOString(),
+    status: 'ok',
+    endpoint: GOOGLE_SHEET_MASTER.appsScriptUrl,
+    version: payload.version || ''
+  };
+  return report;
+}
+async function syncCRMFromGoogleSheet(opts={}){
+  const silent = !!opts.silent;
+  try{
+    sheetStatus('Sincronizando con Google Sheet maestro…');
+    const payload=await appsScriptJSONP({action:'all'});
+    const report=applyAllFromGoogleSheetPayload(payload);
+    saveData();
+    refreshAll();
+    sheetStatus(`Google Sheet sincronizada. CRM: ${report.crm}. Conciertos: ${report.concerts}. Ensayos: ${report.rehearsals}. Canciones: ${report.songs}.`, 'ok');
+    if(!silent) alert(`Datos actualizados desde Google Sheet.\nCRM: ${report.crm}\nConciertos: ${report.concerts}\nEnsayos: ${report.rehearsals}\nCanciones: ${report.songs}`);
+    return true;
+  }catch(err){
+    db.sheetSync = Object.assign({}, db.sheetSync||{}, {status:'error', error:String(err.message||err), updatedAt:new Date().toISOString(), endpoint: GOOGLE_SHEET_MASTER.appsScriptUrl});
+    sheetStatus('No se ha podido leer la Google Sheet desde esta app. Se muestra la última caché local. Motivo: '+esc(err.message||err), 'bad');
+    if(!silent) alert('No se pudo sincronizar con Google Sheet: '+(err.message||err));
+    return false;
+  }
+}
+
 function statusClass(s){
   const x=norm(s);
   if(x.includes('enviado')||x.includes('confirmado')||x.includes('realizado')||x.includes('actualizado')) return 'status s-green';
@@ -253,8 +686,29 @@ function tabCount(id){
   if(id==='setlist')return setlistRows().length;
   return '';
 }
+
+function renderSheetSyncPanel(){
+  const el=document.getElementById('sheetSyncMini');
+  if(!el) return;
+  const sync=db.sheetSync||{};
+  const status=sync.status==='ok'?'Sincronizado':'Pendiente de sincronizar';
+  const updated=sync.updatedAt ? new Date(sync.updatedAt).toLocaleString('es-ES') : (db.createdFrom.lastImport || '—');
+  el.innerHTML=`
+    <div class="detailItem">
+      <small>Fuente de datos</small>
+      <strong>Google Sheet maestro</strong><br>
+      <span style="color:var(--muted)">Estado: ${esc(status)} · Última lectura: ${esc(updated)} · Endpoint Apps Script activo</span>
+    </div>
+    <div class="actions" style="margin-top:10px">
+      <button class="btn gold" type="button" onclick="syncCRMFromGoogleSheet()">Actualizar todo desde Google Sheet</button>
+      <a class="btn ghost" href="${esc(GOOGLE_SHEET_MASTER.userUrl)}" target="_blank" rel="noopener">Abrir Google Sheet</a>
+    </div>
+  `;
+}
+
 function refreshAll(){
   renderNav();
+  renderSheetSyncPanel();
   document.getElementById('sideLoaded').innerHTML=`${db.crm.length} contactos · ${db.gmailResponses.length} respuestas Gmail<br>Última importación: ${esc(db.createdFrom.lastImport || '—')}`;
   document.getElementById('heroBadges').innerHTML=[
     `${db.crm.length} contactos CRM`,`${countBy(db.crm,'campaign','Salas')} salas`,`${countBy(db.crm,'campaign','Eventos/Bodas/Festejos')} eventos/bodas/festejos`,
@@ -545,7 +999,7 @@ function bandMembers(){
     {id:'esther',name:'Esther',role:'Voz'},
     {id:'lorenzo',name:'Lorenzo',role:'Guitarra solista'},
     {id:'oscar',name:'Oscar',role:'Guitarra rítmica'},
-    {id:'miguel_bajo',name:'Miguel',role:'Bajo'},
+    {id:'jeffrey',name:'Jeffrey',role:'Bajo'},
     {id:'pepe',name:'Pepe',role:'Batería'}
   ];
 }
@@ -1283,3 +1737,4 @@ function initialTabFromUrl(){
   }catch(e){ return 'dashboard'; }
 }
 renderNav();refreshAll();setTab(initialTabFromUrl(), {scroll:false, updateUrl:false});
+setTimeout(()=>syncCRMFromGoogleSheet({silent:true, startup:true}), 450);

@@ -1,5 +1,5 @@
-/* APP-ENHE · PWA service worker v1.3 */
-const CACHE_NAME = "app-enhe-pwa-v1-3-0";
+/* APP-ENHE · PWA service worker v1.5 sheet endpoint */
+const CACHE_NAME = "app-enhe-pwa-v1-5-0";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -52,6 +52,12 @@ self.addEventListener("fetch", event => {
   const request = event.request;
 
   if (request.method !== "GET") return;
+
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) {
+    event.respondWith(fetch(request, { cache: "no-store" }));
+    return;
+  }
 
   if (isCoreRequest(request)) {
     event.respondWith(

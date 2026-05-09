@@ -123,3 +123,44 @@ Cambios aplicados:
 
 Limitación importante:
 APP-ENHE sigue siendo una app estática en GitHub Pages. Los datos que se guardan se guardan en el navegador local. Para asistencia compartida en tiempo real haría falta una base de datos o un formulario externo conectado a Google Sheets, Supabase, Firebase o similar.
+
+
+## v1.4 · Google Sheet primero
+
+- La fuente de verdad del CRM vuelve a ser Google Sheet maestro.
+- La app intenta sincronizar desde `https://docs.google.com/spreadsheets/d/1mrffAdGxfzRL602XHD4Uw-EKiYBgZ4PgLuVuOFPxEGU`.
+- `localStorage` queda como caché del navegador, no como base principal.
+- Se corrige formación: Miguel = voz; Jeffrey = bajo.
+- Si la hoja no es pública/published CSV o no hay Apps Script configurado, la app mostrará la última caché local y avisará.
+
+
+## APP-ENHE v1.5 · Google Sheet endpoint conectado
+
+Fuente principal de datos:
+
+- Google Sheet maestro: `1mrffAdGxfzRL602XHD4Uw-EKiYBgZ4PgLuVuOFPxEGU`
+- Apps Script `/exec`: `https://script.google.com/macros/s/AKfycbwMPx0moS9-P_RI6s8K4q1aFA7ZaiAvtwpq3IKnoph-MHVTTzQzC4wHNNfo9SIQDe22fQ/exec`
+
+La app debe usar Google Sheet como fuente principal. `localStorage` queda como caché temporal del navegador, no como base maestra.
+
+Botón principal de sincronización:
+
+- `Actualizar todo desde Google Sheet`
+
+Datos que intenta sincronizar:
+
+- CRM
+- CONCIERTOS
+- ENSAYOS
+- CANCIONES
+- SETLIST
+- Formación
+
+Formación corregida:
+
+- Miguel — Voz
+- Esther — Voz
+- Lorenzo — Guitarra solista
+- Oscar — Guitarra rítmica
+- Jeffrey — Bajo
+- Pepe — Batería
