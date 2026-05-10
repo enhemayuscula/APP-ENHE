@@ -164,3 +164,35 @@ Formación corregida:
 - Oscar — Guitarra rítmica
 - Jeffrey — Bajo
 - Pepe — Batería
+
+
+## APP-ENHE v1.7 · corrección local de ensayo
+
+Correcciones aplicadas:
+
+- `PAGOS_LOCAL` se consolida por `Mes + ID Miembro`.
+- `NO` ya no se interpreta como pagado.
+- `SI / Sí / Pagado` sí se interpreta como pagado.
+- El mes se muestra como `YYYY-MM`, no como fecha completa ISO.
+- Se restringe el control del local a los 6 miembros activos:
+  - Miguel
+  - Esther
+  - Lorenzo
+  - Oscar
+  - Jeffrey
+  - Pepe
+- El importe mensual se toma desde Google Sheet / `CONFIG_GRUPO` cuando llega por Apps Script.
+- Si las cuotas suman 217,02 por redondeo, la app muestra el total del local como 217,00 €.
+- `localStorage` queda solo como caché; Google Sheet sigue siendo fuente principal.
+
+
+## APP-ENHE v1.8 · local ensayo definitivo
+
+Corrección de cierre para Local ensayo:
+- Google Sheet sigue siendo la fuente principal.
+- Se ignora la caché antigua de localStorage.
+- Se consolida PAGOS_LOCAL por Mes + ID Miembro.
+- Solo cuentan los seis miembros reales: Miguel, Esther, Lorenzo, Oscar, Jeffrey y Pepe.
+- `NO`, `Pendiente` o vacío nunca cuentan como pagado.
+- El total mensual se toma de CONFIG_GRUPO/local_mensual: 217 €.
+- Scripts CSS/JS con query `?v=1.8.0` para evitar caché vieja en PWA.

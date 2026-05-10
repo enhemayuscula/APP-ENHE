@@ -1,5 +1,5 @@
-/* APP-ENHE · PWA service worker v1.5 sheet endpoint */
-const CACHE_NAME = "app-enhe-pwa-v1-5-0";
+/* APP-ENHE · PWA service worker v1.8 local ensayo definitivo */
+const CACHE_NAME = "app-enhe-pwa-v1-8-0";
 const APP_SHELL = [
   "./",
   "./index.html",

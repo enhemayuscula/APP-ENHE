@@ -1,4 +1,6 @@
-const STORE_KEY = 'n_mayuscula_control_pro_v3';
+const APP_ENHE_APP_VERSION = '1.8.0-local-ensayo-definitivo';
+const STORE_KEY = 'n_mayuscula_control_pro_v4_sheet_first';
+const OLD_STORE_KEYS = ['n_mayuscula_control_pro_v3','n_mayuscula_control_pro_v2','n_mayuscula_control_pro'];
 let db = loadData();
 let filteredCRM = [];
 const tabs = [
@@ -21,12 +23,24 @@ function shouldSeedReplace(v){
 function loadData(){
   let data=clone(INITIAL_DATA);
   try{
+    // v1.8: no arrastrar datos antiguos del navegador para pagos/local.
+    // Google Sheet es la fuente principal; localStorage solo caché de esta versión.
     const raw=localStorage.getItem(STORE_KEY);
     if(raw){
       data=Object.assign(clone(INITIAL_DATA), JSON.parse(raw));
     }
   }catch(e){}
   return migrateData(data);
+}
+function clearOldLocalCaches(){
+  try{
+    OLD_STORE_KEYS.forEach(k=>localStorage.removeItem(k));
+    if(window.caches){
+      caches.keys().then(keys=>keys.forEach(k=>{
+        if(!String(k).includes('v1-8')) caches.delete(k);
+      })).catch(()=>{});
+    }
+  }catch(e){}
 }
 function migrateData(data){
   data.repertoire = Array.isArray(data.repertoire) ? data.repertoire : [];
@@ -112,6 +126,7 @@ function migrateData(data){
 
   data.concerts = Array.isArray(data.concerts) ? data.concerts : [];
   data.localPayments = Array.isArray(data.localPayments) ? data.localPayments : [];
+  data.localConfig = Object.assign({monthlyAmount:217, source:'CONFIG_GRUPO / Google Sheet'}, data.localConfig || {});
   const defaultConcert = {
     id: 0,
     date: '',
@@ -205,6 +220,111 @@ function norm(v){return String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/
 function eur(n){n=Number(n||0);return n? n.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0}) : '—';}
 function compact(v,n=95){v=String(v??'').trim(); return v.length>n ? v.slice(0,n-1)+'…' : v;}
 function nextId(arr){return (arr||[]).reduce((m,x)=>Math.max(m, Number(x.id)||0),0)+1;}
+
+function parseEuroValue(v){
+  if(typeof v==='number') return Number.isFinite(v)?v:0;
+  let s=String(v??'').trim();
+  if(!s) return 0;
+  s=s.replace(/\s/g,'').replace(/[^\d,.\-]/g,'');
+  if(s.includes(',') && s.includes('.')){
+    s=s.replace(/\./g,'').replace(',','.');
+  }else{
+    s=s.replace(',','.');
+  }
+  const n=Number(s);
+  return Number.isFinite(n)?n:0;
+}
+function money2(n){
+  n=Number(n||0);
+  return n.toLocaleString('es-ES',{minimumFractionDigits:2, maximumFractionDigits:2})+' €';
+}
+function normalizeMonthValue(v){
+  if(v instanceof Date && !isNaN(v.getTime())) return v.toISOString().slice(0,7);
+  let raw=String(v??'').trim();
+  if(!raw) return '';
+  // Apps Script puede devolver "2026-05-01T09:00:00" o fechas localizadas.
+  const iso=raw.match(/^(\d{4})-(\d{2})(?:-\d{2})?/);
+  if(iso) return `${iso[1]}-${iso[2]}`;
+  const slash=raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(slash) return `${slash[3]}-${String(slash[2]).padStart(2,'0')}`;
+  const yearMonth=raw.match(/(\d{4})\D+(\d{1,2})/);
+  if(yearMonth) return `${yearMonth[1]}-${String(yearMonth[2]).padStart(2,'0')}`;
+  const d=new Date(raw);
+  if(!isNaN(d.getTime())) return d.toISOString().slice(0,7);
+  return raw.slice(0,7);
+}
+function normalizeMemberKey(v){
+  let s=norm(v).replace(/[^a-z0-9]+/g,'');
+  if(s==='miguelvoz' || s==='miguelcantante') return 'miguel';
+  if(s==='jeff' || s==='jeffbajista') return 'jeffrey';
+  if(s.includes('miguel')) return 'miguel';
+  if(s.includes('esther')) return 'esther';
+  if(s.includes('lorenzo')) return 'lorenzo';
+  if(s.includes('oscar')) return 'oscar';
+  if(s.includes('jeffrey') || s.includes('jeff')) return 'jeffrey';
+  if(s.includes('pepe')) return 'pepe';
+  return s;
+}
+function memberDisplayName(id, fallback=''){
+  const key=normalizeMemberKey(id||fallback);
+  const map={miguel:'Miguel',esther:'Esther',lorenzo:'Lorenzo',oscar:'Oscar',jeffrey:'Jeffrey',pepe:'Pepe'};
+  return map[key] || fallback || id || '';
+}
+function isPaymentPaid(v){
+  const x=norm(v).replace(/\./g,'').trim();
+  if(!x) return false;
+  if(['no','n','false','0','pendiente','sinpagar','sin pagar','nopagado','no pagado','debe',''].includes(x)) return false;
+  return ['si','sí','s','pagado','pagada','paid','true','1','ok','confirmado','cobrado'].includes(x);
+}
+function mergeTextNotes(a,b){
+  const out=[];
+  [a,b].forEach(v=>String(v??'').split('|').map(x=>x.trim()).filter(Boolean).forEach(x=>{if(!out.includes(x)) out.push(x);}));
+  return out.join(' | ');
+}
+function consolidateLocalPaymentRows(items){
+  const allowed=['miguel','esther','lorenzo','oscar','jeffrey','pepe'];
+  const byKey=new Map();
+
+  (items||[]).forEach((item,idx)=>{
+    const month=normalizeMonthValue(item.month || item.Mes || item.mes);
+    const memberId=normalizeMemberKey(item.memberId || item['ID Miembro'] || item.id_miembro || item.name || item.Nombre);
+    if(!month || !allowed.includes(memberId)) return;
+
+    const key=month+'|'+memberId;
+    const amount=parseEuroValue(item.amount ?? item.Cuota ?? item.cuota ?? item.importe);
+    const paidValue=item.paid ?? item.Pagado ?? item.pagado ?? '';
+    const clean={
+      id:item.id || idx+1,
+      month,
+      memberId,
+      name:memberDisplayName(memberId, item.name || item.Nombre),
+      amount: amount || 36.17,
+      paid:isPaymentPaid(paidValue)?'SI':'NO',
+      paidDate:item.paidDate || item['Fecha pago'] || item.fecha_pago || '',
+      updatedAt:item.updatedAt || item['Última actualización'] || item.actualizado_en || '',
+      notes:item.notes || item.Notas || item.notas || '',
+      raw:item.raw || item
+    };
+
+    if(!byKey.has(key)){
+      byKey.set(key, clean);
+    }else{
+      const prev=byKey.get(key);
+      prev.amount=prev.amount || clean.amount;
+      prev.paid=(isPaymentPaid(prev.paid)||isPaymentPaid(clean.paid))?'SI':'NO';
+      prev.paidDate=prev.paidDate || clean.paidDate;
+      prev.updatedAt=clean.updatedAt || prev.updatedAt;
+      prev.notes=mergeTextNotes(prev.notes, clean.notes);
+      byKey.set(key, prev);
+    }
+  });
+
+  const order={miguel:1,esther:2,lorenzo:3,oscar:4,jeffrey:5,pepe:6};
+  return [...byKey.values()].sort((a,b)=>
+    String(b.month).localeCompare(String(a.month)) || (order[a.memberId]||99)-(order[b.memberId]||99)
+  );
+}
+
 
 const GOOGLE_SHEET_MASTER = {
   spreadsheetId: '1mrffAdGxfzRL602XHD4Uw-EKiYBgZ4PgLuVuOFPxEGU',
@@ -563,21 +683,25 @@ function applySetlistFromSheet(rows){
 }
 
 function mapLocalPaymentRow(row,i){
+  const memberRaw = pick(row,['ID Miembro','id_miembro','miembro_id','memberId','member_id']) || pick(row,['Nombre','nombre','miembro','name']);
+  const cuotaRaw = pick(row,['Cuota','cuota','importe','amount']);
+  const pagadoRaw = pick(row,['Pagado','pagado','paid','estado_pago','Estado pago']);
   return {
     id: Number(pick(row,['id','ID'])) || i+1,
-    month: pick(row,['Mes','mes','month']),
-    memberId: pick(row,['ID Miembro','id_miembro','miembro_id']),
-    name: pick(row,['Nombre','nombre','miembro']),
-    amount: Number(String(pick(row,['Cuota','cuota','importe'])||'').replace(/[^\d.,-]/g,'').replace(',','.')) || 0,
-    paid: pick(row,['Pagado','pagado','estado']) || 'NO',
-    paidDate: pick(row,['Fecha pago','fecha_pago']),
-    updatedAt: pick(row,['Última actualización','actualizado_en']),
-    notes: pick(row,['Notas','notas']),
+    month: normalizeMonthValue(pick(row,['Mes','mes','month'])),
+    memberId: normalizeMemberKey(memberRaw),
+    name: memberDisplayName(memberRaw, pick(row,['Nombre','nombre','miembro','name'])),
+    amount: parseEuroValue(cuotaRaw),
+    paid: isPaymentPaid(pagadoRaw) ? 'SI' : 'NO',
+    paidDate: pick(row,['Fecha pago','fecha_pago','paidDate']),
+    updatedAt: pick(row,['Última actualización','actualizado_en','updatedAt']),
+    notes: pick(row,['Notas','notas','notes']),
     raw: row
   };
 }
 function applyLocalPaymentsFromSheet(rows){
-  const items=rows.map(mapLocalPaymentRow).filter(x=>x.month || x.name || x.memberId);
+  const mapped=rows.map(mapLocalPaymentRow);
+  const items=consolidateLocalPaymentRows(mapped);
   if(items.length) db.localPayments=items;
   return items.length;
 }
@@ -607,8 +731,14 @@ function applyAllFromGoogleSheetPayload(payload){
   if(setlistRows.length) report.setlist=applySetlistFromSheet(setlistRows);
 
   const localSheet = findPayloadSheet(payload, ['PAGOS_LOCAL','LOCAL_ENSAYO_PAGOS','Pagos local','Local ensayo']);
-  const localRows = Array.isArray(payload?.data?.pagosLocal) ? payload.data.pagosLocal : rowsFromPayloadSheet(localSheet);
-  if(localRows.length) report.local=applyLocalPaymentsFromSheet(localRows);
+  const rawLocalRows = payload?.rawSheets?.PAGOS_LOCAL?.rows || payload?.sheets?.PAGOS_LOCAL?.rows || [];
+  const normalizedLocalRows = Array.isArray(payload?.data?.pagosLocal) ? payload.data.pagosLocal : [];
+  const localRows = rawLocalRows.length ? rawLocalRows : (normalizedLocalRows.length ? normalizedLocalRows : rowsFromPayloadSheet(localSheet));
+  report.local=applyLocalPaymentsFromSheet(localRows);
+  const localMensual=parseEuroValue(payload?.data?.localMensual || payload?.localMensual || 0);
+  if(localMensual){
+    db.localConfig=Object.assign({}, db.localConfig||{}, {monthlyAmount:localMensual, source:'CONFIG_GRUPO / Google Sheet', updatedAt:new Date().toISOString()});
+  }
 
   const formacionPayload = Array.isArray(payload?.data?.miembros) ? payload.data.miembros : payload.formacion;
   if(Array.isArray(formacionPayload) && formacionPayload.length){
@@ -1227,36 +1357,63 @@ function renderRehearsals(){
 function renderLocalPayments(){
   const section=document.getElementById('local');
   if(!section)return;
-  db.localPayments = Array.isArray(db.localPayments) ? db.localPayments : [];
-  const rows=db.localPayments.slice().sort((a,b)=>String(b.month||'').localeCompare(String(a.month||'')) || String(a.name||'').localeCompare(String(b.name||'')));
+
+  db.localPayments = consolidateLocalPaymentRows(Array.isArray(db.localPayments) ? db.localPayments : []);
+  const rows=db.localPayments.slice();
   const currentMonth = new Date().toISOString().slice(0,7);
-  const monthRows = rows.filter(r=>String(r.month||'')===currentMonth);
-  const baseRows = monthRows.length ? monthRows : rows;
-  const total = baseRows.reduce((a,r)=>a+(Number(r.amount)||0),0);
-  const paid = baseRows.filter(r=>['si','sí','pagado','pagada','ok'].includes(norm(r.paid))).reduce((a,r)=>a+(Number(r.amount)||0),0);
-  const pending = Math.max(0, total-paid);
+  const months=[...new Set(rows.map(r=>normalizeMonthValue(r.month)).filter(Boolean))].sort().reverse();
+  const controlMonth = months.includes(currentMonth) ? currentMonth : (months[0] || currentMonth);
+  const allowed=['miguel','esther','lorenzo','oscar','jeffrey','pepe'];
+
+  let baseRows = consolidateLocalPaymentRows(rows.filter(r=>normalizeMonthValue(r.month)===controlMonth))
+    .filter(r=>allowed.includes(normalizeMemberKey(r.memberId || r.name)));
+
+  // Blindaje final: máximo una cuota por miembro real.
+  const byMember=new Map();
+  baseRows.forEach(r=>{
+    const id=normalizeMemberKey(r.memberId || r.name);
+    if(!byMember.has(id)) byMember.set(id,r);
+    else{
+      const prev=byMember.get(id);
+      prev.paid=(isPaymentPaid(prev.paid)||isPaymentPaid(r.paid))?'SI':'NO';
+      prev.amount=prev.amount || r.amount;
+      prev.paidDate=prev.paidDate || r.paidDate;
+      prev.notes=mergeTextNotes(prev.notes,r.notes);
+    }
+  });
+  baseRows=[...byMember.values()];
+
+  const sumRows = baseRows.reduce((a,r)=>a+(parseEuroValue(r.amount)||0),0);
+  const configAmount=parseEuroValue(db.localConfig?.monthlyAmount);
+  const monthlyAmount = configAmount || (baseRows.length===6 ? 217 : sumRows);
+  const paidRaw = baseRows.filter(r=>isPaymentPaid(r.paid)).reduce((a,r)=>a+(parseEuroValue(r.amount)||0),0);
+  const paid = Math.min(monthlyAmount || paidRaw, paidRaw);
+  const pending = Math.max(0, (monthlyAmount || sumRows) - paid);
+
   const kpis=document.getElementById('localKpis');
   if(kpis) kpis.innerHTML=[
-    ['Mes control', baseRows[0]?.month || currentMonth],
+    ['Mes control', controlMonth],
     ['Cuotas', baseRows.length],
-    ['Total controlado', total.toFixed(2)+' €'],
-    ['Pagado', paid.toFixed(2)+' €'],
-    ['Pendiente', pending.toFixed(2)+' €']
+    ['Total local', money2(monthlyAmount || sumRows)],
+    ['Pagado', money2(paid)],
+    ['Pendiente', money2(pending)]
   ].map(k=>`<div class="card kpi"><strong>${esc(k[1])}</strong><span>${esc(k[0])}</span></div>`).join('');
+
   const tbody=document.querySelector('#localTable tbody');
-  if(tbody) tbody.innerHTML=rows.map(r=>{
-    const paidNorm=norm(r.paid);
-    const st=paidNorm==='si'||paidNorm==='sí'||paidNorm==='pagado'||paidNorm==='ok'?'Pagado':'Pendiente';
+  const shownRows=baseRows.length ? baseRows : rows;
+  if(tbody) tbody.innerHTML=shownRows.map(r=>{
+    const st=isPaymentPaid(r.paid)?'Pagado':'Pendiente';
     return `<tr>
-      <td>${esc(r.month||'—')}</td>
-      <td><strong>${esc(r.name||r.memberId||'—')}</strong><br><small>${esc(r.memberId||'')}</small></td>
-      <td>${esc((Number(r.amount)||0).toFixed(2))} €</td>
+      <td>${esc(normalizeMonthValue(r.month)||'—')}</td>
+      <td><strong>${esc(memberDisplayName(r.memberId||r.name)||r.name||'—')}</strong><br><small>${esc(normalizeMemberKey(r.memberId||r.name)||'')}</small></td>
+      <td>${esc(money2(parseEuroValue(r.amount)).replace(' €',''))} €</td>
       <td>${badge(st)}</td>
       <td>${esc(r.paidDate||'—')}</td>
       <td>${esc(compact(r.notes||'',120))}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="6" class="muted">No hay cuotas del local cargadas en PAGOS_LOCAL.</td></tr>';
 }
+
 
 function fillSelectKeep(el, options, current){
   if(!el)return;
@@ -1807,5 +1964,6 @@ function initialTabFromUrl(){
     return tabs.some(t=>t[0]===id) ? id : 'dashboard';
   }catch(e){ return 'dashboard'; }
 }
+clearOldLocalCaches();
 renderNav();refreshAll();setTab(initialTabFromUrl(), {scroll:false, updateUrl:false});
 setTimeout(()=>syncCRMFromGoogleSheet({silent:true, startup:true}), 450);
