@@ -38,49 +38,46 @@
     'composeForContact'
   ];
 
-  const ADMIN_ONCLICK_PATTERNS = [
-    'openContactModal',
-    'saveContact',
-    'deleteRecord',
-    'openConcertModal',
-    'saveConcert',
-    'openRehearsalModal',
-    'saveRehearsal',
-    'saveConcertAttendance',
-    'markLocalPayment',
-    'exportRehearsalsCSV',
-    'loadConcertPosterFile',
-    'createConcertFromBudget',
-    'openSongModal',
-    'saveSong',
-    'openTaskModal',
-    'saveTask',
-    'resetData',
-    'importJSON',
-    'importCSVContacts',
-    'safeImportCRMFile',
-    'exportJSON',
-    'exportCSV',
-    'exportFilteredCRM',
-    'exportSetlistCSV',
-    'exportRepertoireCSV',
-    'applySongLinksImport',
-    'openSongLinksImportModal',
-    'downloadXlsx',
-    'copyBudgetText',
-    'composeTemplate',
-    'composeForContact'
-  ];
+  const ADMIN_ONCLICK_PATTERNS = ADMIN_FUNCTIONS.slice();
+
+  let lastUserNoticeAt = 0;
 
   function isAdmin(){
     return localStorage.getItem(ADMIN_KEY) === '1';
   }
 
+  function ensureToast(){
+    let toast = document.getElementById('adminSoftNotice');
+    if(toast) return toast;
+
+    toast = document.createElement('div');
+    toast.id = 'adminSoftNotice';
+    toast.className = 'adminSoftNotice';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    document.body.appendChild(toast);
+    return toast;
+  }
+
+  function softNotice(message, opts){
+    const now = Date.now();
+    const force = opts && opts.force;
+
+    if(!force && now - lastUserNoticeAt < 2500) return;
+    lastUserNoticeAt = now;
+
+    const toast = ensureToast();
+    toast.textContent = message || 'Acción disponible solo en modo administrador.';
+    toast.classList.add('show');
+
+    clearTimeout(toast.__hideTimer);
+    toast.__hideTimer = setTimeout(function(){
+      toast.classList.remove('show');
+    }, 3200);
+  }
+
   function notifyUserMode(){
-    alert(
-      'Modo usuario: solo lectura.\n\n' +
-      'Para editar, importar, exportar, hacer backups o modificar datos, entra como administrador.'
-    );
+    softNotice('Modo usuario: solo lectura. Para editar o exportar, entra como administrador.');
   }
 
   function setAdmin(value){
@@ -88,10 +85,12 @@
       localStorage.setItem(ADMIN_KEY, '1');
       document.body.classList.add('admin-enabled');
       document.body.classList.remove('user-readonly');
+      softNotice('Modo administrador activado.', {force:true});
     }else{
       localStorage.removeItem(ADMIN_KEY);
       document.body.classList.remove('admin-enabled');
       document.body.classList.add('user-readonly');
+      softNotice('Modo usuario: solo lectura.', {force:true});
     }
     updateAdminUI();
     markAdminControls();
@@ -124,7 +123,7 @@
       return fn.apply(window, args || []);
     }
 
-    alert('La función "' + fnName + '" todavía no está disponible. Recarga la página y prueba de nuevo.');
+    softNotice('La función "' + fnName + '" todavía no está disponible. Recarga la página y prueba de nuevo.', {force:true});
   }
 
   function openExportPanel(){
@@ -136,7 +135,7 @@
     if(typeof window.setTab === 'function'){
       window.setTab('importExport');
     }else{
-      alert('El panel de exportación todavía no está disponible. Recarga la página.');
+      softNotice('El panel de exportación todavía no está disponible. Recarga la página.', {force:true});
     }
   }
 
@@ -284,20 +283,11 @@
       window[name] = guarded;
     });
 
-    const originalSaveData = window.saveData;
-    if(typeof originalSaveData === 'function' && !originalSaveData.__appEnheGuarded){
-      const guardedSave = function(){
-        if(!isAdmin()){
-          console.warn('APP-ENHE: intento de guardado bloqueado en modo usuario.');
-          notifyUserMode();
-          return null;
-        }
-        return originalSaveData.apply(this, arguments);
-      };
-      guardedSave.__appEnheGuarded = true;
-      guardedSave.__appEnheOriginal = originalSaveData;
-      window.saveData = guardedSave;
-    }
+    /*
+      No se bloquea window.saveData en modo usuario.
+      La app necesita guardar caché local tras sincronizar con Google Sheet.
+      Bloquear saveData provocaba alertas repetidas al cargar o refrescar datos.
+    */
   }
 
   function installObserver(){

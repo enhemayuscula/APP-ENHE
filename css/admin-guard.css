@@ -189,3 +189,39 @@ body.user-readonly #adminPanel.open {
   display: block;
 }
 
+
+
+/* APP-ENHE v2.3 · aviso no modal para acciones de usuario */
+.adminSoftNotice {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translate(-50%, 22px);
+  z-index: 10000;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(24,18,18,.96);
+  color: #f8d36a;
+  border: 1px solid rgba(248,211,106,.42);
+  box-shadow: 0 16px 46px rgba(0,0,0,.55);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.adminSoftNotice.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (max-width: 720px) {
+  .adminSoftNotice {
+    bottom: 82px;
+    border-radius: 14px;
+    font-size: 12px;
+  }
+}

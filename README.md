@@ -1,5 +1,4 @@
-# APP-ENHE v2.1 · mobile sync lite
-
+# APP-ENHE v2.3 · admin notice fix
 
 Versión completa para APP-ENHE.
 
@@ -260,3 +259,11 @@ Corrección de cierre para Local ensayo:
 - `NO`, `Pendiente` o vacío nunca cuentan como pagado.
 - El total mensual se toma de CONFIG_GRUPO/local_mensual: 217 €.
 - Scripts CSS/JS con query `?v=1.8.0` para evitar caché vieja en PWA.
+
+
+## v2.3
+
+- Corrige el aviso modal repetitivo de modo usuario.
+- El aviso de solo lectura pasa a ser no modal y solo aparece ante acciones restringidas.
+- No se bloquea `saveData` para permitir caché local tras sincronizar Google Sheet.
+- Mantiene Google Sheet como fuente principal.
