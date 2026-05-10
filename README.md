@@ -1,3 +1,67 @@
+# APP-ENHE v2.1 · mobile sync lite
+
+
+Versión completa para APP-ENHE.
+
+Cambios principales:
+- Bridge Apps Script reducido y estable para móvil.
+- Endpoint `action=mobile` ligero.
+- Google Sheet sigue siendo la fuente principal.
+- Nuevo cache key de PWA para forzar actualización.
+- No se deben usar datos locales como fuente maestra.
+
+Apps Script:
+1. En el proyecto de Apps Script, sustituir SOLO el archivo del bridge por `apps-script/APP_ENHE_BRIDGE.gs`.
+2. Guardar.
+3. Ejecutar `APP_ENHE_instalar_o_actualizar` si Apps Script lo permite.
+   - Si vuelve a salir error genérico, no insistir: crear nueva versión de despliegue y probar `?action=health`.
+4. Implementar > Gestionar implementaciones > Editar > Nueva versión > Implementar.
+
+GitHub:
+Subir todo el contenido descomprimido al repo APP-ENHE.
+
+Prueba:
+https://enhemayuscula.github.io/APP-ENHE/?v=22final
+
+
+---
+
+# APP-ENHE v2.0 · mobile sync JSONP
+
+Versión de estabilización para que PC y móvil lean desde Google Sheet mediante Apps Script en modo JSONP ligero.
+
+Fuente principal:
+- CRM_GENERAL
+- REPERTORIO
+- SETLISTS
+- CONCIERTOS
+- ENSAYOS
+- TAREAS
+- PAGOS_LOCAL
+- MIEMBROS
+- RESPUESTAS_GMAIL
+
+Apps Script incluido:
+- apps-script/APP_ENHE_BRIDGE_v2_0_mobile_sync_jsonp.gs
+
+Orden:
+1. Sustituir el archivo bridge en Apps Script.
+2. Ejecutar APP_ENHE_instalar_o_actualizar.
+3. Implementar nueva versión de la Web App.
+4. Subir este paquete completo a GitHub.
+5. Abrir https://enhemayuscula.github.io/APP-ENHE/?v=20mobile
+
+# APP-ENHE v1.9 · Sheet write-through
+
+Google Sheet es la fuente principal. La app sincroniza al abrir, al volver a la pestaña y después de guardar como administrador.
+
+Cambios v1.9:
+- Nueva caché local v5 para no arrastrar datos viejos de móvil.
+- Escritura en Google Sheet desde admin para conciertos, ensayos, tareas, asistencia y pagos del local.
+- Local de ensayo cuenta solo Miguel, Esther, Lorenzo, Oscar, Jeffrey y Pepe.
+- Datos iniciales de seguridad: 2 conciertos y 1 ensayo restaurados del backup.
+- Service worker v1.9 con actualización de JS/CSS sin caché vieja.
+
 # APP-ENHE · versión modular
 
 Esta carpeta sustituye al `index.html` monolítico por una estructura más manejable.
@@ -139,7 +203,7 @@ APP-ENHE sigue siendo una app estática en GitHub Pages. Los datos que se guarda
 Fuente principal de datos:
 
 - Google Sheet maestro: `1mrffAdGxfzRL602XHD4Uw-EKiYBgZ4PgLuVuOFPxEGU`
-- Apps Script `/exec`: `https://script.google.com/macros/s/AKfycbwMPx0moS9-P_RI6s8K4q1aFA7ZaiAvtwpq3IKnoph-MHVTTzQzC4wHNNfo9SIQDe22fQ/exec`
+- Apps Script `/exec`: `https://script.google.com/macros/s/AKfycbwmB2voyp9DCqFoHa939EXbBc05eOvt6VVJAatP47aDFmzWPg5Fn3KSrt8CcEDsVAet5g/exec`
 
 La app debe usar Google Sheet como fuente principal. `localStorage` queda como caché temporal del navegador, no como base maestra.
 

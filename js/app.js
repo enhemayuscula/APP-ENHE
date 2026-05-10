@@ -1,6 +1,6 @@
-const APP_ENHE_APP_VERSION = '1.8.0-local-ensayo-definitivo';
-const STORE_KEY = 'n_mayuscula_control_pro_v4_sheet_first';
-const OLD_STORE_KEYS = ['n_mayuscula_control_pro_v3','n_mayuscula_control_pro_v2','n_mayuscula_control_pro'];
+const APP_ENHE_APP_VERSION = '2.2.0-mobile-sync-lite';
+const STORE_KEY = 'n_mayuscula_control_pro_v8_mobile_sheet_lite';
+const OLD_STORE_KEYS = ['n_mayuscula_control_pro_v7_mobile_sheet_jsonp','n_mayuscula_control_pro_v6_sheet_master_v20','n_mayuscula_control_pro_v5_sheet_master','n_mayuscula_control_pro_v4_sheet_first','n_mayuscula_control_pro_v3','n_mayuscula_control_pro_v2','n_mayuscula_control_pro'];
 let db = loadData();
 let filteredCRM = [];
 const tabs = [
@@ -21,13 +21,16 @@ function shouldSeedReplace(v){
     x.includes('provisional · revisar en ensayo');
 }
 function loadData(){
+  // v1.9: Google Sheet es la fuente principal.
+  // localStorage solo sirve como caché de esta versión, nunca como fuente maestra.
   let data=clone(INITIAL_DATA);
   try{
-    // v1.8: no arrastrar datos antiguos del navegador para pagos/local.
-    // Google Sheet es la fuente principal; localStorage solo caché de esta versión.
     const raw=localStorage.getItem(STORE_KEY);
     if(raw){
-      data=Object.assign(clone(INITIAL_DATA), JSON.parse(raw));
+      const cached=JSON.parse(raw);
+      if(cached && cached.appCacheVersion === APP_ENHE_APP_VERSION){
+        data=Object.assign(clone(INITIAL_DATA), cached);
+      }
     }
   }catch(e){}
   return migrateData(data);
@@ -213,7 +216,7 @@ function migrateData(data){
 
   return data;
 }
-function saveData(){localStorage.setItem(STORE_KEY, JSON.stringify(db)); refreshAll();}
+function saveData(){db.appCacheVersion=APP_ENHE_APP_VERSION;localStorage.setItem(STORE_KEY, JSON.stringify(db)); refreshAll();}
 function resetData(){if(confirm('¿Restaurar los datos iniciales importados del Excel? Se perderán cambios locales de esta app.')){localStorage.removeItem(STORE_KEY);db=clone(INITIAL_DATA);refreshAll();}}
 function esc(v){return String(v??'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
 function norm(v){return String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();}
@@ -331,7 +334,7 @@ const GOOGLE_SHEET_MASTER = {
   gid: '2128742185',
   userUrl: 'https://docs.google.com/spreadsheets/d/1mrffAdGxfzRL602XHD4Uw-EKiYBgZ4PgLuVuOFPxEGU/edit?gid=2128742185#gid=2128742185',
   csvUrl: 'https://docs.google.com/spreadsheets/d/1mrffAdGxfzRL602XHD4Uw-EKiYBgZ4PgLuVuOFPxEGU/export?format=csv&gid=2128742185',
-  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbwMPx0moS9-P_RI6s8K4q1aFA7ZaiAvtwpq3IKnoph-MHVTTzQzC4wHNNfo9SIQDe22fQ/exec'
+  appsScriptUrl: 'https://script.google.com/macros/s/AKfycbwmB2voyp9DCqFoHa939EXbBc05eOvt6VVJAatP47aDFmzWPg5Fn3KSrt8CcEDsVAet5g/exec'
 };
 
 function sheetStatus(msg, type='info'){
@@ -482,6 +485,166 @@ function appsScriptJSONP(params={}){
     document.head.appendChild(script);
   });
 }
+
+function isAdminActive(){
+  return document.body.classList.contains('admin-enabled') ||
+    localStorage.getItem('app_enhe_admin_local_unlocked_v2') === '1';
+}
+
+function sheetWriteEnabled(){
+  return !!(GOOGLE_SHEET_MASTER && GOOGLE_SHEET_MASTER.appsScriptUrl);
+}
+
+function attendanceToSheetFields(attendance){
+  const out={};
+  const map={
+    miguel_voz:'asistencia_miguel',
+    miguel:'asistencia_miguel',
+    esther:'asistencia_esther',
+    lorenzo:'asistencia_lorenzo',
+    oscar:'asistencia_oscar',
+    jeffrey:'asistencia_jeffrey',
+    pepe:'asistencia_pepe'
+  };
+  Object.keys(map).forEach(id=>{
+    const v=attendance && attendance[id];
+    if(v){
+      out[map[id]] = typeof v === 'string' ? v : (v.status || '');
+    }
+  });
+  return out;
+}
+
+function concertToSheetRow(c){
+  return Object.assign({
+    id:c.id,
+    ID:c.id,
+    estado:c.status || '',
+    Estado:c.status || '',
+    fecha:c.date || '',
+    Fecha:c.date || '',
+    hora:c.time || '',
+    Hora:c.time || '',
+    titulo:c.eventName || '',
+    'Sala / Evento':c.eventName || c.venue || '',
+    sala_lugar:c.venue || '',
+    ciudad:c.city || '',
+    direccion:c.address || '',
+    entrada:c.publicInfo || '',
+    cartel_url:c.posterUrl || '',
+    cartel_titulo:c.posterTitle || '',
+    notas_publicas:c.publicInfo || '',
+    notas_produccion:c.notes || '',
+    Caché:c.fee || '',
+    actualizado_en:new Date().toISOString()
+  }, attendanceToSheetFields(c.attendance||{}));
+}
+
+function rehearsalToSheetRow(r){
+  return Object.assign({
+    id:r.id,
+    ID:r.id,
+    fecha:r.date || '',
+    Fecha:r.date || '',
+    hora_inicio:r.startTime || '',
+    hora_fin:r.endTime || '',
+    Hora:[r.startTime||'',r.endTime||''].filter(Boolean).join('-'),
+    lugar:r.place || '',
+    Lugar:r.place || '',
+    estado:r.status || '',
+    Estado:r.status || '',
+    objetivo:r.objective || '',
+    temas_ids:r.allSongs ? 'TODOS' : JSON.stringify(r.songIds || []),
+    temas_texto:r.allSongs ? 'Todos los temas' : (r.songTitles || ''),
+    Temas:r.allSongs ? 'Todos los temas' : (r.songTitles || ''),
+    notas:r.notes || '',
+    Notas:r.notes || '',
+    actualizado_en:new Date().toISOString()
+  }, attendanceToSheetFields(r.attendance||{}));
+}
+
+function taskToSheetRow(t){
+  return {
+    id:t.id,
+    ID:t.id,
+    titulo:t.title || '',
+    Tarea:t.title || '',
+    responsable:t.owner || '',
+    Responsable:t.owner || '',
+    fecha:t.due || '',
+    Fecha:t.due || '',
+    estado:t.status || '',
+    Estado:t.status || '',
+    prioridad:t.priority || '',
+    Prioridad:t.priority || '',
+    area:t.area || '',
+    Área:t.area || '',
+    notas:t.notes || '',
+    Notas:t.notes || '',
+    actualizado_en:new Date().toISOString()
+  };
+}
+
+function localPaymentToSheetRow(patch){
+  const id=normalizeMemberKey(patch.memberId || patch.name);
+  const name=memberDisplayName(id);
+  return {
+    mes:normalizeMonthValue(patch.month) || new Date().toISOString().slice(0,7),
+    Mes:normalizeMonthValue(patch.month) || new Date().toISOString().slice(0,7),
+    memberId:id,
+    'ID Miembro':id,
+    nombre:name,
+    Nombre:name,
+    cuota:parseEuroValue(patch.amount) || 36.17,
+    Cuota:parseEuroValue(patch.amount) || 36.17,
+    pagado:isPaymentPaid(patch.paid) ? 'SI' : 'NO',
+    Pagado:isPaymentPaid(patch.paid) ? 'SI' : 'NO',
+    fecha_pago:patch.paidDate || '',
+    'Fecha pago':patch.paidDate || '',
+    notas:patch.notes || '',
+    Notas:patch.notes || '',
+    actualizado_en:new Date().toISOString(),
+    'Última actualización':new Date().toISOString()
+  };
+}
+
+function pushSheetRow(action,row,opts={}){
+  if(!sheetWriteEnabled()) return Promise.reject(new Error('No hay endpoint Apps Script configurado.'));
+  if(!isAdminActive() && !opts.allowUser) return Promise.reject(new Error('Modo usuario: no se puede escribir en Google Sheet.'));
+  sheetStatus('Guardando en Google Sheet maestro…');
+  return appsScriptJSONP({action, key:'1929', row:JSON.stringify(row)})
+    .then(payload=>{
+      if(!payload || payload.ok===false) throw new Error(payload?.error || 'No se pudo guardar en Google Sheet.');
+      sheetStatus('Guardado en Google Sheet maestro. Actualizando vista…','ok');
+      return syncCRMFromGoogleSheet({silent:true, afterWrite:true}).then(()=>payload);
+    })
+    .catch(err=>{
+      sheetStatus('Guardado solo en este navegador. Falló Google Sheet: '+esc(err.message||err),'bad');
+      throw err;
+    });
+}
+
+function pushConcertToSheet(c){
+  return pushSheetRow('upsertConcert', concertToSheetRow(c));
+}
+
+function pushRehearsalToSheet(r){
+  return pushSheetRow('upsertRehearsal', rehearsalToSheetRow(r));
+}
+
+function pushTaskToSheet(t){
+  return pushSheetRow('upsertTask', taskToSheetRow(t));
+}
+
+function pushLocalPaymentToSheet(p){
+  return pushSheetRow('upsertLocalPayment', localPaymentToSheetRow(p));
+}
+
+function alertSheetWriteError(err){
+  alert('El cambio se ha guardado en este navegador, pero NO se ha podido enviar a Google Sheet.\\n\\nMotivo: '+(err.message||err)+'\\n\\nHasta que no se guarde en Google Sheet, el móvil y otros equipos no verán ese cambio.');
+}
+
+
 function sheetListFromPayload(payload){
   if(!payload || !payload.sheets) return [];
   return Object.entries(payload.sheets).map(([key,value])=>Object.assign({key}, value || {}));
@@ -779,7 +942,7 @@ async function syncCRMFromGoogleSheet(opts={}){
   const silent = !!opts.silent;
   try{
     sheetStatus('Sincronizando con Google Sheet maestro…');
-    const payload=await appsScriptJSONP({action:'all'});
+    const payload=await appsScriptJSONP({action:'mobile'});
     const report=applyAllFromGoogleSheetPayload(payload);
     saveData();
     refreshAll();
@@ -788,7 +951,7 @@ async function syncCRMFromGoogleSheet(opts={}){
     return true;
   }catch(err){
     db.sheetSync = Object.assign({}, db.sheetSync||{}, {status:'error', error:String(err.message||err), updatedAt:new Date().toISOString(), endpoint: GOOGLE_SHEET_MASTER.appsScriptUrl});
-    sheetStatus('No se ha podido leer la Google Sheet desde esta app. Se muestra la última caché local. Motivo: '+esc(err.message||err), 'bad');
+    sheetStatus('SIN CONEXIÓN REAL CON GOOGLE SHEET en este dispositivo. No se debe fiar de estos datos hasta sincronizar. Motivo: '+esc(err.message||err), 'bad');
     if(!silent) alert('No se pudo sincronizar con Google Sheet: '+(err.message||err));
     return false;
   }
@@ -1157,7 +1320,23 @@ function openConcertModal(id=null,preset=null){
   document.getElementById('modalBody').innerHTML=renderForm(concertFields(), item)+posterUploadBlock(item)+`<div class="hr"></div><div class="actions"><button class="btn gold" onclick="saveConcert()">Guardar</button><button class="btn dark" onclick="closeModal()">Cancelar</button></div>`;
   openModal();
 }
-function saveConcert(){const obj=readForm(concertFields());['fee','deposit','paid','contactId'].forEach(k=>obj[k]=Number(obj[k]||0)); if(modalContext.id){const idx=db.concerts.findIndex(x=>x.id===modalContext.id);db.concerts[idx]=Object.assign({},db.concerts[idx],obj);}else{obj.id=nextId(db.concerts);db.concerts.push(obj);} closeModal();saveData();}
+function saveConcert(){
+  const obj=readForm(concertFields());
+  ['fee','deposit','paid','contactId'].forEach(k=>obj[k]=Number(obj[k]||0));
+  let item;
+  if(modalContext.id){
+    const idx=db.concerts.findIndex(x=>x.id===modalContext.id);
+    item=Object.assign({},db.concerts[idx],obj);
+    db.concerts[idx]=item;
+  }else{
+    obj.id=nextId(db.concerts);
+    item=obj;
+    db.concerts.push(item);
+  }
+  closeModal();
+  saveData();
+  pushConcertToSheet(item).catch(alertSheetWriteError);
+}
 
 function bandMembers(){
   return Array.isArray(db.bandMembers) && db.bandMembers.length ? db.bandMembers : [
@@ -1278,15 +1457,19 @@ function saveRehearsal(){
     const notes=document.querySelector(`[data-rehearsal-attendance-note="${m.id}"]`)?.value||'';
     obj.attendance[m.id]={status:st,notes};
   });
+  let item;
   if(modalContext.id){
     const idx=db.rehearsals.findIndex(x=>x.id===modalContext.id);
-    db.rehearsals[idx]=Object.assign({},db.rehearsals[idx],obj);
+    item=Object.assign({},db.rehearsals[idx],obj);
+    db.rehearsals[idx]=item;
   }else{
     obj.id=nextId(db.rehearsals||[]);
-    db.rehearsals.push(obj);
+    item=obj;
+    db.rehearsals.push(item);
   }
   closeModal();
   saveData();
+  pushRehearsalToSheet(item).catch(alertSheetWriteError);
 }
 function viewRehearsalModal(id){
   const r=(db.rehearsals||[]).find(x=>x.id===id);
@@ -1368,7 +1551,6 @@ function renderLocalPayments(){
   let baseRows = consolidateLocalPaymentRows(rows.filter(r=>normalizeMonthValue(r.month)===controlMonth))
     .filter(r=>allowed.includes(normalizeMemberKey(r.memberId || r.name)));
 
-  // Blindaje final: máximo una cuota por miembro real.
   const byMember=new Map();
   baseRows.forEach(r=>{
     const id=normalizeMemberKey(r.memberId || r.name);
@@ -1383,18 +1565,17 @@ function renderLocalPayments(){
   });
   baseRows=[...byMember.values()];
 
-  const sumRows = baseRows.reduce((a,r)=>a+(parseEuroValue(r.amount)||0),0);
   const configAmount=parseEuroValue(db.localConfig?.monthlyAmount);
-  const monthlyAmount = configAmount || (baseRows.length===6 ? 217 : sumRows);
+  const monthlyAmount = configAmount || 217;
   const paidRaw = baseRows.filter(r=>isPaymentPaid(r.paid)).reduce((a,r)=>a+(parseEuroValue(r.amount)||0),0);
-  const paid = Math.min(monthlyAmount || paidRaw, paidRaw);
-  const pending = Math.max(0, (monthlyAmount || sumRows) - paid);
+  const paid = Math.min(monthlyAmount, paidRaw);
+  const pending = Math.max(0, monthlyAmount - paid);
 
   const kpis=document.getElementById('localKpis');
   if(kpis) kpis.innerHTML=[
     ['Mes control', controlMonth],
     ['Cuotas', baseRows.length],
-    ['Total local', money2(monthlyAmount || sumRows)],
+    ['Total local', money2(monthlyAmount)],
     ['Pagado', money2(paid)],
     ['Pendiente', money2(pending)]
   ].map(k=>`<div class="card kpi"><strong>${esc(k[1])}</strong><span>${esc(k[0])}</span></div>`).join('');
@@ -1403,15 +1584,34 @@ function renderLocalPayments(){
   const shownRows=baseRows.length ? baseRows : rows;
   if(tbody) tbody.innerHTML=shownRows.map(r=>{
     const st=isPaymentPaid(r.paid)?'Pagado':'Pendiente';
+    const memberId=normalizeMemberKey(r.memberId||r.name);
     return `<tr>
       <td>${esc(normalizeMonthValue(r.month)||'—')}</td>
-      <td><strong>${esc(memberDisplayName(r.memberId||r.name)||r.name||'—')}</strong><br><small>${esc(normalizeMemberKey(r.memberId||r.name)||'')}</small></td>
+      <td><strong>${esc(memberDisplayName(memberId)||r.name||'—')}</strong><br><small>${esc(memberId||'')}</small></td>
       <td>${esc(money2(parseEuroValue(r.amount)).replace(' €',''))} €</td>
       <td>${badge(st)}</td>
       <td>${esc(r.paidDate||'—')}</td>
       <td>${esc(compact(r.notes||'',120))}</td>
+      <td class="admin-only"><button class="mini" onclick="markLocalPayment('${esc(normalizeMonthValue(r.month)||controlMonth)}','${esc(memberId)}','SI')">Pagado</button> <button class="mini danger" onclick="markLocalPayment('${esc(normalizeMonthValue(r.month)||controlMonth)}','${esc(memberId)}','NO')">Pendiente</button></td>
     </tr>`;
-  }).join('') || '<tr><td colspan="6" class="muted">No hay cuotas del local cargadas en PAGOS_LOCAL.</td></tr>';
+  }).join('') || '<tr><td colspan="7" class="muted">No hay cuotas del local cargadas en PAGOS_LOCAL.</td></tr>';
+}
+
+function markLocalPayment(month, memberId, paid){
+  const id=normalizeMemberKey(memberId);
+  const rows=consolidateLocalPaymentRows(db.localPayments||[]);
+  let item=rows.find(r=>normalizeMonthValue(r.month)===normalizeMonthValue(month) && normalizeMemberKey(r.memberId||r.name)===id);
+  if(!item){
+    item={month:normalizeMonthValue(month)||new Date().toISOString().slice(0,7), memberId:id, name:memberDisplayName(id), amount:36.17, paid:'NO', notes:''};
+    db.localPayments.push(item);
+  }
+  item.paid=paid==='SI'?'SI':'NO';
+  item.paidDate=paid==='SI'?new Date().toISOString().slice(0,10):'';
+  item.notes=mergeTextNotes(item.notes, paid==='SI'?'Marcado pagado desde APP-ENHE':'Marcado pendiente desde APP-ENHE');
+  saveData();
+  pushLocalPaymentToSheet(item)
+    .then(()=>sheetStatus('Pago local actualizado en Google Sheet.','ok'))
+    .catch(alertSheetWriteError);
 }
 
 
@@ -1473,7 +1673,9 @@ function saveConcertAttendance(){
   c.attendance=c.attendance||{};
   c.attendance[mId]={status,notes,updatedAt:new Date().toISOString()};
   saveData();
-  alert('Confirmación guardada en este navegador.');
+  pushConcertToSheet(c)
+    .then(()=>alert('Confirmación guardada en Google Sheet.'))
+    .catch(alertSheetWriteError);
 }
 function rehearsalHeaders(){return [
   {label:'ID',key:'id'},
@@ -1826,7 +2028,22 @@ function composeForContact(id){const c=db.crm.find(x=>x.id===id); if(!c||!c.emai
 function taskFields(){return [['title','Tarea','text','span2'],['owner','Responsable','text'],['due','Fecha','date'],['status','Estado','select','', ['Pendiente','En curso','Completada','Cancelada']],['priority','Prioridad','select','', ['Muy alta','Alta','Media','Baja']],['area','Área','text'],['notes','Notas','textarea','span4']];}
 function renderTasks(){document.querySelector('#taskTable tbody').innerHTML=db.tasks.map(t=>`<tr><td><strong>${esc(t.title)}</strong></td><td>${esc(t.owner)}</td><td>${esc(t.due)}</td><td>${badge(t.status)}</td><td>${badge(t.priority)}</td><td>${esc(t.area)}</td><td>${esc(t.notes)}</td><td><button class="btn small gold" onclick="openTaskModal(${t.id})">Editar</button> <button class="btn small red" onclick="deleteRecord('tasks',${t.id})">Borrar</button></td></tr>`).join('')||'<tr><td colspan="8">Sin tareas.</td></tr>';}
 function openTaskModal(id=null){const item=id?db.tasks.find(x=>x.id===id):{status:'Pendiente',priority:'Media'};modalContext={type:'task',id};document.getElementById('modalTitle').textContent=id?'Editar tarea':'Nueva tarea';document.getElementById('modalBody').innerHTML=renderForm(taskFields(), item)+`<div class="hr"></div><div class="actions"><button class="btn gold" onclick="saveTask()">Guardar</button><button class="btn dark" onclick="closeModal()">Cancelar</button></div>`;openModal();}
-function saveTask(){const obj=readForm(taskFields()); if(modalContext.id){const idx=db.tasks.findIndex(x=>x.id===modalContext.id);db.tasks[idx]=Object.assign({},db.tasks[idx],obj);}else{obj.id=nextId(db.tasks);db.tasks.push(obj);} closeModal();saveData();}
+function saveTask(){
+  const obj=readForm(taskFields());
+  let item;
+  if(modalContext.id){
+    const idx=db.tasks.findIndex(x=>x.id===modalContext.id);
+    item=Object.assign({},db.tasks[idx],obj);
+    db.tasks[idx]=item;
+  }else{
+    obj.id=nextId(db.tasks);
+    item=obj;
+    db.tasks.push(item);
+  }
+  closeModal();
+  saveData();
+  pushTaskToSheet(item).catch(alertSheetWriteError);
+}
 function downloadBlob(filename, blob){
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -1966,4 +2183,6 @@ function initialTabFromUrl(){
 }
 clearOldLocalCaches();
 renderNav();refreshAll();setTab(initialTabFromUrl(), {scroll:false, updateUrl:false});
-setTimeout(()=>syncCRMFromGoogleSheet({silent:true, startup:true}), 450);
+setTimeout(()=>syncCRMFromGoogleSheet({silent:true, startup:true}), 250);
+window.addEventListener('focus',()=>syncCRMFromGoogleSheet({silent:true, focus:true}));
+document.addEventListener('visibilitychange',()=>{if(!document.hidden) syncCRMFromGoogleSheet({silent:true, visible:true});});

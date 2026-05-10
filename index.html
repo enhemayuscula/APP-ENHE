@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- APP-ENHE v1.8 local ensayo definitivo -->
+<!-- APP-ENHE v2.2 final sync -->
 <title>Ñ Mayúscula · Control profesional de conciertos, CRM y setlist</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#120608">
@@ -12,9 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="stylesheet" href="css/styles.css?v=1.8.0">
-<link rel="stylesheet" href="css/admin-guard.css?v=1.8.0">
-<script defer src="js/admin-guard.js?v=1.8.0"></script>
+<link rel="stylesheet" href="css/styles.css?v=2.2.0">
+<link rel="stylesheet" href="css/admin-guard.css?v=2.2.0">
+<script defer src="js/admin-guard.js?v=2.2.0"></script>
 </head>
 <body>
 <div class="app">
@@ -171,7 +171,7 @@
     <div class="tableWrap">
       <table id="localTable">
         <thead>
-          <tr><th>Mes</th><th>Miembro</th><th>Cuota</th><th>Estado</th><th>Fecha pago</th><th>Notas</th></tr>
+          <tr><th>Mes</th><th>Miembro</th><th>Cuota</th><th>Estado</th><th>Fecha pago</th><th>Notas</th><th class="admin-only">Acciones</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -324,13 +324,13 @@
 
 <div class="modal" id="modal"><div class="modalPanel"><div class="modalHead"><strong id="modalTitle">Detalle</strong><button class="close" onclick="closeModal()">×</button></div><div class="modalBody" id="modalBody"></div></div></div>
 
-<script src="js/assets.js?v=1.8.0"></script>
-<script src="js/data.js?v=1.8.0"></script>
-<script src="js/app.js?v=1.8.0"></script>
+<script src="js/assets.js?v=2.2.0"></script>
+<script src="js/data.js?v=2.2.0"></script>
+<script src="js/app.js?v=2.2.0"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("./sw.js?v=1.8.0").catch(function (error) {
+    navigator.serviceWorker.register("./sw.js?v=2.2.0").catch(function (error) {
       console.warn("Service Worker no registrado:", error);
     });
   });

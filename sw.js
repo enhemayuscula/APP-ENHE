@@ -1,5 +1,5 @@
-/* APP-ENHE · PWA service worker v1.8 local ensayo definitivo */
-const CACHE_NAME = "app-enhe-pwa-v1-8-0";
+/* APP-ENHE · PWA service worker v2.2 final sync */
+const CACHE_NAME = "app-enhe-pwa-v2-2-0";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -61,7 +61,7 @@ self.addEventListener("fetch", event => {
 
   if (isCoreRequest(request)) {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: "no-store" })
         .then(response => {
           const copy = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
