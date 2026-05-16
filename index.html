@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- APP-ENHE v2.4 presupuesto avanzado -->
+<!-- APP-ENHE v2.5 Lady Stone Admin -->
 <title>Ñ Mayúscula · Control profesional de conciertos, CRM y setlist</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#120608">
@@ -12,16 +12,16 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="stylesheet" href="css/styles.css?v=2.4.0">
-<link rel="stylesheet" href="css/admin-guard.css?v=2.4.0">
-<script defer src="js/admin-guard.js?v=2.4.0"></script>
+<link rel="stylesheet" href="css/styles.css?v=2.5.0">
+<link rel="stylesheet" href="css/admin-guard.css?v=2.5.0">
+<script defer src="js/admin-guard.js?v=2.5.0"></script>
 </head>
 <body>
 <div class="app">
 <aside>
   <div class="brand">
     <img class="logo" alt="Logo Ñ Mayúscula" src="assets/logo-n-mayuscula.jpg">
-    <div><h1>Ñ Mayúscula</h1><p>Control conciertos · CRM · dossier</p></div>
+    <div><h1>Ñ Mayúscula</h1><p>Control conciertos · CRM · asociación</p></div>
   </div>
   <div class="nav" id="nav"></div>
   <div class="sideCard">
@@ -175,6 +175,125 @@
         </thead>
         <tbody></tbody>
       </table>
+    </div>
+  </section>
+
+
+
+  <section class="tab" id="ladyStone">
+    <div class="sectionTitle">
+      <div>
+        <h3>Lady Stone Admin</h3>
+        <p>Control interno de la Asociación Musical y Cultural Lady Janis Joplin Stone: proyectos, entradas, gastos, facturas y liquidaciones.</p>
+      </div>
+      <div class="actions">
+        <button class="btn gold" type="button" onclick="renderLadyStoneAdmin()">Actualizar vista</button>
+        <button class="btn dark" type="button" onclick="exportLadyStoneCSV()">Exportar control CSV</button>
+        <button class="btn ghost" type="button" onclick="copyLadyStoneSummary()">Copiar resumen</button>
+      </div>
+    </div>
+
+    <div class="notice">
+      <strong>Uso interno administrador:</strong> este módulo no vende entradas ni emite facturas oficiales. Sirve para controlar datos, previsiones, gastos, liquidaciones y documentos por proyecto. La fuente principal sigue siendo Google Sheet; localStorage solo actúa como caché temporal.
+    </div>
+
+    <div class="grid three">
+      <div class="card" id="ladyAssociationCard"></div>
+      <div class="card" id="ladyProjectSummary"></div>
+      <div class="card" id="ladyQuickWarnings"></div>
+    </div>
+
+    <div class="grid two">
+      <div class="card">
+        <h4>Entradas / taquilla / liquidación</h4>
+        <p class="muted">Control económico del evento. Para Café La Palma, usar canal Passline de la sala y guardar aquí enlace, ventas y liquidación.</p>
+        <div class="formGrid">
+          <div class="field"><label>Proyecto</label><select id="lstTicketProject" onchange="calculateLadyStoneTicketForm()"><option>Ñ Mayúscula</option><option>Breathless Cover Band</option><option>Común asociación</option></select></div>
+          <div class="field"><label>Fecha</label><input type="date" id="lstTicketDate" onchange="calculateLadyStoneTicketForm()"></div>
+          <div class="field span2"><label>Evento</label><input id="lstTicketEvent" placeholder="Ej. Café La Palma · noche compartida" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field span2"><label>Sala / lugar</label><input id="lstTicketVenue" placeholder="Café La Palma" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>Canal venta</label><select id="lstTicketChannel" onchange="calculateLadyStoneTicketForm()"><option>Passline sala</option><option>Entradium</option><option>Wegow</option><option>Stripe propio</option><option>Taquilla manual</option><option>Otro</option></select></div>
+          <div class="field"><label>Aforo</label><input type="number" id="lstTicketCapacity" value="150" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field span2"><label>Enlace de venta</label><input id="lstTicketUrl" placeholder="https://..." oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>Precio anticipada €</label><input type="number" id="lstPriceAdvance" value="10" step="0.01" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>Vendidas anticipada</label><input type="number" id="lstSoldAdvance" value="0" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>Precio taquilla €</label><input type="number" id="lstPriceDoor" value="12" step="0.01" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>Vendidas taquilla</label><input type="number" id="lstSoldDoor" value="0" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>Invitaciones</label><input type="number" id="lstInvites" value="0" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>Canon sala €</label><input type="number" id="lstCanon" value="423.50" step="0.01" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>IVA entradas %</label><input type="number" id="lstVatPct" value="10" step="0.01" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>SGAE</label><select id="lstSgaeMode" onchange="calculateLadyStoneTicketForm()"><option value="sala">Gestionada por sala</option><option value="promotor">A cargo promotor</option><option value="sin_confirmar">Sin confirmar</option></select></div>
+          <div class="field"><label>SGAE estimada %</label><input type="number" id="lstSgaePct" value="8.5" step="0.1" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>Otros gastos €</label><input type="number" id="lstOtherExpenses" value="0" step="0.01" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>Reparto bandas</label><select id="lstSplitBands" onchange="calculateLadyStoneTicketForm()"><option value="1">Solo este proyecto</option><option value="2" selected>Dos bandas 50/50</option><option value="custom">Manual / revisar</option></select></div>
+          <div class="field span2"><label>Notas</label><textarea id="lstTicketNotes" placeholder="Condiciones, enlace, liquidación, comentarios..."></textarea></div>
+        </div>
+        <div id="ladyTicketCalc" class="notice" style="margin-top:12px"></div>
+        <div class="actions" style="margin-top:12px">
+          <button class="btn gold" type="button" onclick="createLadyStoneTicket()">Guardar control de entradas</button>
+          <button class="btn dark" type="button" onclick="copyLadyStoneTicketEstimate()">Copiar estimación</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4>Gasto / ingreso rápido</h4>
+        <p class="muted">Registra movimientos internos por proyecto. No sustituye contabilidad oficial.</p>
+        <div class="formGrid">
+          <div class="field"><label>Proyecto</label><select id="lstMovementProject"><option>Ñ Mayúscula</option><option>Breathless Cover Band</option><option>Común asociación</option></select></div>
+          <div class="field"><label>Tipo</label><select id="lstMovementType"><option value="gasto">Gasto</option><option value="ingreso">Ingreso</option><option value="traspaso">Traspaso interno</option></select></div>
+          <div class="field"><label>Fecha</label><input type="date" id="lstMovementDate"></div>
+          <div class="field"><label>Importe €</label><input type="number" id="lstMovementAmount" step="0.01"></div>
+          <div class="field span2"><label>Concepto</label><input id="lstMovementConcept" placeholder="Canon sala, cartel, liquidación concierto..."></div>
+          <div class="field"><label>Pagado por / recibido por</label><input id="lstMovementPaidBy" placeholder="Miguel / asociación / sala"></div>
+          <div class="field"><label>Forma de pago</label><input id="lstMovementMethod" placeholder="Transferencia, efectivo, tarjeta..."></div>
+          <div class="field span2"><label>Notas / justificante</label><textarea id="lstMovementNotes" placeholder="Pendiente factura, justificante, enlace documento..."></textarea></div>
+        </div>
+        <div class="actions" style="margin-top:12px">
+          <button class="btn gold" type="button" onclick="createLadyStoneMovement()">Guardar movimiento</button>
+        </div>
+
+        <div class="hr"></div>
+
+        <h4>Factura / liquidación</h4>
+        <div class="formGrid">
+          <div class="field"><label>Proyecto</label><select id="lstInvoiceProject"><option>Ñ Mayúscula</option><option>Breathless Cover Band</option><option>Común asociación</option></select></div>
+          <div class="field"><label>Estado</label><select id="lstInvoiceStatus"><option>Pendiente emitir</option><option>Emitida</option><option>Cobro pendiente</option><option>Cobrada</option><option>Revisar fiscalidad</option></select></div>
+          <div class="field"><label>Fecha</label><input type="date" id="lstInvoiceDate"></div>
+          <div class="field"><label>Importe €</label><input type="number" id="lstInvoiceAmount" step="0.01"></div>
+          <div class="field span2"><label>Cliente / sala</label><input id="lstInvoiceClient" placeholder="Café La Palma / cliente / agencia"></div>
+          <div class="field span2"><label>Concepto</label><input id="lstInvoiceConcept" placeholder="Actuación musical Ñ Mayúscula · fecha"></div>
+          <div class="field"><label>Quién factura</label><input id="lstInvoiceBy" placeholder="Asociación / pendiente"></div>
+          <div class="field"><label>Fecha cobro prevista</label><input type="date" id="lstInvoiceDue"></div>
+          <div class="field span2"><label>Notas</label><textarea id="lstInvoiceNotes" placeholder="Datos fiscales, factura requerida, liquidación recibida..."></textarea></div>
+        </div>
+        <div class="actions" style="margin-top:12px">
+          <button class="btn gold" type="button" onclick="createLadyStoneInvoice()">Guardar factura/liquidación</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid two">
+      <div class="card">
+        <h4>Últimos controles de entradas</h4>
+        <div class="tableWrap"><table id="ladyTicketsTable"><thead><tr><th>Fecha</th><th>Proyecto</th><th>Evento</th><th>Vendidas</th><th>Neto estimado</th><th>Por proyecto</th><th>Canal</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card">
+        <h4>Últimos movimientos</h4>
+        <div class="tableWrap"><table id="ladyMovementsTable"><thead><tr><th>Fecha</th><th>Proyecto</th><th>Tipo</th><th>Concepto</th><th>Importe</th><th>Estado</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card">
+        <h4>Facturas / liquidaciones</h4>
+        <div class="tableWrap"><table id="ladyInvoicesTable"><thead><tr><th>Fecha</th><th>Proyecto</th><th>Cliente</th><th>Importe</th><th>Estado</th><th>Quién factura</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card">
+        <h4>Enlaces rápidos</h4>
+        <div class="actions">
+          <a class="btn gold" href="https://enhemayuscula.github.io/APP-ENHE/" target="_blank" rel="noopener">Abrir APP-ENHE</a>
+          <a class="btn dark" href="#" onclick="alert('Configurar URL de APP-BCB cuando se cierre versión estable.'); return false;">APP-BCB pendiente</a>
+          <a class="btn ghost" href="https://docs.google.com/spreadsheets/d/1mrffAdGxfzRL602XHD4Uw-EKiYBgZ4PgLuVuOFPxEGU/edit?gid=2128742185#gid=2128742185" target="_blank" rel="noopener">Google Sheet Ñ</a>
+        </div>
+        <div class="notice" style="margin-top:12px">Fase v2.5: base de control. No vende entradas ni presenta impuestos. La asociación central definitiva podrá migrarse más adelante a APP-LADY-STONE.</div>
+      </div>
     </div>
   </section>
 
@@ -485,13 +604,13 @@
 
 <div class="modal" id="modal"><div class="modalPanel"><div class="modalHead"><strong id="modalTitle">Detalle</strong><button class="close" onclick="closeModal()">×</button></div><div class="modalBody" id="modalBody"></div></div></div>
 
-<script src="js/assets.js?v=2.4.0"></script>
-<script src="js/data.js?v=2.4.0"></script>
-<script src="js/app.js?v=2.4.0"></script>
+<script src="js/assets.js?v=2.5.0"></script>
+<script src="js/data.js?v=2.5.0"></script>
+<script src="js/app.js?v=2.5.0"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("./sw.js?v=2.3.0").catch(function (error) {
+    navigator.serviceWorker.register("./sw.js?v=2.5.0").catch(function (error) {
       console.warn("Service Worker no registrado:", error);
     });
   });

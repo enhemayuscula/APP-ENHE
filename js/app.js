@@ -1,11 +1,11 @@
-const APP_ENHE_APP_VERSION = '2.4.0-presupuesto-avanzado';
-const STORE_KEY = 'n_mayuscula_control_pro_v10_budget_advanced';
-const OLD_STORE_KEYS = ['n_mayuscula_control_pro_v9_admin_notice_fix','n_mayuscula_control_pro_v8_mobile_sheet_lite','n_mayuscula_control_pro_v7_mobile_sheet_jsonp','n_mayuscula_control_pro_v6_sheet_master_v20','n_mayuscula_control_pro_v5_sheet_master','n_mayuscula_control_pro_v4_sheet_first','n_mayuscula_control_pro_v3','n_mayuscula_control_pro_v2','n_mayuscula_control_pro'];
+const APP_ENHE_APP_VERSION = '2.5.0-lady-stone-admin';
+const STORE_KEY = 'n_mayuscula_control_pro_v11_lady_stone_admin';
+const OLD_STORE_KEYS = ['n_mayuscula_control_pro_v10_budget_advanced','n_mayuscula_control_pro_v9_admin_notice_fix','n_mayuscula_control_pro_v8_mobile_sheet_lite','n_mayuscula_control_pro_v7_mobile_sheet_jsonp','n_mayuscula_control_pro_v6_sheet_master_v20','n_mayuscula_control_pro_v5_sheet_master','n_mayuscula_control_pro_v4_sheet_first','n_mayuscula_control_pro_v3','n_mayuscula_control_pro_v2','n_mayuscula_control_pro'];
 let db = loadData();
 let filteredCRM = [];
 const tabs = [
   ['dashboard','Panel','●'],['crm','CRM','●'],['followup','Seguimiento','●'],['gmail','Gmail','●'],['concerts','Conciertos','●'],['rehearsals','Ensayos','●'],['local','Local ensayo','●'],
-  ['budget','Presupuesto','●'],['repertoire','Canciones','●'],['setlist','Setlist','●'],['dossier','Dossier','●'],['templates','Plantillas','●'],['tasks','Tareas','●'],['importExport','Exportar','●']
+  ['ladyStone','Lady Stone','●'],['budget','Presupuesto','●'],['repertoire','Canciones','●'],['setlist','Setlist','●'],['dossier','Dossier','●'],['templates','Plantillas','●'],['tasks','Tareas','●'],['importExport','Exportar','●']
 ];
 
 function clone(o){return JSON.parse(JSON.stringify(o));}
@@ -130,6 +130,8 @@ function migrateData(data){
   data.concerts = Array.isArray(data.concerts) ? data.concerts : [];
   data.localPayments = Array.isArray(data.localPayments) ? data.localPayments : [];
   data.localConfig = Object.assign({monthlyAmount:217, source:'CONFIG_GRUPO / Google Sheet'}, data.localConfig || {});
+
+  data.ladyStone = normalizeLadyStoneData(data.ladyStone);
   const defaultConcert = {
     id: 0,
     date: '',
@@ -240,6 +242,63 @@ function parseEuroValue(v){
 function money2(n){
   n=Number(n||0);
   return n.toLocaleString('es-ES',{minimumFractionDigits:2, maximumFractionDigits:2})+' €';
+}
+
+function todayISO(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function defaultLadyStoneData(){
+  return {
+    association:{
+      name:'Asociación Musical y Cultural Lady Janis Joplin Stone',
+      scope:'Comunidad de Madrid',
+      address:'C/ Hermanos García Noblejas, 131, 6º A · 28037 Madrid',
+      operationalBase:'Lady Stone Music · Local Janis Joplin · C. Torre de Don Miguel, 13-A · Villa de Vallecas · 28031 Madrid',
+      president:'Miguel Ángel Fernández Sánchez',
+      status:'Borrador / pendiente de constitución'
+    },
+    projects:[
+      {id:'enhe', name:'Ñ Mayúscula', status:'Activo', app:'APP-ENHE'},
+      {id:'bcb', name:'Breathless Cover Band', status:'Activo', app:'APP-BCB'},
+      {id:'common', name:'Común asociación', status:'Interno', app:'Lady Stone'}
+    ],
+    tickets:[],
+    movements:[],
+    invoices:[],
+    documents:[],
+    settings:{
+      defaultVatTickets:10,
+      defaultSgaePct:8.5,
+      notes:'Una sola asociación con proyectos separados. No mezclar saldos Ñ / BCB.'
+    }
+  };
+}
+
+function normalizeLadyProjectName(v){
+  const x=norm(v);
+  if(x.includes('breathless') || x.includes('bcb')) return 'Breathless Cover Band';
+  if(x.includes('comun') || x.includes('asociacion')) return 'Común asociación';
+  return 'Ñ Mayúscula';
+}
+
+function normalizeLadyStoneData(raw){
+  const base=defaultLadyStoneData();
+  raw = raw && typeof raw === 'object' ? raw : {};
+  const out=Object.assign({}, base, raw);
+  out.association=Object.assign({}, base.association, raw.association||{});
+  out.settings=Object.assign({}, base.settings, raw.settings||{});
+  out.projects=Array.isArray(raw.projects) && raw.projects.length ? raw.projects : base.projects;
+  out.tickets=Array.isArray(raw.tickets) ? raw.tickets : [];
+  out.movements=Array.isArray(raw.movements) ? raw.movements : [];
+  out.invoices=Array.isArray(raw.invoices) ? raw.invoices : [];
+  out.documents=Array.isArray(raw.documents) ? raw.documents : [];
+  return out;
+}
+
+function ensureLadyStone(){
+  db.ladyStone = normalizeLadyStoneData(db.ladyStone);
+  return db.ladyStone;
 }
 function normalizeMonthValue(v){
   if(v instanceof Date && !isNaN(v.getTime())) return v.toISOString().slice(0,7);
@@ -608,6 +667,54 @@ function localPaymentToSheetRow(patch){
   };
 }
 
+
+function ladyStoneTicketToSheetRow(t){
+  return {
+    id:t.id,
+    ID:t.id,
+    Proyecto:t.project||'',
+    Fecha:t.date||'',
+    Evento:t.event||'',
+    Sala:t.venue||'',
+    Canal:t.channel||'',
+    Enlace:t.url||'',
+    Aforo:t.capacity||0,
+    Invitaciones:t.invites||0,
+    Precio_anticipada:t.priceAdvance||0,
+    Vendidas_anticipada:t.soldAdvance||0,
+    Precio_taquilla:t.priceDoor||0,
+    Vendidas_taquilla:t.soldDoor||0,
+    Entradas_vendidas:t.soldTotal||0,
+    Taquilla_bruta:t.gross||0,
+    IVA_cultural:t.vatAmount||0,
+    Canon_sala:t.canon||0,
+    SGAE_modo:t.sgaeMode||'',
+    SGAE_estimado:t.sgaeAmount||0,
+    Otros_gastos:t.otherExpenses||0,
+    Neto_estimado:t.netEstimate||0,
+    Neto_por_proyecto:t.netPerProject||0,
+    Reparto_bandas:t.splitBands||'',
+    Estado:t.status||'Previsión',
+    Notas:t.notes||'',
+    actualizado_en:new Date().toISOString()
+  };
+}
+function ladyStoneMovementToSheetRow(m){
+  return {
+    id:m.id, ID:m.id, Proyecto:m.project||'', Fecha:m.date||'', Tipo:m.type||'', Concepto:m.concept||'', Importe:m.amount||0,
+    Pagado_por:m.paidBy||'', Forma_pago:m.method||'', Estado:m.status||'Registrado', Notas:m.notes||'', actualizado_en:new Date().toISOString()
+  };
+}
+function ladyStoneInvoiceToSheetRow(i){
+  return {
+    id:i.id, ID:i.id, Proyecto:i.project||'', Fecha:i.date||'', Cliente:i.client||'', Concepto:i.concept||'', Importe:i.amount||0,
+    Estado:i.status||'', Quien_factura:i.invoiceBy||'', Fecha_cobro_prevista:i.dueDate||'', Notas:i.notes||'', actualizado_en:new Date().toISOString()
+  };
+}
+function pushLadyStoneTicketToSheet(t){return pushSheetRow('upsertLadyStoneTicket', ladyStoneTicketToSheetRow(t));}
+function pushLadyStoneMovementToSheet(m){return pushSheetRow('upsertLadyStoneMovement', ladyStoneMovementToSheetRow(m));}
+function pushLadyStoneInvoiceToSheet(i){return pushSheetRow('upsertLadyStoneInvoice', ladyStoneInvoiceToSheetRow(i));}
+
 function pushSheetRow(action,row,opts={}){
   if(!sheetWriteEnabled()) return Promise.reject(new Error('No hay endpoint Apps Script configurado.'));
   if(!isAdminActive() && !opts.allowUser) return Promise.reject(new Error('Modo usuario: no se puede escribir en Google Sheet.'));
@@ -903,6 +1010,11 @@ function applyAllFromGoogleSheetPayload(payload){
     db.localConfig=Object.assign({}, db.localConfig||{}, {monthlyAmount:localMensual, source:'CONFIG_GRUPO / Google Sheet', updatedAt:new Date().toISOString()});
   }
 
+  const ladyTicketsRows = rowsFromPayloadSheet(findPayloadSheet(payload, ['LADY_STONE_ENTRADAS','ENTRADAS','TAQUILLA']));
+  const ladyMovementsRows = rowsFromPayloadSheet(findPayloadSheet(payload, ['LADY_STONE_MOVIMIENTOS','MOVIMIENTOS']));
+  const ladyInvoicesRows = rowsFromPayloadSheet(findPayloadSheet(payload, ['LADY_STONE_FACTURAS','FACTURAS','LIQUIDACIONES']));
+  applyLadyStoneFromSheet(ladyTicketsRows, ladyMovementsRows, ladyInvoicesRows);
+
   const formacionPayload = Array.isArray(payload?.data?.miembros) ? payload.data.miembros : payload.formacion;
   if(Array.isArray(formacionPayload) && formacionPayload.length){
     db.bandMembers=formacionPayload.map(m=>({
@@ -979,6 +1091,7 @@ function setTab(id, opts={}){
   if(id==='concerts') renderConcerts();
   if(id==='rehearsals') renderRehearsals();
   if(id==='local') renderLocalPayments();
+  if(id==='ladyStone') renderLadyStoneAdmin();
   if(id==='budget') calcBudget();
   if(id==='repertoire') renderRepertoire();
   if(id==='setlist') renderSetlist();
@@ -1010,6 +1123,7 @@ function tabCount(id){
   if(id==='concerts')return db.concerts.length;
   if(id==='rehearsals')return (db.rehearsals||[]).length;
   if(id==='tasks')return db.tasks.length;
+  if(id==='ladyStone')return (ensureLadyStone().tickets.length + ensureLadyStone().movements.length + ensureLadyStone().invoices.length);
   if(id==='repertoire')return db.repertoire.length;
   if(id==='setlist')return setlistRows().length;
   return '';
@@ -1040,7 +1154,7 @@ function refreshAll(){
   document.getElementById('sideLoaded').innerHTML=`${db.crm.length} contactos · ${db.gmailResponses.length} respuestas Gmail<br>Última importación: ${esc(db.createdFrom.lastImport || '—')}`;
   document.getElementById('heroBadges').innerHTML=[
     `${db.crm.length} contactos CRM`,`${countBy(db.crm,'campaign','Salas')} salas`,`${countBy(db.crm,'campaign','Eventos/Bodas/Festejos')} eventos/bodas/festejos`,
-    `${db.gmailResponses.length} respuestas Gmail`,`${(db.rehearsals||[]).length} ensayos`,`${(db.localPayments||[]).length} pagos local`,`${db.repertoire.length} canciones`,`${setlistRows().length} temas setlist`,`${db.templates.length} plantillas`
+    `${db.gmailResponses.length} respuestas Gmail`,`${(db.rehearsals||[]).length} ensayos`,`${(db.localPayments||[]).length} pagos local`,`${ensureLadyStone().tickets.length} controles asociación`,`${db.repertoire.length} canciones`,`${setlistRows().length} temas setlist`,`${db.templates.length} plantillas`
   ].map(x=>`<span class="badge">${esc(x)}</span>`).join('');
   fillFilters();
   renderDashboard();
@@ -1050,6 +1164,7 @@ function refreshAll(){
   renderConcerts();
   renderRehearsals();
   renderLocalPayments();
+  renderLadyStoneAdmin();
   renderBudgetUI();
   renderRepertoire();
   renderSetlist();
@@ -2417,11 +2532,303 @@ function safeImportCRMFile(file){
 }
 
 function copyText(txt){navigator.clipboard?.writeText(txt).then(()=>alert('Copiado.')).catch(()=>{const t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();alert('Copiado.');});}
+
+function rowVal(obj, keys){
+  for(const k of keys){
+    if(obj && obj[k] !== undefined && obj[k] !== null && String(obj[k]).trim() !== '') return obj[k];
+  }
+  return '';
+}
+
+function applyLadyStoneFromSheet(ticketsRows, movementsRows, invoicesRows){
+  const ls=ensureLadyStone();
+  if(Array.isArray(ticketsRows) && ticketsRows.length){
+    ls.tickets = ticketsRows.map(r=>({
+      id: rowVal(r,['id','ID']) || ('ticket_'+Date.now()+'_'+Math.random().toString(36).slice(2)),
+      project: normalizeLadyProjectName(rowVal(r,['Proyecto','project'])),
+      date: rowVal(r,['Fecha','date']),
+      event: rowVal(r,['Evento','event']),
+      venue: rowVal(r,['Sala','venue']),
+      channel: rowVal(r,['Canal','channel']),
+      url: rowVal(r,['Enlace','url']),
+      capacity: parseEuroValue(rowVal(r,['Aforo','capacity'])),
+      invites: parseEuroValue(rowVal(r,['Invitaciones','invites'])),
+      priceAdvance: parseEuroValue(rowVal(r,['Precio_anticipada','priceAdvance'])),
+      soldAdvance: parseEuroValue(rowVal(r,['Vendidas_anticipada','soldAdvance'])),
+      priceDoor: parseEuroValue(rowVal(r,['Precio_taquilla','priceDoor'])),
+      soldDoor: parseEuroValue(rowVal(r,['Vendidas_taquilla','soldDoor'])),
+      soldTotal: parseEuroValue(rowVal(r,['Entradas_vendidas','soldTotal'])),
+      gross: parseEuroValue(rowVal(r,['Taquilla_bruta','gross'])),
+      vatAmount: parseEuroValue(rowVal(r,['IVA_cultural','vatAmount'])),
+      canon: parseEuroValue(rowVal(r,['Canon_sala','canon'])),
+      sgaeMode: rowVal(r,['SGAE_modo','sgaeMode']),
+      sgaeAmount: parseEuroValue(rowVal(r,['SGAE_estimado','sgaeAmount'])),
+      otherExpenses: parseEuroValue(rowVal(r,['Otros_gastos','otherExpenses'])),
+      netEstimate: parseEuroValue(rowVal(r,['Neto_estimado','netEstimate'])),
+      netPerProject: parseEuroValue(rowVal(r,['Neto_por_proyecto','netPerProject'])),
+      splitBands: rowVal(r,['Reparto_bandas','splitBands']),
+      status: rowVal(r,['Estado','status']) || 'Previsión',
+      notes: rowVal(r,['Notas','notes'])
+    }));
+  }
+  if(Array.isArray(movementsRows) && movementsRows.length){
+    ls.movements = movementsRows.map(r=>({
+      id: rowVal(r,['id','ID']) || ('mov_'+Date.now()+'_'+Math.random().toString(36).slice(2)),
+      project: normalizeLadyProjectName(rowVal(r,['Proyecto','project'])),
+      date: rowVal(r,['Fecha','date']),
+      type: rowVal(r,['Tipo','type']) || 'gasto',
+      concept: rowVal(r,['Concepto','concept']),
+      amount: parseEuroValue(rowVal(r,['Importe','amount'])),
+      paidBy: rowVal(r,['Pagado_por','paidBy']),
+      method: rowVal(r,['Forma_pago','method']),
+      status: rowVal(r,['Estado','status']) || 'Registrado',
+      notes: rowVal(r,['Notas','notes'])
+    }));
+  }
+  if(Array.isArray(invoicesRows) && invoicesRows.length){
+    ls.invoices = invoicesRows.map(r=>({
+      id: rowVal(r,['id','ID']) || ('fac_'+Date.now()+'_'+Math.random().toString(36).slice(2)),
+      project: normalizeLadyProjectName(rowVal(r,['Proyecto','project'])),
+      date: rowVal(r,['Fecha','date']),
+      client: rowVal(r,['Cliente','client']),
+      concept: rowVal(r,['Concepto','concept']),
+      amount: parseEuroValue(rowVal(r,['Importe','amount'])),
+      status: rowVal(r,['Estado','status']) || 'Pendiente emitir',
+      invoiceBy: rowVal(r,['Quien_factura','invoiceBy']),
+      dueDate: rowVal(r,['Fecha_cobro_prevista','dueDate']),
+      notes: rowVal(r,['Notas','notes'])
+    }));
+  }
+}
+
+function getInputVal(id){const el=document.getElementById(id); return el ? el.value : '';}
+function setInputVal(id, value){const el=document.getElementById(id); if(el) el.value=value;}
+
+function ladyStoneTicketEstimateFromForm(){
+  const priceAdvance=parseEuroValue(getInputVal('lstPriceAdvance'));
+  const soldAdvance=parseEuroValue(getInputVal('lstSoldAdvance'));
+  const priceDoor=parseEuroValue(getInputVal('lstPriceDoor'));
+  const soldDoor=parseEuroValue(getInputVal('lstSoldDoor'));
+  const canon=parseEuroValue(getInputVal('lstCanon'));
+  const vatPct=parseEuroValue(getInputVal('lstVatPct')) || 10;
+  const sgaeMode=getInputVal('lstSgaeMode') || 'sala';
+  const sgaePct=parseEuroValue(getInputVal('lstSgaePct')) || 8.5;
+  const otherExpenses=parseEuroValue(getInputVal('lstOtherExpenses'));
+  const splitBands=getInputVal('lstSplitBands') || '1';
+
+  const gross=(priceAdvance*soldAdvance)+(priceDoor*soldDoor);
+  const soldTotal=soldAdvance+soldDoor;
+  const netAfterVat = gross / (1 + vatPct/100);
+  const vatAmount = gross - netAfterVat;
+  const sgaeAmount = sgaeMode === 'promotor' ? (netAfterVat * sgaePct / 100) : 0;
+  const netEstimate = netAfterVat - canon - sgaeAmount - otherExpenses;
+  const split = splitBands === '2' ? 2 : 1;
+  const netPerProject = netEstimate / split;
+  return {priceAdvance,soldAdvance,priceDoor,soldDoor,canon,vatPct,sgaeMode,sgaePct,otherExpenses,splitBands,gross,soldTotal,netAfterVat,vatAmount,sgaeAmount,netEstimate,netPerProject};
+}
+
+function calculateLadyStoneTicketForm(){
+  const el=document.getElementById('ladyTicketCalc');
+  if(!el) return;
+  const c=ladyStoneTicketEstimateFromForm();
+  const warn = c.sgaeMode === 'promotor' ? 'SGAE estimada a cargo del promotor.' : (c.sgaeMode === 'sala' ? 'SGAE marcada como gestionada por la sala.' : 'SGAE sin confirmar.');
+  el.innerHTML = `
+    <strong>Estimación:</strong><br>
+    Entradas vendidas: ${c.soldTotal} · Taquilla bruta: ${money2(c.gross)} · Neto sin IVA cultural: ${money2(c.netAfterVat)}<br>
+    IVA cultural estimado: ${money2(c.vatAmount)} · Canon: ${money2(c.canon)} · SGAE: ${money2(c.sgaeAmount)} · Otros gastos: ${money2(c.otherExpenses)}<br>
+    <strong>Neto estimado total:</strong> ${money2(c.netEstimate)} · <strong>Neto por proyecto:</strong> ${money2(c.netPerProject)}<br>
+    <span class="muted">${esc(warn)} Cifras orientativas; validar liquidación y fiscalidad antes de cerrar.</span>
+  `;
+  return c;
+}
+
+function createLadyStoneTicket(){
+  const ls=ensureLadyStone();
+  const c=ladyStoneTicketEstimateFromForm();
+  const ticket={
+    id:'ticket_'+Date.now(),
+    project:normalizeLadyProjectName(getInputVal('lstTicketProject')),
+    date:getInputVal('lstTicketDate') || todayISO(),
+    event:getInputVal('lstTicketEvent') || 'Evento sin nombre',
+    venue:getInputVal('lstTicketVenue') || '',
+    channel:getInputVal('lstTicketChannel') || '',
+    url:getInputVal('lstTicketUrl') || '',
+    capacity:parseEuroValue(getInputVal('lstTicketCapacity')),
+    invites:parseEuroValue(getInputVal('lstInvites')),
+    priceAdvance:c.priceAdvance,
+    soldAdvance:c.soldAdvance,
+    priceDoor:c.priceDoor,
+    soldDoor:c.soldDoor,
+    soldTotal:c.soldTotal,
+    gross:c.gross,
+    vatAmount:c.vatAmount,
+    canon:c.canon,
+    sgaeMode:c.sgaeMode,
+    sgaeAmount:c.sgaeAmount,
+    otherExpenses:c.otherExpenses,
+    netEstimate:c.netEstimate,
+    netPerProject:c.netPerProject,
+    splitBands:c.splitBands,
+    status:'Previsión',
+    notes:getInputVal('lstTicketNotes') || '',
+    updatedAt:new Date().toISOString()
+  };
+  ls.tickets.unshift(ticket);
+  saveData();
+  pushLadyStoneTicketToSheet(ticket).catch(alertSheetWriteError);
+}
+
+function createLadyStoneMovement(){
+  const ls=ensureLadyStone();
+  const mov={
+    id:'mov_'+Date.now(),
+    project:normalizeLadyProjectName(getInputVal('lstMovementProject')),
+    type:getInputVal('lstMovementType') || 'gasto',
+    date:getInputVal('lstMovementDate') || todayISO(),
+    concept:getInputVal('lstMovementConcept') || 'Movimiento sin concepto',
+    amount:parseEuroValue(getInputVal('lstMovementAmount')),
+    paidBy:getInputVal('lstMovementPaidBy') || '',
+    method:getInputVal('lstMovementMethod') || '',
+    status:'Registrado',
+    notes:getInputVal('lstMovementNotes') || '',
+    updatedAt:new Date().toISOString()
+  };
+  ls.movements.unshift(mov);
+  saveData();
+  pushLadyStoneMovementToSheet(mov).catch(alertSheetWriteError);
+}
+
+function createLadyStoneInvoice(){
+  const ls=ensureLadyStone();
+  const inv={
+    id:'inv_'+Date.now(),
+    project:normalizeLadyProjectName(getInputVal('lstInvoiceProject')),
+    status:getInputVal('lstInvoiceStatus') || 'Pendiente emitir',
+    date:getInputVal('lstInvoiceDate') || todayISO(),
+    client:getInputVal('lstInvoiceClient') || '',
+    concept:getInputVal('lstInvoiceConcept') || '',
+    amount:parseEuroValue(getInputVal('lstInvoiceAmount')),
+    invoiceBy:getInputVal('lstInvoiceBy') || '',
+    dueDate:getInputVal('lstInvoiceDue') || '',
+    notes:getInputVal('lstInvoiceNotes') || '',
+    updatedAt:new Date().toISOString()
+  };
+  ls.invoices.unshift(inv);
+  saveData();
+  pushLadyStoneInvoiceToSheet(inv).catch(alertSheetWriteError);
+}
+
+function projectTotals(project){
+  const ls=ensureLadyStone();
+  const movements=ls.movements.filter(x=>normalizeLadyProjectName(x.project)===project);
+  const ingresos=movements.filter(x=>norm(x.type).includes('ingreso')).reduce((a,x)=>a+parseEuroValue(x.amount),0);
+  const gastos=movements.filter(x=>norm(x.type).includes('gasto')).reduce((a,x)=>a+parseEuroValue(x.amount),0);
+  const tickets=ls.tickets.filter(x=>normalizeLadyProjectName(x.project)===project).reduce((a,x)=>a+parseEuroValue(x.netPerProject || x.netEstimate),0);
+  const invoices=ls.invoices.filter(x=>normalizeLadyProjectName(x.project)===project);
+  const pendienteFacturar=invoices.filter(x=>norm(x.status).includes('pendiente')).reduce((a,x)=>a+parseEuroValue(x.amount),0);
+  return {ingresos,gastos,tickets,invoices,pendienteFacturar,saldo:ingresos+tickets-gastos};
+}
+
+function renderLadyStoneAdmin(){
+  const ls=ensureLadyStone();
+  const assoc=document.getElementById('ladyAssociationCard');
+  if(!assoc) return;
+  assoc.innerHTML = `<h4>Asociación</h4>
+    <div class="detailItem"><small>Nombre</small><strong>${esc(ls.association.name)}</strong></div>
+    <div class="detailItem"><small>Ámbito</small><strong>${esc(ls.association.scope)}</strong></div>
+    <div class="detailItem"><small>Domicilio social/fiscal</small><span>${esc(ls.association.address)}</span></div>
+    <div class="detailItem"><small>Sede operativa</small><span>${esc(ls.association.operationalBase)}</span></div>
+    <div class="detailItem"><small>Estado</small>${badge(ls.association.status)}</div>`;
+
+  const proj=document.getElementById('ladyProjectSummary');
+  const projectNames=['Ñ Mayúscula','Breathless Cover Band','Común asociación'];
+  proj.innerHTML='<h4>Resumen por proyecto</h4>' + projectNames.map(name=>{
+    const t=projectTotals(name);
+    return `<div class="detailItem"><small>${esc(name)}</small><strong>Saldo interno estimado: ${money2(t.saldo)}</strong><br><span class="muted">Previsión entradas: ${money2(t.tickets)} · Ingresos: ${money2(t.ingresos)} · Gastos: ${money2(t.gastos)}</span></div>`;
+  }).join('');
+
+  const warn=document.getElementById('ladyQuickWarnings');
+  warn.innerHTML=`<h4>Puntos de control</h4>
+    <ul class="cleanList">
+      <li>Separar siempre movimientos de Ñ, BCB y común.</li>
+      <li>Si el canal de venta es de sala, pedir acceso o reportes de ventas.</li>
+      <li>No usar pasarela propia sin revisar SGAE, IVA, facturación y acceso.</li>
+      <li>La asociación central no debe mezclar saldos internos entre proyectos.</li>
+    </ul>`;
+
+  const ticketBody=document.querySelector('#ladyTicketsTable tbody');
+  ticketBody.innerHTML=(ls.tickets||[]).slice(0,20).map(t=>`<tr>
+    <td>${esc(t.date||'')}</td><td>${esc(t.project||'')}</td><td><strong>${esc(t.event||'')}</strong><br><small>${esc(t.venue||'')}</small></td>
+    <td>${Number(t.soldTotal||0)}</td><td>${money2(t.netEstimate)}</td><td>${money2(t.netPerProject)}</td><td>${esc(t.channel||'')}</td>
+  </tr>`).join('') || `<tr><td colspan="7" class="muted">Sin controles de entradas todavía.</td></tr>`;
+
+  const movBody=document.querySelector('#ladyMovementsTable tbody');
+  movBody.innerHTML=(ls.movements||[]).slice(0,20).map(m=>`<tr>
+    <td>${esc(m.date||'')}</td><td>${esc(m.project||'')}</td><td>${badge(m.type||'')}</td><td>${esc(m.concept||'')}</td><td>${money2(m.amount)}</td><td>${esc(m.status||'')}</td>
+  </tr>`).join('') || `<tr><td colspan="6" class="muted">Sin movimientos registrados.</td></tr>`;
+
+  const invBody=document.querySelector('#ladyInvoicesTable tbody');
+  invBody.innerHTML=(ls.invoices||[]).slice(0,20).map(i=>`<tr>
+    <td>${esc(i.date||'')}</td><td>${esc(i.project||'')}</td><td>${esc(i.client||'')}</td><td>${money2(i.amount)}</td><td>${badge(i.status||'')}</td><td>${esc(i.invoiceBy||'')}</td>
+  </tr>`).join('') || `<tr><td colspan="6" class="muted">Sin facturas/liquidaciones registradas.</td></tr>`;
+  calculateLadyStoneTicketForm();
+}
+
+function ladyStoneSummaryText(){
+  const projectNames=['Ñ Mayúscula','Breathless Cover Band','Común asociación'];
+  const lines=[
+    'Lady Stone Admin · Resumen interno',
+    'Asociación Musical y Cultural Lady Janis Joplin Stone',
+    'Fecha: '+new Date().toLocaleString('es-ES'),
+    ''
+  ];
+  projectNames.forEach(name=>{
+    const t=projectTotals(name);
+    lines.push(`${name}: saldo estimado ${money2(t.saldo)} · entradas ${money2(t.tickets)} · ingresos ${money2(t.ingresos)} · gastos ${money2(t.gastos)}`);
+  });
+  lines.push('', 'Nota: resumen de control interno, no documento fiscal.');
+  return lines.join('\n');
+}
+
+function copyLadyStoneSummary(){
+  const txt=ladyStoneSummaryText();
+  navigator.clipboard?.writeText(txt).then(()=>alert('Resumen copiado.')).catch(()=>prompt('Copia el resumen:', txt));
+}
+
+function copyLadyStoneTicketEstimate(){
+  const c=calculateLadyStoneTicketForm() || ladyStoneTicketEstimateFromForm();
+  const txt=[
+    'Estimación de entradas / liquidación',
+    `Entradas vendidas: ${c.soldTotal}`,
+    `Taquilla bruta: ${money2(c.gross)}`,
+    `Neto sin IVA cultural: ${money2(c.netAfterVat)}`,
+    `IVA cultural estimado: ${money2(c.vatAmount)}`,
+    `Canon sala: ${money2(c.canon)}`,
+    `SGAE estimada: ${money2(c.sgaeAmount)}`,
+    `Otros gastos: ${money2(c.otherExpenses)}`,
+    `Neto estimado total: ${money2(c.netEstimate)}`,
+    `Neto por proyecto: ${money2(c.netPerProject)}`
+  ].join('\n');
+  navigator.clipboard?.writeText(txt).then(()=>alert('Estimación copiada.')).catch(()=>prompt('Copia la estimación:', txt));
+}
+
+function exportLadyStoneCSV(){
+  const ls=ensureLadyStone();
+  const rows=[];
+  rows.push(['tipo','id','proyecto','fecha','concepto_evento','importe_neto','estado','notas']);
+  (ls.tickets||[]).forEach(t=>rows.push(['entradas',t.id,t.project,t.date,t.event,parseEuroValue(t.netPerProject||t.netEstimate),t.status,t.notes]));
+  (ls.movements||[]).forEach(m=>rows.push(['movimiento',m.id,m.project,m.date,m.concept,parseEuroValue(m.amount),m.status,m.notes]));
+  (ls.invoices||[]).forEach(i=>rows.push(['factura',i.id,i.project,i.date,i.concept,parseEuroValue(i.amount),i.status,i.notes]));
+  const csv=rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  downloadBlob(csv, 'lady-stone-control.csv', 'text/csv;charset=utf-8');
+}
+
+
 window.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 function initialTabFromUrl(){
   try{
     const raw = new URL(window.location.href).searchParams.get('tab') || '';
-    const map = {songs:'repertoire', canciones:'repertoire', repertorio:'repertoire', ensayos:'rehearsals', ensayo:'rehearsals', rehearsals:'rehearsals', export:'importExport', exportar:'importExport'};
+    const map = {songs:'repertoire', canciones:'repertoire', repertorio:'repertoire', ensayos:'rehearsals', ensayo:'rehearsals', rehearsals:'rehearsals', ladystone:'ladyStone', asociacion:'ladyStone', asociación:'ladyStone', admin:'ladyStone', export:'importExport', exportar:'importExport'};
     const id = map[raw] || raw;
     return tabs.some(t=>t[0]===id) ? id : 'dashboard';
   }catch(e){ return 'dashboard'; }

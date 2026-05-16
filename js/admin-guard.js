@@ -37,7 +37,14 @@
     'copyBudgetEmail',
     'downloadBudgetHTML',
     'composeTemplate',
-    'composeForContact'
+    'composeForContact',
+    'renderLadyStoneAdmin',
+    'createLadyStoneTicket',
+    'createLadyStoneMovement',
+    'createLadyStoneInvoice',
+    'exportLadyStoneCSV',
+    'copyLadyStoneSummary',
+    'copyLadyStoneTicketEstimate'
   ];
 
   const ADMIN_ONCLICK_PATTERNS = ADMIN_FUNCTIONS.slice();
@@ -227,7 +234,12 @@
       labelText.includes('exportar csv ensayos') ||
       labelText.includes('marcar todos') ||
       labelText.includes('usar setlist actual') ||
-      labelText.includes('limpiar')
+      labelText.includes('limpiar') ||
+      labelText.includes('guardar control de entradas') ||
+      labelText.includes('guardar movimiento') ||
+      labelText.includes('guardar factura') ||
+      labelText.includes('copiar resumen') ||
+      labelText.includes('copiar estimación')
     )){
       return true;
     }
