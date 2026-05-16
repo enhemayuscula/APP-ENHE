@@ -1,4 +1,4 @@
-# APP-ENHE v2.5 · Lady Stone Admin
+# APP-ENHE v2.6 · Lady Stone Acuerdos Económicos
 
 Versión completa para APP-ENHE.
 
@@ -10,7 +10,7 @@ Versión completa para APP-ENHE.
   - Ñ Mayúscula
   - Breathless Cover Band
   - Común asociación
-- Control de entradas / taquilla / liquidación.
+- Control de acuerdos económicos completos: caché fijo, extras, mínimo garantizado, porcentajes de taquilla, porcentaje de barra, canon de sala, taquilla gestionada por sala/banda y acuerdos mixtos.
 - Control de gastos e ingresos.
 - Control de facturas y liquidaciones.
 - Resumen económico interno por proyecto.
@@ -23,7 +23,7 @@ Versión completa para APP-ENHE.
 
 Usar el archivo separado:
 
-`APP_ENHE_BRIDGE_v2_5_lady_stone_admin.gs`
+`APP_ENHE_BRIDGE_v2_6_economic_agreements.gs`
 
 No subirlo a GitHub.
 
@@ -33,7 +33,7 @@ Pasos:
 3. Ejecutar `APP_ENHE_instalar_o_actualizar`.
 4. Implementar > Gestionar implementaciones > Editar > Nueva versión > Implementar.
 5. Probar `?action=health`.
-6. Debe devolver versión `2.5-lady-stone-admin`.
+6. Debe devolver versión `2.6-economic-agreements`.
 
 ## GitHub
 
@@ -43,7 +43,7 @@ No incluye carpeta `apps-script`.
 
 ## Prueba
 
-https://enhemayuscula.github.io/APP-ENHE/?v=25ladystone
+https://enhemayuscula.github.io/APP-ENHE/?v=26economicagreements
 
 Entrar como admin con clave 1929 y abrir:
 
@@ -53,3 +53,12 @@ Entrar como admin con clave 1929 y abrir:
 
 Este módulo es la primera base de administración central. 
 Cuando esté estable en Ñ, se podrá replicar la arquitectura a APP-BCB y, si conviene, crear una app central independiente `APP-LADY-STONE`.
+
+
+## Cambios v2.6
+
+- Renombra el bloque de entradas a **Acuerdo económico / liquidación**.
+- Añade selector obligatorio de modelo económico.
+- Añade campos de caché fijo, mínimo garantizado, extras, porcentaje de taquilla y porcentaje de barra.
+- Calcula neto estimado según modelo.
+- Guarda los campos ampliados en Google Sheet mediante el bridge v2.6.

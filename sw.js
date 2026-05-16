@@ -1,5 +1,5 @@
-/* APP-ENHE · PWA service worker v2.5 Lady Stone Admin */
-const CACHE_NAME = "app-enhe-pwa-v2-5-0";
+/* APP-ENHE · PWA service worker v2.6 Lady Stone Acuerdos Económicos */
+const CACHE_NAME = "app-enhe-pwa-v2-6-0";
 const APP_SHELL = [
   "./",
   "./index.html",

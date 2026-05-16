@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- APP-ENHE v2.5 Lady Stone Admin -->
+<!-- APP-ENHE v2.6 Lady Stone Acuerdos Económicos -->
 <title>Ñ Mayúscula · Control profesional de conciertos, CRM y setlist</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#120608">
@@ -184,7 +184,7 @@
     <div class="sectionTitle">
       <div>
         <h3>Lady Stone Admin</h3>
-        <p>Control interno de la Asociación Musical y Cultural Lady Janis Joplin Stone: proyectos, entradas, gastos, facturas y liquidaciones.</p>
+        <p>Control interno de la Asociación Musical y Cultural Lady Janis Joplin Stone: proyectos, acuerdos económicos, gastos, facturas y liquidaciones.</p>
       </div>
       <div class="actions">
         <button class="btn gold" type="button" onclick="renderLadyStoneAdmin()">Actualizar vista</button>
@@ -194,7 +194,7 @@
     </div>
 
     <div class="notice">
-      <strong>Uso interno administrador:</strong> este módulo no vende entradas ni emite facturas oficiales. Sirve para controlar datos, previsiones, gastos, liquidaciones y documentos por proyecto. La fuente principal sigue siendo Google Sheet; localStorage solo actúa como caché temporal.
+      <strong>Uso interno administrador:</strong> este módulo no vende entradas ni emite facturas oficiales. Sirve para controlar acuerdos económicos, cachés, porcentajes, previsiones, gastos, liquidaciones y documentos por proyecto. La fuente principal sigue siendo Google Sheet; localStorage solo actúa como caché temporal.
     </div>
 
     <div class="grid three">
@@ -205,32 +205,60 @@
 
     <div class="grid two">
       <div class="card">
-        <h4>Entradas / taquilla / liquidación</h4>
-        <p class="muted">Control económico del evento. Para Café La Palma, usar canal Passline de la sala y guardar aquí enlace, ventas y liquidación.</p>
+        <h4>Acuerdo económico / liquidación</h4>
+        <p class="muted">Controla cualquier modelo real: caché fijo, extras, mínimo garantizado, porcentaje de taquilla, porcentaje de barra, canon de sala o acuerdo mixto. No vende entradas ni sustituye contabilidad oficial.</p>
         <div class="formGrid">
+          <div class="field span2"><label>Tipo de acuerdo económico</label><select id="lstAgreementType" onchange="calculateLadyStoneTicketForm()">
+            <option value="cache_fijo">Caché fijo</option>
+            <option value="cache_fijo_extras">Caché fijo + extras</option>
+            <option value="minimo_mas_taquilla">Mínimo garantizado + porcentaje de taquilla</option>
+            <option value="porcentaje_taquilla">Porcentaje de taquilla</option>
+            <option value="porcentaje_barra">Porcentaje de barra / bebidas</option>
+            <option value="taquilla_mas_barra">Porcentaje de taquilla + barra</option>
+            <option value="canon_mas_taquilla" selected>Canon de sala + taquilla para la banda</option>
+            <option value="taquilla_sala">Taquilla gestionada por la sala</option>
+            <option value="taquilla_banda">Taquilla gestionada por la banda</option>
+            <option value="mixto">Acuerdo mixto / personalizado</option>
+          </select></div>
           <div class="field"><label>Proyecto</label><select id="lstTicketProject" onchange="calculateLadyStoneTicketForm()"><option>Ñ Mayúscula</option><option>Breathless Cover Band</option><option>Común asociación</option></select></div>
           <div class="field"><label>Fecha</label><input type="date" id="lstTicketDate" onchange="calculateLadyStoneTicketForm()"></div>
           <div class="field span2"><label>Evento</label><input id="lstTicketEvent" placeholder="Ej. Café La Palma · noche compartida" oninput="calculateLadyStoneTicketForm()"></div>
-          <div class="field span2"><label>Sala / lugar</label><input id="lstTicketVenue" placeholder="Café La Palma" oninput="calculateLadyStoneTicketForm()"></div>
-          <div class="field"><label>Canal venta</label><select id="lstTicketChannel" onchange="calculateLadyStoneTicketForm()"><option>Passline sala</option><option>Entradium</option><option>Wegow</option><option>Stripe propio</option><option>Taquilla manual</option><option>Otro</option></select></div>
+          <div class="field span2"><label>Sala / cliente / lugar</label><input id="lstTicketVenue" placeholder="Café La Palma / cliente privado / agencia" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>Canal venta / liquidación</label><select id="lstTicketChannel" onchange="calculateLadyStoneTicketForm()"><option>Passline sala</option><option>Entradium</option><option>Wegow</option><option>Stripe propio</option><option>Taquilla manual</option><option>Pago cliente</option><option>Barra sala</option><option>Otro</option></select></div>
           <div class="field"><label>Aforo</label><input type="number" id="lstTicketCapacity" value="150" oninput="calculateLadyStoneTicketForm()"></div>
-          <div class="field span2"><label>Enlace de venta</label><input id="lstTicketUrl" placeholder="https://..." oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field span2"><label>Enlace venta / reporte</label><input id="lstTicketUrl" placeholder="https://... / reporte de ventas / liquidación" oninput="calculateLadyStoneTicketForm()"></div>
+
+          <div class="field"><label>Caché fijo acordado €</label><input type="number" id="lstCacheFixed" value="0" step="0.01" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>Mínimo garantizado €</label><input type="number" id="lstMinimumGuarantee" value="0" step="0.01" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>Extra sonido €</label><input type="number" id="lstExtraSound" value="0" step="0.01" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>Extra iluminación €</label><input type="number" id="lstExtraLights" value="0" step="0.01" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>Extra desplazamiento €</label><input type="number" id="lstExtraTravel" value="0" step="0.01" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>Otros extras €</label><input type="number" id="lstExtraOther" value="0" step="0.01" oninput="calculateLadyStoneTicketForm()"></div>
+
           <div class="field"><label>Precio anticipada €</label><input type="number" id="lstPriceAdvance" value="10" step="0.01" oninput="calculateLadyStoneTicketForm()"></div>
           <div class="field"><label>Vendidas anticipada</label><input type="number" id="lstSoldAdvance" value="0" oninput="calculateLadyStoneTicketForm()"></div>
           <div class="field"><label>Precio taquilla €</label><input type="number" id="lstPriceDoor" value="12" step="0.01" oninput="calculateLadyStoneTicketForm()"></div>
           <div class="field"><label>Vendidas taquilla</label><input type="number" id="lstSoldDoor" value="0" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>% banda sobre taquilla</label><input type="number" id="lstTicketPct" value="100" step="0.1" oninput="calculateLadyStoneTicketForm()"></div>
           <div class="field"><label>Invitaciones</label><input type="number" id="lstInvites" value="0" oninput="calculateLadyStoneTicketForm()"></div>
+
+          <div class="field"><label>Ventas barra €</label><input type="number" id="lstBarGross" value="0" step="0.01" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>% banda sobre barra</label><input type="number" id="lstBarPct" value="0" step="0.1" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>Base barra</label><select id="lstBarBase" onchange="calculateLadyStoneTicketForm()"><option value="bruta">Bruta</option><option value="neta">Neta sin IVA</option></select></div>
+          <div class="field"><label>Horario barra computable</label><input id="lstBarWindow" placeholder="Ej. 22:00-00:00" oninput="calculateLadyStoneTicketForm()"></div>
+
           <div class="field"><label>Canon sala €</label><input type="number" id="lstCanon" value="423.50" step="0.01" oninput="calculateLadyStoneTicketForm()"></div>
           <div class="field"><label>IVA entradas %</label><input type="number" id="lstVatPct" value="10" step="0.01" oninput="calculateLadyStoneTicketForm()"></div>
           <div class="field"><label>SGAE</label><select id="lstSgaeMode" onchange="calculateLadyStoneTicketForm()"><option value="sala">Gestionada por sala</option><option value="promotor">A cargo promotor</option><option value="sin_confirmar">Sin confirmar</option></select></div>
           <div class="field"><label>SGAE estimada %</label><input type="number" id="lstSgaePct" value="8.5" step="0.1" oninput="calculateLadyStoneTicketForm()"></div>
           <div class="field"><label>Otros gastos €</label><input type="number" id="lstOtherExpenses" value="0" step="0.01" oninput="calculateLadyStoneTicketForm()"></div>
+          <div class="field"><label>Ajuste manual €</label><input type="number" id="lstManualAmount" value="0" step="0.01" oninput="calculateLadyStoneTicketForm()"></div>
           <div class="field"><label>Reparto bandas</label><select id="lstSplitBands" onchange="calculateLadyStoneTicketForm()"><option value="1">Solo este proyecto</option><option value="2" selected>Dos bandas 50/50</option><option value="custom">Manual / revisar</option></select></div>
-          <div class="field span2"><label>Notas</label><textarea id="lstTicketNotes" placeholder="Condiciones, enlace, liquidación, comentarios..."></textarea></div>
+          <div class="field span2"><label>Notas</label><textarea id="lstTicketNotes" placeholder="Condiciones, caché, porcentaje de barra, porcentaje de taquilla, enlace, liquidación, comentarios..."></textarea></div>
         </div>
         <div id="ladyTicketCalc" class="notice" style="margin-top:12px"></div>
         <div class="actions" style="margin-top:12px">
-          <button class="btn gold" type="button" onclick="createLadyStoneTicket()">Guardar control de entradas</button>
+          <button class="btn gold" type="button" onclick="createLadyStoneTicket()">Guardar acuerdo económico</button>
           <button class="btn dark" type="button" onclick="copyLadyStoneTicketEstimate()">Copiar estimación</button>
         </div>
       </div>
@@ -274,8 +302,8 @@
 
     <div class="grid two">
       <div class="card">
-        <h4>Últimos controles de entradas</h4>
-        <div class="tableWrap"><table id="ladyTicketsTable"><thead><tr><th>Fecha</th><th>Proyecto</th><th>Evento</th><th>Vendidas</th><th>Neto estimado</th><th>Por proyecto</th><th>Canal</th></tr></thead><tbody></tbody></table></div>
+        <h4>Últimos acuerdos económicos</h4>
+        <div class="tableWrap"><table id="ladyTicketsTable"><thead><tr><th>Fecha</th><th>Proyecto</th><th>Evento</th><th>Modelo</th><th>Base cálculo</th><th>Neto estimado</th><th>Canal</th></tr></thead><tbody></tbody></table></div>
       </div>
       <div class="card">
         <h4>Últimos movimientos</h4>
@@ -292,7 +320,7 @@
           <a class="btn dark" href="#" onclick="alert('Configurar URL de APP-BCB cuando se cierre versión estable.'); return false;">APP-BCB pendiente</a>
           <a class="btn ghost" href="https://docs.google.com/spreadsheets/d/1mrffAdGxfzRL602XHD4Uw-EKiYBgZ4PgLuVuOFPxEGU/edit?gid=2128742185#gid=2128742185" target="_blank" rel="noopener">Google Sheet Ñ</a>
         </div>
-        <div class="notice" style="margin-top:12px">Fase v2.5: base de control. No vende entradas ni presenta impuestos. La asociación central definitiva podrá migrarse más adelante a APP-LADY-STONE.</div>
+        <div class="notice" style="margin-top:12px">Fase v2.6: acuerdos económicos completos. No vende entradas ni presenta impuestos. La asociación central definitiva podrá migrarse más adelante a APP-LADY-STONE.</div>
       </div>
     </div>
   </section>

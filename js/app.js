@@ -1,6 +1,6 @@
-const APP_ENHE_APP_VERSION = '2.5.0-lady-stone-admin';
-const STORE_KEY = 'n_mayuscula_control_pro_v11_lady_stone_admin';
-const OLD_STORE_KEYS = ['n_mayuscula_control_pro_v10_budget_advanced','n_mayuscula_control_pro_v9_admin_notice_fix','n_mayuscula_control_pro_v8_mobile_sheet_lite','n_mayuscula_control_pro_v7_mobile_sheet_jsonp','n_mayuscula_control_pro_v6_sheet_master_v20','n_mayuscula_control_pro_v5_sheet_master','n_mayuscula_control_pro_v4_sheet_first','n_mayuscula_control_pro_v3','n_mayuscula_control_pro_v2','n_mayuscula_control_pro'];
+const APP_ENHE_APP_VERSION = '2.6.0-economic-agreements';
+const STORE_KEY = 'n_mayuscula_control_pro_v12_lady_stone_economic_agreements';
+const OLD_STORE_KEYS = ['n_mayuscula_control_pro_v11_lady_stone_admin','n_mayuscula_control_pro_v10_budget_advanced','n_mayuscula_control_pro_v9_admin_notice_fix','n_mayuscula_control_pro_v8_mobile_sheet_lite','n_mayuscula_control_pro_v7_mobile_sheet_jsonp','n_mayuscula_control_pro_v6_sheet_master_v20','n_mayuscula_control_pro_v5_sheet_master','n_mayuscula_control_pro_v4_sheet_first','n_mayuscula_control_pro_v3','n_mayuscula_control_pro_v2','n_mayuscula_control_pro'];
 let db = loadData();
 let filteredCRM = [];
 const tabs = [
@@ -676,21 +676,42 @@ function ladyStoneTicketToSheetRow(t){
     Fecha:t.date||'',
     Evento:t.event||'',
     Sala:t.venue||'',
+    Modelo_economico:t.agreementType||'',
+    Modelo_economico_texto:t.agreementLabel||agreementLabel(t.agreementType),
     Canal:t.channel||'',
     Enlace:t.url||'',
     Aforo:t.capacity||0,
     Invitaciones:t.invites||0,
+    Cache_fijo:t.cacheFixed||0,
+    Minimo_garantizado:t.minimumGuarantee||0,
+    Extra_sonido:t.extraSound||0,
+    Extra_luces:t.extraLights||0,
+    Extra_desplazamiento:t.extraTravel||0,
+    Extra_otros:t.extraOther||0,
+    Extras_total:t.extrasTotal||0,
     Precio_anticipada:t.priceAdvance||0,
     Vendidas_anticipada:t.soldAdvance||0,
     Precio_taquilla:t.priceDoor||0,
     Vendidas_taquilla:t.soldDoor||0,
+    Porcentaje_taquilla:t.ticketPct||0,
     Entradas_vendidas:t.soldTotal||0,
     Taquilla_bruta:t.gross||0,
+    Taquilla_neta_sin_iva:t.netAfterVat||0,
     IVA_cultural:t.vatAmount||0,
+    Importe_porcentaje_taquilla:t.ticketPctAmount||0,
+    Barra_bruta:t.barGross||0,
+    Porcentaje_barra:t.barPct||0,
+    Base_barra:t.barBaseMode||'',
+    Barra_base_calculo:t.barBase||0,
+    Horario_barra:t.barWindow||'',
+    Importe_porcentaje_barra:t.barPctAmount||0,
     Canon_sala:t.canon||0,
     SGAE_modo:t.sgaeMode||'',
     SGAE_estimado:t.sgaeAmount||0,
     Otros_gastos:t.otherExpenses||0,
+    Ajuste_manual:t.manualAmount||0,
+    Importe_base_acuerdo:t.agreementGross||0,
+    Base_calculo:t.baseDescription||'',
     Neto_estimado:t.netEstimate||0,
     Neto_por_proyecto:t.netPerProject||0,
     Reparto_bandas:t.splitBands||'',
@@ -2544,26 +2565,47 @@ function applyLadyStoneFromSheet(ticketsRows, movementsRows, invoicesRows){
   const ls=ensureLadyStone();
   if(Array.isArray(ticketsRows) && ticketsRows.length){
     ls.tickets = ticketsRows.map(r=>({
-      id: rowVal(r,['id','ID']) || ('ticket_'+Date.now()+'_'+Math.random().toString(36).slice(2)),
+      id: rowVal(r,['id','ID']) || ('agreement_'+Date.now()+'_'+Math.random().toString(36).slice(2)),
       project: normalizeLadyProjectName(rowVal(r,['Proyecto','project'])),
       date: rowVal(r,['Fecha','date']),
       event: rowVal(r,['Evento','event']),
       venue: rowVal(r,['Sala','venue']),
+      agreementType: rowVal(r,['Modelo_economico','agreementType']) || 'canon_mas_taquilla',
+      agreementLabel: rowVal(r,['Modelo_economico_texto','agreementLabel']) || agreementLabel(rowVal(r,['Modelo_economico','agreementType']) || 'canon_mas_taquilla'),
       channel: rowVal(r,['Canal','channel']),
       url: rowVal(r,['Enlace','url']),
       capacity: parseEuroValue(rowVal(r,['Aforo','capacity'])),
       invites: parseEuroValue(rowVal(r,['Invitaciones','invites'])),
+      cacheFixed: parseEuroValue(rowVal(r,['Cache_fijo','cacheFixed'])),
+      minimumGuarantee: parseEuroValue(rowVal(r,['Minimo_garantizado','minimumGuarantee'])),
+      extraSound: parseEuroValue(rowVal(r,['Extra_sonido','extraSound'])),
+      extraLights: parseEuroValue(rowVal(r,['Extra_luces','extraLights'])),
+      extraTravel: parseEuroValue(rowVal(r,['Extra_desplazamiento','extraTravel'])),
+      extraOther: parseEuroValue(rowVal(r,['Extra_otros','extraOther'])),
+      extrasTotal: parseEuroValue(rowVal(r,['Extras_total','extrasTotal'])),
       priceAdvance: parseEuroValue(rowVal(r,['Precio_anticipada','priceAdvance'])),
       soldAdvance: parseEuroValue(rowVal(r,['Vendidas_anticipada','soldAdvance'])),
       priceDoor: parseEuroValue(rowVal(r,['Precio_taquilla','priceDoor'])),
       soldDoor: parseEuroValue(rowVal(r,['Vendidas_taquilla','soldDoor'])),
+      ticketPct: parseEuroValue(rowVal(r,['Porcentaje_taquilla','ticketPct'])),
       soldTotal: parseEuroValue(rowVal(r,['Entradas_vendidas','soldTotal'])),
       gross: parseEuroValue(rowVal(r,['Taquilla_bruta','gross'])),
+      netAfterVat: parseEuroValue(rowVal(r,['Taquilla_neta_sin_iva','netAfterVat'])),
       vatAmount: parseEuroValue(rowVal(r,['IVA_cultural','vatAmount'])),
+      ticketPctAmount: parseEuroValue(rowVal(r,['Importe_porcentaje_taquilla','ticketPctAmount'])),
+      barGross: parseEuroValue(rowVal(r,['Barra_bruta','barGross'])),
+      barPct: parseEuroValue(rowVal(r,['Porcentaje_barra','barPct'])),
+      barBaseMode: rowVal(r,['Base_barra','barBaseMode']),
+      barBase: parseEuroValue(rowVal(r,['Barra_base_calculo','barBase'])),
+      barWindow: rowVal(r,['Horario_barra','barWindow']),
+      barPctAmount: parseEuroValue(rowVal(r,['Importe_porcentaje_barra','barPctAmount'])),
       canon: parseEuroValue(rowVal(r,['Canon_sala','canon'])),
       sgaeMode: rowVal(r,['SGAE_modo','sgaeMode']),
       sgaeAmount: parseEuroValue(rowVal(r,['SGAE_estimado','sgaeAmount'])),
       otherExpenses: parseEuroValue(rowVal(r,['Otros_gastos','otherExpenses'])),
+      manualAmount: parseEuroValue(rowVal(r,['Ajuste_manual','manualAmount'])),
+      agreementGross: parseEuroValue(rowVal(r,['Importe_base_acuerdo','agreementGross'])),
+      baseDescription: rowVal(r,['Base_calculo','baseDescription']),
       netEstimate: parseEuroValue(rowVal(r,['Neto_estimado','netEstimate'])),
       netPerProject: parseEuroValue(rowVal(r,['Neto_por_proyecto','netPerProject'])),
       splitBands: rowVal(r,['Reparto_bandas','splitBands']),
@@ -2604,27 +2646,119 @@ function applyLadyStoneFromSheet(ticketsRows, movementsRows, invoicesRows){
 function getInputVal(id){const el=document.getElementById(id); return el ? el.value : '';}
 function setInputVal(id, value){const el=document.getElementById(id); if(el) el.value=value;}
 
+const LADY_STONE_AGREEMENT_LABELS = {
+  cache_fijo:'Caché fijo',
+  cache_fijo_extras:'Caché fijo + extras',
+  minimo_mas_taquilla:'Mínimo garantizado + porcentaje de taquilla',
+  porcentaje_taquilla:'Porcentaje de taquilla',
+  porcentaje_barra:'Porcentaje de barra / bebidas',
+  taquilla_mas_barra:'Porcentaje de taquilla + barra',
+  canon_mas_taquilla:'Canon de sala + taquilla para la banda',
+  taquilla_sala:'Taquilla gestionada por la sala',
+  taquilla_banda:'Taquilla gestionada por la banda',
+  mixto:'Acuerdo mixto / personalizado'
+};
+
+function agreementLabel(v){
+  return LADY_STONE_AGREEMENT_LABELS[v] || v || 'Acuerdo sin definir';
+}
+
 function ladyStoneTicketEstimateFromForm(){
+  const agreementType=getInputVal('lstAgreementType') || 'canon_mas_taquilla';
+
+  const cacheFixed=parseEuroValue(getInputVal('lstCacheFixed'));
+  const minimumGuarantee=parseEuroValue(getInputVal('lstMinimumGuarantee'));
+  const extraSound=parseEuroValue(getInputVal('lstExtraSound'));
+  const extraLights=parseEuroValue(getInputVal('lstExtraLights'));
+  const extraTravel=parseEuroValue(getInputVal('lstExtraTravel'));
+  const extraOther=parseEuroValue(getInputVal('lstExtraOther'));
+  const extrasTotal=extraSound+extraLights+extraTravel+extraOther;
+
   const priceAdvance=parseEuroValue(getInputVal('lstPriceAdvance'));
   const soldAdvance=parseEuroValue(getInputVal('lstSoldAdvance'));
   const priceDoor=parseEuroValue(getInputVal('lstPriceDoor'));
   const soldDoor=parseEuroValue(getInputVal('lstSoldDoor'));
+  const ticketPct=parseEuroValue(getInputVal('lstTicketPct')) || 0;
+
+  const barGross=parseEuroValue(getInputVal('lstBarGross'));
+  const barPct=parseEuroValue(getInputVal('lstBarPct')) || 0;
+  const barBaseMode=getInputVal('lstBarBase') || 'bruta';
+  const barWindow=getInputVal('lstBarWindow') || '';
+
   const canon=parseEuroValue(getInputVal('lstCanon'));
   const vatPct=parseEuroValue(getInputVal('lstVatPct')) || 10;
   const sgaeMode=getInputVal('lstSgaeMode') || 'sala';
   const sgaePct=parseEuroValue(getInputVal('lstSgaePct')) || 8.5;
   const otherExpenses=parseEuroValue(getInputVal('lstOtherExpenses'));
+  const manualAmount=parseEuroValue(getInputVal('lstManualAmount'));
   const splitBands=getInputVal('lstSplitBands') || '1';
 
   const gross=(priceAdvance*soldAdvance)+(priceDoor*soldDoor);
   const soldTotal=soldAdvance+soldDoor;
   const netAfterVat = gross / (1 + vatPct/100);
   const vatAmount = gross - netAfterVat;
-  const sgaeAmount = sgaeMode === 'promotor' ? (netAfterVat * sgaePct / 100) : 0;
-  const netEstimate = netAfterVat - canon - sgaeAmount - otherExpenses;
+  const ticketPctAmount = netAfterVat * (ticketPct/100);
+
+  const barBase = barBaseMode === 'neta' ? (barGross / (1 + vatPct/100)) : barGross;
+  const barPctAmount = barBase * (barPct/100);
+
+  const sgaeBase = netAfterVat > 0 ? netAfterVat : 0;
+  const sgaeAmount = sgaeMode === 'promotor' ? (sgaeBase * sgaePct / 100) : 0;
+
+  let agreementGross=0;
+  let baseDescription='';
+
+  switch(agreementType){
+    case 'cache_fijo':
+      agreementGross = cacheFixed;
+      baseDescription = 'Caché fijo';
+      break;
+    case 'cache_fijo_extras':
+      agreementGross = cacheFixed + extrasTotal;
+      baseDescription = 'Caché fijo + extras';
+      break;
+    case 'minimo_mas_taquilla':
+      agreementGross = Math.max(minimumGuarantee, ticketPctAmount) + extrasTotal;
+      baseDescription = `Mayor entre mínimo ${money2(minimumGuarantee)} y ${ticketPct}% taquilla`;
+      break;
+    case 'porcentaje_taquilla':
+      agreementGross = ticketPctAmount + extrasTotal;
+      baseDescription = `${ticketPct}% de taquilla neta`;
+      break;
+    case 'porcentaje_barra':
+      agreementGross = barPctAmount + extrasTotal;
+      baseDescription = `${barPct}% de barra ${barBaseMode}`;
+      break;
+    case 'taquilla_mas_barra':
+      agreementGross = ticketPctAmount + barPctAmount + extrasTotal;
+      baseDescription = `${ticketPct}% taquilla + ${barPct}% barra`;
+      break;
+    case 'canon_mas_taquilla':
+    case 'taquilla_sala':
+    case 'taquilla_banda':
+      agreementGross = netAfterVat + extrasTotal;
+      baseDescription = 'Taquilla neta sin IVA cultural + extras';
+      break;
+    case 'mixto':
+      agreementGross = cacheFixed + ticketPctAmount + barPctAmount + extrasTotal + manualAmount;
+      baseDescription = 'Caché + taquilla + barra + ajuste manual';
+      break;
+    default:
+      agreementGross = cacheFixed + ticketPctAmount + barPctAmount + extrasTotal + manualAmount;
+      baseDescription = 'Acuerdo personalizado';
+  }
+
+  const netEstimate = agreementGross - canon - sgaeAmount - otherExpenses;
   const split = splitBands === '2' ? 2 : 1;
-  const netPerProject = netEstimate / split;
-  return {priceAdvance,soldAdvance,priceDoor,soldDoor,canon,vatPct,sgaeMode,sgaePct,otherExpenses,splitBands,gross,soldTotal,netAfterVat,vatAmount,sgaeAmount,netEstimate,netPerProject};
+  const netPerProject = splitBands === 'custom' ? netEstimate : netEstimate / split;
+
+  return {
+    agreementType, agreementLabel:agreementLabel(agreementType),
+    cacheFixed, minimumGuarantee, extraSound, extraLights, extraTravel, extraOther, extrasTotal,
+    priceAdvance,soldAdvance,priceDoor,soldDoor,ticketPct,canon,vatPct,sgaeMode,sgaePct,otherExpenses,manualAmount,splitBands,
+    barGross,barPct,barBaseMode,barBase,barWindow,
+    gross,soldTotal,netAfterVat,vatAmount,ticketPctAmount,barPctAmount,sgaeAmount,agreementGross,baseDescription,netEstimate,netPerProject
+  };
 }
 
 function calculateLadyStoneTicketForm(){
@@ -2633,11 +2767,14 @@ function calculateLadyStoneTicketForm(){
   const c=ladyStoneTicketEstimateFromForm();
   const warn = c.sgaeMode === 'promotor' ? 'SGAE estimada a cargo del promotor.' : (c.sgaeMode === 'sala' ? 'SGAE marcada como gestionada por la sala.' : 'SGAE sin confirmar.');
   el.innerHTML = `
-    <strong>Estimación:</strong><br>
-    Entradas vendidas: ${c.soldTotal} · Taquilla bruta: ${money2(c.gross)} · Neto sin IVA cultural: ${money2(c.netAfterVat)}<br>
-    IVA cultural estimado: ${money2(c.vatAmount)} · Canon: ${money2(c.canon)} · SGAE: ${money2(c.sgaeAmount)} · Otros gastos: ${money2(c.otherExpenses)}<br>
+    <strong>Estimación del acuerdo:</strong> ${esc(c.agreementLabel)}<br>
+    Base de cálculo: ${esc(c.baseDescription)} · Importe base: ${money2(c.agreementGross)}<br>
+    Caché: ${money2(c.cacheFixed)} · Extras: ${money2(c.extrasTotal)} · Mínimo garantizado: ${money2(c.minimumGuarantee)}<br>
+    Entradas vendidas: ${c.soldTotal} · Taquilla bruta: ${money2(c.gross)} · Neto sin IVA cultural: ${money2(c.netAfterVat)} · % taquilla: ${money2(c.ticketPctAmount)}<br>
+    Barra declarada: ${money2(c.barGross)} · Base barra: ${money2(c.barBase)} · % barra: ${money2(c.barPctAmount)} ${c.barWindow ? '· Horario: '+esc(c.barWindow) : ''}<br>
+    Canon: ${money2(c.canon)} · SGAE: ${money2(c.sgaeAmount)} · Otros gastos: ${money2(c.otherExpenses)} · Ajuste manual: ${money2(c.manualAmount)}<br>
     <strong>Neto estimado total:</strong> ${money2(c.netEstimate)} · <strong>Neto por proyecto:</strong> ${money2(c.netPerProject)}<br>
-    <span class="muted">${esc(warn)} Cifras orientativas; validar liquidación y fiscalidad antes de cerrar.</span>
+    <span class="muted">${esc(warn)} Cifras orientativas; validar contrato, liquidación, factura y fiscalidad antes de cerrar.</span>
   `;
   return c;
 }
@@ -2646,26 +2783,47 @@ function createLadyStoneTicket(){
   const ls=ensureLadyStone();
   const c=ladyStoneTicketEstimateFromForm();
   const ticket={
-    id:'ticket_'+Date.now(),
+    id:'agreement_'+Date.now(),
     project:normalizeLadyProjectName(getInputVal('lstTicketProject')),
     date:getInputVal('lstTicketDate') || todayISO(),
     event:getInputVal('lstTicketEvent') || 'Evento sin nombre',
     venue:getInputVal('lstTicketVenue') || '',
+    agreementType:c.agreementType,
+    agreementLabel:c.agreementLabel,
     channel:getInputVal('lstTicketChannel') || '',
     url:getInputVal('lstTicketUrl') || '',
     capacity:parseEuroValue(getInputVal('lstTicketCapacity')),
     invites:parseEuroValue(getInputVal('lstInvites')),
+    cacheFixed:c.cacheFixed,
+    minimumGuarantee:c.minimumGuarantee,
+    extraSound:c.extraSound,
+    extraLights:c.extraLights,
+    extraTravel:c.extraTravel,
+    extraOther:c.extraOther,
+    extrasTotal:c.extrasTotal,
     priceAdvance:c.priceAdvance,
     soldAdvance:c.soldAdvance,
     priceDoor:c.priceDoor,
     soldDoor:c.soldDoor,
+    ticketPct:c.ticketPct,
     soldTotal:c.soldTotal,
     gross:c.gross,
+    netAfterVat:c.netAfterVat,
     vatAmount:c.vatAmount,
+    ticketPctAmount:c.ticketPctAmount,
+    barGross:c.barGross,
+    barPct:c.barPct,
+    barBaseMode:c.barBaseMode,
+    barBase:c.barBase,
+    barWindow:c.barWindow,
+    barPctAmount:c.barPctAmount,
     canon:c.canon,
     sgaeMode:c.sgaeMode,
     sgaeAmount:c.sgaeAmount,
     otherExpenses:c.otherExpenses,
+    manualAmount:c.manualAmount,
+    agreementGross:c.agreementGross,
+    baseDescription:c.baseDescription,
     netEstimate:c.netEstimate,
     netPerProject:c.netPerProject,
     splitBands:c.splitBands,
@@ -2744,23 +2902,23 @@ function renderLadyStoneAdmin(){
   const projectNames=['Ñ Mayúscula','Breathless Cover Band','Común asociación'];
   proj.innerHTML='<h4>Resumen por proyecto</h4>' + projectNames.map(name=>{
     const t=projectTotals(name);
-    return `<div class="detailItem"><small>${esc(name)}</small><strong>Saldo interno estimado: ${money2(t.saldo)}</strong><br><span class="muted">Previsión entradas: ${money2(t.tickets)} · Ingresos: ${money2(t.ingresos)} · Gastos: ${money2(t.gastos)}</span></div>`;
+    return `<div class="detailItem"><small>${esc(name)}</small><strong>Saldo interno estimado: ${money2(t.saldo)}</strong><br><span class="muted">Acuerdos previstos: ${money2(t.tickets)} · Ingresos: ${money2(t.ingresos)} · Gastos: ${money2(t.gastos)}</span></div>`;
   }).join('');
 
   const warn=document.getElementById('ladyQuickWarnings');
   warn.innerHTML=`<h4>Puntos de control</h4>
     <ul class="cleanList">
       <li>Separar siempre movimientos de Ñ, BCB y común.</li>
-      <li>Si el canal de venta es de sala, pedir acceso o reportes de ventas.</li>
-      <li>No usar pasarela propia sin revisar SGAE, IVA, facturación y acceso.</li>
+      <li>Si el acuerdo incluye taquilla o barra, pedir reporte de ventas/liquidación por escrito.</li>
+      <li>No cerrar porcentajes de barra/taquilla sin definir base bruta/neta, horario, reporte y responsable de liquidación.</li>
       <li>La asociación central no debe mezclar saldos internos entre proyectos.</li>
     </ul>`;
 
   const ticketBody=document.querySelector('#ladyTicketsTable tbody');
   ticketBody.innerHTML=(ls.tickets||[]).slice(0,20).map(t=>`<tr>
     <td>${esc(t.date||'')}</td><td>${esc(t.project||'')}</td><td><strong>${esc(t.event||'')}</strong><br><small>${esc(t.venue||'')}</small></td>
-    <td>${Number(t.soldTotal||0)}</td><td>${money2(t.netEstimate)}</td><td>${money2(t.netPerProject)}</td><td>${esc(t.channel||'')}</td>
-  </tr>`).join('') || `<tr><td colspan="7" class="muted">Sin controles de entradas todavía.</td></tr>`;
+    <td>${esc(t.agreementLabel || agreementLabel(t.agreementType) || 'Acuerdo')}</td><td>${esc(t.baseDescription || '')}</td><td>${money2(t.netEstimate)}</td><td>${esc(t.channel||'')}</td>
+  </tr>`).join('') || `<tr><td colspan="7" class="muted">Sin acuerdos económicos todavía.</td></tr>`;
 
   const movBody=document.querySelector('#ladyMovementsTable tbody');
   movBody.innerHTML=(ls.movements||[]).slice(0,20).map(m=>`<tr>
@@ -2784,7 +2942,7 @@ function ladyStoneSummaryText(){
   ];
   projectNames.forEach(name=>{
     const t=projectTotals(name);
-    lines.push(`${name}: saldo estimado ${money2(t.saldo)} · entradas ${money2(t.tickets)} · ingresos ${money2(t.ingresos)} · gastos ${money2(t.gastos)}`);
+    lines.push(`${name}: saldo estimado ${money2(t.saldo)} · acuerdos ${money2(t.tickets)} · ingresos ${money2(t.ingresos)} · gastos ${money2(t.gastos)}`);
   });
   lines.push('', 'Nota: resumen de control interno, no documento fiscal.');
   return lines.join('\n');
@@ -2798,14 +2956,23 @@ function copyLadyStoneSummary(){
 function copyLadyStoneTicketEstimate(){
   const c=calculateLadyStoneTicketForm() || ladyStoneTicketEstimateFromForm();
   const txt=[
-    'Estimación de entradas / liquidación',
+    'Estimación de acuerdo económico / liquidación',
+    `Modelo: ${c.agreementLabel}`,
+    `Base de cálculo: ${c.baseDescription}`,
+    `Importe base acuerdo: ${money2(c.agreementGross)}`,
+    `Caché fijo: ${money2(c.cacheFixed)}`,
+    `Mínimo garantizado: ${money2(c.minimumGuarantee)}`,
+    `Extras: ${money2(c.extrasTotal)}`,
     `Entradas vendidas: ${c.soldTotal}`,
     `Taquilla bruta: ${money2(c.gross)}`,
-    `Neto sin IVA cultural: ${money2(c.netAfterVat)}`,
-    `IVA cultural estimado: ${money2(c.vatAmount)}`,
+    `Taquilla neta sin IVA cultural: ${money2(c.netAfterVat)}`,
+    `% taquilla banda: ${money2(c.ticketPctAmount)}`,
+    `Barra declarada: ${money2(c.barGross)}`,
+    `% barra banda: ${money2(c.barPctAmount)}`,
     `Canon sala: ${money2(c.canon)}`,
     `SGAE estimada: ${money2(c.sgaeAmount)}`,
     `Otros gastos: ${money2(c.otherExpenses)}`,
+    `Ajuste manual: ${money2(c.manualAmount)}`,
     `Neto estimado total: ${money2(c.netEstimate)}`,
     `Neto por proyecto: ${money2(c.netPerProject)}`
   ].join('\n');
@@ -2815,12 +2982,12 @@ function copyLadyStoneTicketEstimate(){
 function exportLadyStoneCSV(){
   const ls=ensureLadyStone();
   const rows=[];
-  rows.push(['tipo','id','proyecto','fecha','concepto_evento','importe_neto','estado','notas']);
-  (ls.tickets||[]).forEach(t=>rows.push(['entradas',t.id,t.project,t.date,t.event,parseEuroValue(t.netPerProject||t.netEstimate),t.status,t.notes]));
-  (ls.movements||[]).forEach(m=>rows.push(['movimiento',m.id,m.project,m.date,m.concept,parseEuroValue(m.amount),m.status,m.notes]));
-  (ls.invoices||[]).forEach(i=>rows.push(['factura',i.id,i.project,i.date,i.concept,parseEuroValue(i.amount),i.status,i.notes]));
+  rows.push(['tipo','id','proyecto','fecha','concepto_evento','modelo','base_calculo','importe_base','neto_estimado','neto_por_proyecto','estado','notas']);
+  (ls.tickets||[]).forEach(t=>rows.push(['acuerdo',t.id,t.project,t.date,t.event,t.agreementLabel||agreementLabel(t.agreementType),t.baseDescription||'',parseEuroValue(t.agreementGross),parseEuroValue(t.netEstimate),parseEuroValue(t.netPerProject),t.status,t.notes]));
+  (ls.movements||[]).forEach(m=>rows.push(['movimiento',m.id,m.project,m.date,m.concept,m.type||'','',parseEuroValue(m.amount),parseEuroValue(m.amount),parseEuroValue(m.amount),m.status,m.notes]));
+  (ls.invoices||[]).forEach(i=>rows.push(['factura',i.id,i.project,i.date,i.concept,'factura/liquidación','',parseEuroValue(i.amount),parseEuroValue(i.amount),parseEuroValue(i.amount),i.status,i.notes]));
   const csv=rows.map(r=>r.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
-  downloadBlob(csv, 'lady-stone-control.csv', 'text/csv;charset=utf-8');
+  downloadBlob(csv, 'lady-stone-control-v2-6.csv', 'text/csv;charset=utf-8');
 }
 
 
