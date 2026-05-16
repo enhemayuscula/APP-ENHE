@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- APP-ENHE v2.3 admin notice fix -->
+<!-- APP-ENHE v2.4 presupuesto avanzado -->
 <title>Ñ Mayúscula · Control profesional de conciertos, CRM y setlist</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#120608">
@@ -12,9 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="stylesheet" href="css/styles.css?v=2.3.0">
-<link rel="stylesheet" href="css/admin-guard.css?v=2.3.0">
-<script defer src="js/admin-guard.js?v=2.3.0"></script>
+<link rel="stylesheet" href="css/styles.css?v=2.4.0">
+<link rel="stylesheet" href="css/admin-guard.css?v=2.4.0">
+<script defer src="js/admin-guard.js?v=2.4.0"></script>
 </head>
 <body>
 <div class="app">
@@ -178,26 +178,187 @@
     </div>
   </section>
 
+
   <section class="tab" id="budget">
-    <div class="sectionTitle"><div><h3>Calculadora de presupuesto 2026</h3><p>Basada en las tarifas orientativas del dossier comercial.</p></div></div>
+    <div class="sectionTitle">
+      <div>
+        <h3>Presupuesto profesional</h3>
+        <p>Formulario de administración para calcular caché artístico, extras, producción técnica y generar un texto listo para enviar al cliente.</p>
+      </div>
+      <div class="actions">
+        <button class="btn gold" type="button" onclick="copyBudgetEmail()">Copiar email</button>
+        <button class="btn dark" type="button" onclick="downloadBudgetHTML()">Descargar presupuesto</button>
+        <button class="btn ghost" type="button" onclick="createConcertFromBudget()">Crear concierto</button>
+      </div>
+    </div>
+
+    <div class="notice">
+      <strong>Uso interno:</strong> presupuesto orientativo. No bloquea fecha ni sustituye contrato. Los importes finales deben validarse por fecha, ubicación, duración, producción técnica y disponibilidad.
+    </div>
+
     <div class="grid two">
       <div class="card">
+        <h4>1. Datos del cliente y evento</h4>
         <div class="formGrid">
-          <div class="field span2"><label>Fecha del evento</label><input type="date" id="budgetDate" onchange="calcBudget()"></div>
-          <div class="field span2"><label>Nombre / observación</label><input id="budgetName" placeholder="Ej. Boda Madrid, fiesta privada, sala..." oninput="calcBudget()"></div>
-          <div class="field span4"><label>Extras / incrementos</label><div id="extrasBox" class="grid two"></div></div>
+          <div class="field span2"><label>Cliente / agencia / interlocutor</label><input id="budgetClient" placeholder="Ej. Gonzalo · Deamare" oninput="calcBudget()"></div>
+          <div class="field span2"><label>Email del cliente</label><input id="budgetClientEmail" placeholder="email@cliente.com" oninput="calcBudget()"></div>
+          <div class="field span2"><label>Tipo de evento</label>
+            <select id="budgetEventType" onchange="calcBudget()">
+              <option value="boda">Boda</option>
+              <option value="evento_privado">Evento privado</option>
+              <option value="cumpleanos">Cumpleaños / celebración</option>
+              <option value="empresa">Evento de empresa</option>
+              <option value="sala">Sala / concierto</option>
+              <option value="ayuntamiento">Ayuntamiento / fiestas</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="field span2"><label>Nombre / descripción</label><input id="budgetName" placeholder="Ej. Boda · fiesta posterior" oninput="calcBudget()"></div>
+          <div class="field"><label>Fecha</label><input type="date" id="budgetDate" onchange="calcBudget()"></div>
+          <div class="field"><label>Hora actuación</label><input type="time" id="budgetTime" onchange="calcBudget()"></div>
+          <div class="field"><label>Duración prevista</label>
+            <select id="budgetDuration" onchange="calcBudget()">
+              <option value="60">60 minutos</option>
+              <option value="90" selected>90 minutos / estándar</option>
+              <option value="120">120 minutos</option>
+              <option value="custom">Otra / consultar</option>
+            </select>
+          </div>
+          <div class="field"><label>Momento</label>
+            <select id="budgetMoment" onchange="calcBudget()">
+              <option value="fiesta">Fiesta</option>
+              <option value="inicio-fiesta">Inicio de fiesta</option>
+              <option value="coctel">Cóctel</option>
+              <option value="cena">Cena</option>
+              <option value="concierto">Concierto / sala</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="field span2"><label>Lugar / finca / sala</label><input id="budgetVenue" placeholder="Ej. Palacio de Negralejo" oninput="calcBudget()"></div>
+          <div class="field span2"><label>Dirección / municipio</label><input id="budgetLocation" placeholder="Madrid, Rivas, Guadalajara..." oninput="calcBudget()"></div>
         </div>
-        <div class="actions" style="margin-top:12px"><button class="btn gold" onclick="createConcertFromBudget()">Crear concierto con este presupuesto</button><button class="btn dark" onclick="copyBudgetText()">Copiar presupuesto</button></div>
+
+        <h4 style="margin-top:18px">2. Ubicación y formato</h4>
+        <div class="formGrid">
+          <div class="field"><label>Zona</label>
+            <select id="budgetZone" onchange="calcBudget()">
+              <option value="madrid_capital">Madrid capital</option>
+              <option value="madrid_provincia">Provincia de Madrid</option>
+              <option value="guadalajara">Guadalajara</option>
+              <option value="fuera">Fuera de Comunidad de Madrid</option>
+              <option value="desconocida">Sin confirmar</option>
+            </select>
+          </div>
+          <div class="field"><label>Espacio</label>
+            <select id="budgetSpace" onchange="calcBudget()">
+              <option value="interior">Interior / cubierto</option>
+              <option value="exterior">Exterior / intemperie</option>
+              <option value="mixto">Mixto</option>
+              <option value="pendiente">Pendiente confirmar</option>
+            </select>
+          </div>
+          <div class="field"><label>Aforo estimado</label>
+            <select id="budgetAforo" onchange="calcBudget()">
+              <option value="small">Hasta 100</option>
+              <option value="medium" selected>100-250</option>
+              <option value="large">250-400</option>
+              <option value="xlarge">Más de 400</option>
+              <option value="unknown">Sin confirmar</option>
+            </select>
+          </div>
+          <div class="field"><label>Tipo de recinto</label>
+            <select id="budgetVenueType" onchange="calcBudget()">
+              <option value="finca">Finca / salón de bodas</option>
+              <option value="sala">Sala de conciertos</option>
+              <option value="hotel">Hotel</option>
+              <option value="terraza">Terraza / exterior</option>
+              <option value="ayuntamiento">Espacio municipal</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+        </div>
+
+        <h4 style="margin-top:18px">3. Producción técnica</h4>
+        <div class="formGrid">
+          <div class="field"><label>¿Hay sonido?</label>
+            <select id="budgetHasSound" onchange="calcBudget()">
+              <option value="yes">Sí, lo aporta el espacio/proveedor</option>
+              <option value="no" selected>No</option>
+              <option value="unknown">No confirmado</option>
+            </select>
+          </div>
+          <div class="field"><label>¿Hay iluminación?</label>
+            <select id="budgetHasLights" onchange="calcBudget()">
+              <option value="yes">Sí, la aporta el espacio/proveedor</option>
+              <option value="no" selected>No</option>
+              <option value="unknown">No confirmado</option>
+            </select>
+          </div>
+          <div class="field"><label>¿Hay técnico?</label>
+            <select id="budgetHasTech" onchange="calcBudget()">
+              <option value="yes">Sí</option>
+              <option value="no" selected>No</option>
+              <option value="unknown">No confirmado</option>
+            </select>
+          </div>
+          <div class="field"><label>Escenario / tarima</label>
+            <select id="budgetStage" onchange="calcBudget()">
+              <option value="yes">Sí</option>
+              <option value="no">No / habría que valorar</option>
+              <option value="unknown" selected>No confirmado</option>
+            </select>
+          </div>
+          <div class="field span2"><label>Estimación técnica</label>
+            <select id="budgetTechEstimate" onchange="calcBudget()">
+              <option value="auto" selected>Automática según espacio/aforo</option>
+              <option value="none">No incluir producción técnica</option>
+              <option value="interior_small">Interior pequeño/medio · 700-1.100 €</option>
+              <option value="interior_standard">Interior boda estándar · 1.100-1.800 €</option>
+              <option value="exterior_basic">Exterior básico · 1.800-3.500 €</option>
+              <option value="custom">Importe técnico manual</option>
+            </select>
+          </div>
+          <div class="field"><label>Técnica manual mín. €</label><input type="number" id="budgetTechMin" placeholder="0" oninput="calcBudget()"></div>
+          <div class="field"><label>Técnica manual máx. €</label><input type="number" id="budgetTechMax" placeholder="0" oninput="calcBudget()"></div>
+        </div>
+
+        <h4 style="margin-top:18px">4. Extras y ajustes</h4>
+        <div class="grid two" id="extrasBox"></div>
+
+        <div class="formGrid" style="margin-top:14px">
+          <div class="field"><label>Caché artístico manual €</label><input type="number" id="budgetManualBase" placeholder="Solo si no aplica tabla" oninput="calcBudget()"></div>
+          <div class="field"><label>Descuento autorizado €</label><input type="number" id="budgetDiscount" placeholder="0" oninput="calcBudget()"></div>
+          <div class="field"><label>IVA</label>
+            <select id="budgetVat" onchange="calcBudget()">
+              <option value="no" selected>Mostrar sin IVA</option>
+              <option value="yes">Calcular IVA 21%</option>
+            </select>
+          </div>
+          <div class="field"><label>Validez presupuesto</label><input id="budgetValidUntil" placeholder="Ej. 7 días / hasta confirmar fecha" oninput="calcBudget()"></div>
+          <div class="field span4"><label>Notas internas / condiciones sensibles</label><textarea id="budgetInternalNotes" rows="3" placeholder="Ej. pendiente aforo, exterior sin confirmar, revisar técnica..." oninput="calcBudget()"></textarea></div>
+        </div>
+
+        <div class="actions" style="margin-top:12px">
+          <button class="btn gold" onclick="copyBudgetEmail()">Copiar email</button>
+          <button class="btn dark" onclick="downloadBudgetHTML()">Descargar presupuesto</button>
+          <button class="btn ghost" onclick="copyBudgetText()">Copiar resumen interno</button>
+          <button class="btn ghost" onclick="createConcertFromBudget()">Crear concierto</button>
+        </div>
       </div>
+
       <div class="card light">
-        <h4>Resultado</h4>
+        <h4>Resultado económico</h4>
         <div class="priceBox" id="budgetTotal">—</div>
         <p id="budgetBreakdown"></p>
         <div class="hr"></div>
-        <p><strong>Reserva bodas/eventos privados:</strong> anticipo del 50% del presupuesto total para bloquear fecha.</p>
+        <h4>Presupuesto listo para cliente</h4>
+        <div class="copyBox budgetClientPreview" id="budgetClientPreview"></div>
+        <div class="hr"></div>
+        <h4>Email listo para enviar</h4>
         <div class="copyBox" id="budgetCopy" style="color:#14110f;background:#fff;border-color:#ead7b3"></div>
       </div>
     </div>
+
     <div class="sectionTitle"><div><h3>Tabla de tarifas y condiciones</h3></div></div>
     <div class="grid two">
       <div class="card"><h4>Fechas especiales</h4><div id="specialDates"></div></div>
@@ -324,9 +485,9 @@
 
 <div class="modal" id="modal"><div class="modalPanel"><div class="modalHead"><strong id="modalTitle">Detalle</strong><button class="close" onclick="closeModal()">×</button></div><div class="modalBody" id="modalBody"></div></div></div>
 
-<script src="js/assets.js?v=2.3.0"></script>
-<script src="js/data.js?v=2.3.0"></script>
-<script src="js/app.js?v=2.3.0"></script>
+<script src="js/assets.js?v=2.4.0"></script>
+<script src="js/data.js?v=2.4.0"></script>
+<script src="js/app.js?v=2.4.0"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {

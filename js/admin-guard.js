@@ -34,6 +34,8 @@
     'openSongLinksImportModal',
     'downloadXlsx',
     'copyBudgetText',
+    'copyBudgetEmail',
+    'downloadBudgetHTML',
     'composeTemplate',
     'composeForContact'
   ];
@@ -218,6 +220,8 @@
       labelText.includes('abrir email') ||
       labelText.includes('preparar email') ||
       labelText.includes('copiar presupuesto') ||
+      labelText.includes('copiar email') ||
+      labelText.includes('descargar presupuesto') ||
       labelText.includes('crear concierto') ||
       labelText.includes('guardar confirmación') ||
       labelText.includes('exportar csv ensayos') ||

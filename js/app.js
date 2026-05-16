@@ -1,6 +1,6 @@
-const APP_ENHE_APP_VERSION = '2.3.0-admin-notice-fix';
-const STORE_KEY = 'n_mayuscula_control_pro_v9_admin_notice_fix';
-const OLD_STORE_KEYS = ['n_mayuscula_control_pro_v8_mobile_sheet_lite','n_mayuscula_control_pro_v7_mobile_sheet_jsonp','n_mayuscula_control_pro_v6_sheet_master_v20','n_mayuscula_control_pro_v5_sheet_master','n_mayuscula_control_pro_v4_sheet_first','n_mayuscula_control_pro_v3','n_mayuscula_control_pro_v2','n_mayuscula_control_pro'];
+const APP_ENHE_APP_VERSION = '2.4.0-presupuesto-avanzado';
+const STORE_KEY = 'n_mayuscula_control_pro_v10_budget_advanced';
+const OLD_STORE_KEYS = ['n_mayuscula_control_pro_v9_admin_notice_fix','n_mayuscula_control_pro_v8_mobile_sheet_lite','n_mayuscula_control_pro_v7_mobile_sheet_jsonp','n_mayuscula_control_pro_v6_sheet_master_v20','n_mayuscula_control_pro_v5_sheet_master','n_mayuscula_control_pro_v4_sheet_first','n_mayuscula_control_pro_v3','n_mayuscula_control_pro_v2','n_mayuscula_control_pro'];
 let db = loadData();
 let filteredCRM = [];
 const tabs = [
@@ -1696,36 +1696,281 @@ function exportRehearsalsCSV(){
   downloadBlob('n_mayuscula_ensayos.csv', new Blob([toCSV(rows,rehearsalHeaders())],{type:'text/csv;charset=utf-8'}));
 }
 
+
 function renderBudgetUI(){
   const box=document.getElementById('extrasBox'); if(!box)return;
-  box.innerHTML=db.tariffs.extras.map(e=>`<label style="display:flex;gap:8px;align-items:center;color:var(--text);font-size:13px"><input type="checkbox" data-extra="${e.id}" onchange="calcBudget()" style="width:auto"> ${esc(e.name)} ${e.kind==='fixed'?`(+${eur(e.amount)})`:'(consultar)'}</label>`).join('');
-  document.getElementById('specialDates').innerHTML=db.tariffs.specialDates.map(x=>`<div class="detailItem"><small>${esc(x.date)}</small><div><strong>${esc(x.name)}</strong> · ${eur(x.price)}</div></div>`).join('');
-  document.getElementById('weddingConditions').innerHTML=db.tariffs.weddingConditions.map(x=>`<li>${esc(x)}</li>`).join('');
+  const preferred=['amp30','segundoPase','bodaMadrid','bodaPremium','zona','sonido'];
+  const extras=(db.tariffs.extras||[]).slice().sort((a,b)=>preferred.indexOf(a.id)-preferred.indexOf(b.id));
+  box.innerHTML=extras.map(e=>`
+    <label class="checkLine">
+      <input type="checkbox" data-extra="${esc(e.id)}" onchange="calcBudget()" style="width:auto">
+      <span>${esc(e.name)} ${e.kind==='fixed'?`<strong>+${eur2(e.amount)}</strong>`:'<strong>consultar</strong>'}</span>
+    </label>
+  `).join('');
+  const sd=document.getElementById('specialDates');
+  if(sd) sd.innerHTML=(db.tariffs.specialDates||[]).map(x=>`<div class="detailItem"><small>${esc(x.date)}</small><div><strong>${esc(x.name)}</strong> · ${eur2(x.price)}</div></div>`).join('');
+  const wc=document.getElementById('weddingConditions');
+  if(wc) wc.innerHTML=(db.tariffs.weddingConditions||[]).map(x=>`<li>${esc(x)}</li>`).join('');
+  calcBudget();
 }
-function findBaseTariff(dateStr){
-  if(!dateStr)return null;
-  const special=db.tariffs.specialDates.find(x=>x.date===dateStr); if(special)return {name:special.name, price:special.price, special:true};
-  const d=new Date(dateStr+'T00:00:00'); const day=d.getDay();
-  const row=db.tariffs.base.find(x=>dateStr>=x.from && dateStr<=x.to); if(!row)return null;
-  let key=day===5?'friday':day===6?'saturday':day===0?'sunday':'weekday';
-  return {name:row.name, price:Number(row[key]||0), special:false, dayKey:key};
+
+function eur2(n){
+  n=Number(n||0);
+  return n.toLocaleString('es-ES',{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function numInput(id){
+  const el=document.getElementById(id);
+  if(!el)return 0;
+  return Number(String(el.value||'').replace(',','.'))||0;
+}
+function val(id, fallback=''){
+  const el=document.getElementById(id);
+  return el ? (el.value || fallback) : fallback;
+}
+function checkedExtraIds(){
+  return Array.from(document.querySelectorAll('[data-extra]:checked')).map(ch=>ch.dataset.extra);
+}
+function dayNameFromDate(dateStr){
+  if(!dateStr)return '';
+  const d=new Date(dateStr+'T00:00:00');
+  return ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][d.getDay()]||'';
+}
+function formatDateEs(dateStr){
+  if(!dateStr)return 'fecha pendiente';
+  const d=new Date(dateStr+'T00:00:00');
+  if(isNaN(d))return dateStr;
+  return d.toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+function budgetTechnicalRange(){
+  const mode=val('budgetTechEstimate','auto');
+  const space=val('budgetSpace','pendiente');
+  const aforo=val('budgetAforo','medium');
+  const hasSound=val('budgetHasSound','no');
+  const hasLights=val('budgetHasLights','no');
+  const hasTech=val('budgetHasTech','no');
+  const needsTech = hasSound!=='yes' || hasLights!=='yes' || hasTech!=='yes';
+
+  if(mode==='none' || !needsTech) return {min:0,max:0,label:'Producción técnica no incluida / aportada por el espacio o proveedor externo.', included:false, needed:needsTech};
+  if(mode==='custom'){
+    const min=numInput('budgetTechMin'), max=numInput('budgetTechMax')||min;
+    return {min,max,label:`Producción técnica estimada manual: ${eur2(min)}${max&&max!==min?` - ${eur2(max)}`:''}`, included:true, needed:true};
+  }
+  if(mode==='interior_small') return {min:700,max:1100,label:'Producción técnica interior pequeño/medio: sonido, microfonía, monitores, técnico e iluminación básica.', included:true, needed:true};
+  if(mode==='interior_standard') return {min:1100,max:1800,label:'Producción técnica interior boda estándar: sonido completo, monitores, técnico e iluminación básica cuidada.', included:true, needed:true};
+  if(mode==='exterior_basic') return {min:1800,max:3500,label:'Producción técnica exterior básica: sonido, luces, técnico y necesidades extra de protección/seguridad.', included:true, needed:true};
+
+  // auto
+  if(space==='exterior' || space==='mixto') return {min:1800,max:3500,label:'Producción técnica estimada para exterior/mixto. Confirmar cubierta, suelo, electricidad y plan B.', included:true, needed:true};
+  if(aforo==='large' || aforo==='xlarge') return {min:1800,max:3500,label:'Producción técnica estimada para aforo alto. Confirmar potencia, subgraves, monitores y horarios.', included:true, needed:true};
+  if(aforo==='small') return {min:700,max:1100,label:'Producción técnica estimada para interior pequeño/medio.', included:true, needed:true};
+  return {min:1100,max:1800,label:'Producción técnica estimada para boda/evento interior estándar.', included:true, needed:true};
+}
+function budgetBaseLine(date){
+  const manual=numInput('budgetManualBase');
+  const base=findBaseTariff(date);
+  if(manual>0) return {price:manual, name:'Caché artístico manual', note:'Importe introducido manualmente por administración.'};
+  if(base && base.price>0) return {price:Number(base.price), name:base.name, note:base.special?'Fecha especial':'Tarifa base según tabla'};
+  if(base && base.price===0) return {price:0, name:base.name, note:'Día laborable/no disponible en tabla. Consultar o introducir caché manual.'};
+  return {price:0, name:'Sin tarifa automática', note:'La fecha no está dentro de la tabla 2026. Introducir caché artístico manual o validar tarifa.'};
 }
 function calcBudget(){
-  const date=document.getElementById('budgetDate')?.value||'';
-  const name=document.getElementById('budgetName')?.value||'';
-  const base=findBaseTariff(date);
-  let total=base?Number(base.price||0):0, lines=[];
-  if(base) lines.push(`${base.name}: ${base.price?eur(base.price):'consultar / no disponible'}`); else lines.push('Selecciona fecha para calcular tarifa base.');
-  document.querySelectorAll('[data-extra]:checked').forEach(ch=>{const e=db.tariffs.extras.find(x=>x.id===ch.dataset.extra); if(e){ if(e.kind==='fixed'){total+=Number(e.amount||0);lines.push(`${e.name}: +${eur(e.amount)}`);} else lines.push(`${e.name}: consultar`); }});
-  const totalTxt=total?eur(total):'Consultar';
-  document.getElementById('budgetTotal').textContent=totalTxt;
-  document.getElementById('budgetBreakdown').innerHTML=lines.map(esc).join('<br>') + `<br><br><strong>Anticipo 50%:</strong> ${total?eur(total/2):'—'}`;
-  const copy=`Presupuesto orientativo Ñ Mayúscula\nFecha: ${date||'pendiente'}\nEvento: ${name||'pendiente'}\n${lines.join('\n')}\nTotal orientativo: ${totalTxt}\nReserva: 50% (${total?eur(total/2):'—'})\nPrecios sin IVA. Presupuesto final sujeto a ubicación, duración, formato y necesidades técnicas.`;
-  document.getElementById('budgetCopy').textContent=copy;
-  return {date,name,total,lines};
+  const date=val('budgetDate');
+  const eventType=val('budgetEventType','boda');
+  const client=val('budgetClient');
+  const name=val('budgetName');
+  const time=val('budgetTime');
+  const duration=val('budgetDuration','90');
+  const moment=val('budgetMoment');
+  const venue=val('budgetVenue');
+  const location=val('budgetLocation');
+  const zone=val('budgetZone','madrid_capital');
+  const space=val('budgetSpace','interior');
+  const aforo=val('budgetAforo','medium');
+  const venueType=val('budgetVenueType','finca');
+  const validUntil=val('budgetValidUntil');
+  const discount=numInput('budgetDiscount');
+  const vat=val('budgetVat','no');
+
+  let warnings=[];
+  let lines=[];
+  let artistic=0;
+  const base=budgetBaseLine(date);
+  artistic+=Number(base.price||0);
+  lines.push({label:base.name, amount:base.price, note:base.note, kind:'artistic'});
+  if(base.price===0) warnings.push('La tarifa artística no queda cerrada automáticamente. Revisar manualmente.');
+
+  const extras=checkedExtraIds();
+  extras.forEach(id=>{
+    const e=(db.tariffs.extras||[]).find(x=>x.id===id);
+    if(!e)return;
+    if(e.kind==='fixed'){
+      artistic+=Number(e.amount||0);
+      lines.push({label:e.name, amount:Number(e.amount||0), note:'Extra aplicado', kind:'extra'});
+    }else{
+      lines.push({label:e.name, amount:null, note:'Consultar según aforo/formato', kind:'consult'});
+      warnings.push(`${e.name}: pendiente de cotización específica.`);
+    }
+  });
+
+  // reglas automáticas suaves: no duplican si ya está marcado el extra
+  if(eventType==='boda' && zone==='madrid_capital' && !extras.includes('bodaMadrid')){
+    const e=(db.tariffs.extras||[]).find(x=>x.id==='bodaMadrid');
+    if(e){artistic+=Number(e.amount||0);lines.push({label:'Boda Madrid', amount:Number(e.amount||0), note:'Aplicado automáticamente por tipo de evento/zona', kind:'extra'});}
+  }
+  if((zone==='madrid_provincia' || zone==='guadalajara') && !extras.includes('zona')){
+    const e=(db.tariffs.extras||[]).find(x=>x.id==='zona');
+    if(e){artistic+=Number(e.amount||0);lines.push({label:'Incremento por zona', amount:Number(e.amount||0), note:'Provincia de Madrid excepto capital / Guadalajara', kind:'extra'});}
+  }
+
+  if(discount>0){
+    artistic-=discount;
+    lines.push({label:'Descuento autorizado', amount:-discount, note:'Aplicado manualmente', kind:'discount'});
+  }
+
+  if(duration==='60'){
+    warnings.push('Aunque el pase sea de 60 minutos, los costes principales de reserva, montaje, prueba, desplazamiento y disponibilidad de banda apenas varían respecto al formato estándar.');
+  }
+  if(space==='exterior' || space==='mixto'){
+    warnings.push('Si es exterior, confirmar zona cubierta, suelo estable, protección ante lluvia/humedad, electricidad segura y plan B.');
+  }
+  if(val('budgetStage')!=='yes'){
+    warnings.push('Escenario/tarima no confirmado. Revisar si el espacio es estable, seguro y suficiente para 6 músicos.');
+  }
+
+  const tech=budgetTechnicalRange();
+  const totalMin = Math.max(0, artistic) + (tech.included ? tech.min : 0);
+  const totalMax = Math.max(0, artistic) + (tech.included ? tech.max : 0);
+  const ivaMin = vat==='yes' ? totalMin*0.21 : 0;
+  const ivaMax = vat==='yes' ? totalMax*0.21 : 0;
+  const totalIvaMin=totalMin+ivaMin, totalIvaMax=totalMax+ivaMax;
+  const isRange = totalMax && totalMax!==totalMin;
+  const totalTxt = isRange ? `${eur2(totalIvaMin)} - ${eur2(totalIvaMax)}` : eur2(totalIvaMin);
+  const depositTxt = isRange ? `${eur2(totalIvaMin/2)} - ${eur2(totalIvaMax/2)}` : eur2(totalIvaMin/2);
+
+  const detailLines=[
+    ...lines.map(x=>`${x.label}: ${x.amount===null?'consultar':eur2(x.amount)}${x.note?` · ${x.note}`:''}`),
+    tech.included ? `${tech.label}: ${eur2(tech.min)}${tech.max!==tech.min?` - ${eur2(tech.max)}`:''}` : tech.label,
+    vat==='yes' ? `IVA 21%: ${isRange?`${eur2(ivaMin)} - ${eur2(ivaMax)}`:eur2(ivaMin)}` : 'IVA: no incluido',
+    `Total orientativo: ${totalTxt}`
+  ];
+  const breakdown=document.getElementById('budgetBreakdown');
+  if(breakdown){
+    breakdown.innerHTML=detailLines.map(esc).join('<br>') + `<br><br><strong>Reserva / anticipo 50%:</strong> ${esc(depositTxt)}` + (warnings.length?`<div class="notice warn" style="margin-top:10px">${warnings.map(esc).join('<br>')}</div>`:'');
+  }
+  const totalEl=document.getElementById('budgetTotal');
+  if(totalEl) totalEl.textContent=totalTxt;
+
+  const dateLine = date ? `${formatDateEs(date)}${time?` · ${time} h`:''}` : 'Fecha pendiente de confirmar';
+  const durationLine = duration==='custom' ? 'Duración pendiente de concretar' : `${duration} minutos`;
+  const techClient = tech.included
+    ? `Producción técnica estimada: ${tech.label} Rango orientativo: ${eur2(tech.min)}${tech.max!==tech.min?` - ${eur2(tech.max)}`:''}.`
+    : 'Producción técnica no incluida en este presupuesto. Se entiende aportada por el espacio o por proveedor externo, pendiente de validación técnica.';
+
+  const clientProposal = [
+    'PRESUPUESTO ORIENTATIVO · Ñ MAYÚSCULA',
+    '',
+    `Cliente / interlocutor: ${client || 'pendiente'}`,
+    `Evento: ${name || eventTypeLabel(eventType)}`,
+    `Fecha y hora: ${dateLine}`,
+    `Lugar: ${venue || 'pendiente'}${location?` · ${location}`:''}`,
+    `Formato: banda completa · ${durationLine} · ${momentLabel(moment)}`,
+    '',
+    'Detalle económico:',
+    ...lines.map(x=>`- ${x.label}: ${x.amount===null?'consultar':eur2(x.amount)}`),
+    tech.included ? `- Producción técnica: ${eur2(tech.min)}${tech.max!==tech.min?` - ${eur2(tech.max)}`:''}` : '- Producción técnica: no incluida / pendiente de proveedor',
+    vat==='yes' ? `- IVA 21% incluido en cálculo: ${isRange?`${eur2(ivaMin)} - ${eur2(ivaMax)}`:eur2(ivaMin)}` : '- Precios sin IVA',
+    '',
+    `Total orientativo: ${totalTxt}`,
+    `Reserva de fecha: anticipo 50% (${depositTxt}) tras aceptación de presupuesto/contrato.`,
+    validUntil ? `Validez: ${validUntil}` : '',
+    '',
+    'Condiciones y observaciones:',
+    '- Presupuesto final sujeto a disponibilidad, ubicación, horarios, duración, formato y necesidades técnicas.',
+    '- Cualquier necesidad de sonido, iluminación, técnico, tarima, cubierta o producción adicional debe quedar confirmada por escrito.',
+    '- La fecha se bloquea únicamente con presupuesto/contrato aceptado y anticipo acordado.',
+    duration==='60' ? '- La reducción a un pase de 60 minutos no implica una reducción relevante del caché artístico, ya que los costes principales de reserva, montaje, prueba, desplazamiento y disponibilidad son prácticamente los mismos.' : '',
+    space==='exterior' || space==='mixto' ? '- En exterior será necesario confirmar cubierta o plan alternativo, suelo estable y condiciones eléctricas seguras.' : '',
+    '',
+    'Ñ Mayúscula'
+  ].filter(Boolean).join('\n');
+
+  const emailText = [
+    client ? `Hola ${client.split(' ')[0]},` : 'Hola,',
+    '',
+    'Gracias por la información.',
+    '',
+    `Te enviamos una propuesta orientativa para Ñ Mayúscula en ${name || eventTypeLabel(eventType)}.`,
+    '',
+    `Fecha: ${dateLine}`,
+    `Lugar: ${venue || 'pendiente'}${location?` · ${location}`:''}`,
+    `Formato: banda completa · ${durationLine}`,
+    '',
+    `Parte artística y extras: ${eur2(Math.max(0,artistic))}`,
+    tech.included ? `Producción técnica estimada: ${eur2(tech.min)}${tech.max!==tech.min?` - ${eur2(tech.max)}`:''}` : 'Producción técnica: pendiente / no incluida',
+    `Total orientativo: ${totalTxt}`,
+    '',
+    techClient,
+    '',
+    'El presupuesto final quedaría sujeto a disponibilidad, horarios, ubicación exacta, condiciones del espacio y necesidades técnicas definitivas.',
+    '',
+    'Quedo pendiente de cualquier dato adicional para cerrarlo con precisión.',
+    '',
+    'Un saludo,',
+    'Miguel',
+    'Ñ Mayúscula'
+  ].join('\n');
+
+  const preview=document.getElementById('budgetClientPreview');
+  if(preview) preview.textContent=clientProposal;
+  const copy=document.getElementById('budgetCopy');
+  if(copy) copy.textContent=emailText;
+
+  return {date,name,client,eventType,venue,location,total:totalMin,totalMin,totalMax,artistic,tech,lines,warnings,emailText,clientProposal,depositTxt,totalTxt};
 }
-function copyBudgetText(){calcBudget();copyText(document.getElementById('budgetCopy').textContent);}
-function createConcertFromBudget(){const b=calcBudget();openConcertModal(null,{date:b.date,eventName:b.name||'Evento pendiente',type:'Sala',status:'Presupuesto enviado',fee:b.total,deposit:b.total?b.total/2:0,paid:0,notes:b.lines.join(' | ')})}
+function eventTypeLabel(v){
+  return ({boda:'boda',evento_privado:'evento privado',cumpleanos:'cumpleaños / celebración',empresa:'evento de empresa',sala:'sala / concierto',ayuntamiento:'ayuntamiento / fiestas',otro:'evento'})[v]||'evento';
+}
+function momentLabel(v){
+  return ({fiesta:'fiesta', 'inicio-fiesta':'inicio de fiesta', coctel:'cóctel', cena:'cena', concierto:'concierto', otro:'momento pendiente'})[v]||'momento pendiente';
+}
+function copyBudgetText(){calcBudget();copyText(document.getElementById('budgetClientPreview')?.textContent||'');}
+function copyBudgetEmail(){calcBudget();copyText(document.getElementById('budgetCopy')?.textContent||'');}
+function downloadBudgetHTML(){
+  const b=calcBudget();
+  const title=`Presupuesto Ñ Mayúscula ${b.date||''} ${b.name||''}`.trim();
+  const html=`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${esc(title)}</title><style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#120608;color:#1b130b;margin:0;padding:28px}
+    .page{max-width:860px;margin:0 auto;background:#fffaf1;border:1px solid #e4a52d;border-radius:18px;padding:32px}
+    h1{margin:0;color:#4b0f1f} h2{color:#4b0f1f} pre{white-space:pre-wrap;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5}
+    .brand{color:#b27818;font-weight:bold}.total{font-size:24px;color:#4b0f1f;font-weight:bold}.note{font-size:12px;color:#6a5b49}
+  </style></head><body><div class="page"><div class="brand">Ñ MAYÚSCULA</div><h1>Presupuesto orientativo</h1><p class="total">${esc(b.totalTxt)}</p><pre>${esc(b.clientProposal)}</pre><p class="note">Documento generado desde APP-ENHE. Presupuesto sujeto a validación final.</p></div></body></html>`;
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const a=document.createElement('a');
+  const safe=(title||'presupuesto-n-mayuscula').replace(/[^\w\-áéíóúñ]+/gi,'_');
+  a.href=URL.createObjectURL(blob);
+  a.download=`${safe}.html`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function createConcertFromBudget(){
+  const b=calcBudget();
+  openConcertModal(null,{
+    date:b.date,
+    eventName:b.name||eventTypeLabel(b.eventType)||'Evento pendiente',
+    type:b.eventType==='boda'?'Boda':(b.eventType==='sala'?'Sala':'Evento privado'),
+    status:'Presupuesto preparado',
+    fee:b.totalMin||b.total||0,
+    deposit:b.totalMin?b.totalMin/2:0,
+    paid:0,
+    notes:[
+      `Presupuesto generado desde APP-ENHE: ${b.totalTxt}`,
+      b.venue?`Lugar: ${b.venue}`:'',
+      b.location?`Ubicación: ${b.location}`:'',
+      b.tech&&b.tech.included?`Técnica estimada: ${eur2(b.tech.min)} - ${eur2(b.tech.max)}`:'Técnica pendiente/no incluida',
+      (b.warnings||[]).join(' | ')
+    ].filter(Boolean).join(' | ')
+  });
+}
 
 
 function openPosterHelp(){

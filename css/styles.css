@@ -397,3 +397,33 @@ code{
   .attendanceEditGrid{grid-template-columns:1fr}
 }
 
+
+
+/* APP-ENHE v2.4 · presupuesto avanzado */
+.checkLine{
+  display:flex;
+  gap:9px;
+  align-items:flex-start;
+  color:var(--text);
+  font-size:13px;
+  padding:10px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:14px;
+  background:rgba(255,255,255,.045);
+}
+.checkLine input{margin-top:2px}
+.checkLine strong{color:var(--gold2);font-weight:700}
+.copyBox.budgetClientPreview{
+  max-height:380px;
+  overflow:auto;
+  white-space:pre-wrap;
+  line-height:1.45;
+  color:#17110d;
+  background:#fff;
+  border-color:#ead7b3;
+}
+.notice.warn{
+  border-color:rgba(255,189,89,.45);
+  background:rgba(255,189,89,.12);
+  color:var(--text);
+}

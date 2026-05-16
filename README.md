@@ -267,3 +267,8 @@ Corrección de cierre para Local ensayo:
 - El aviso de solo lectura pasa a ser no modal y solo aparece ante acciones restringidas.
 - No se bloquea `saveData` para permitir caché local tras sincronizar Google Sheet.
 - Mantiene Google Sheet como fuente principal.
+
+
+## APP-ENHE v2.4 · Presupuesto avanzado
+
+Añade calculadora profesional de presupuesto para administración: datos de cliente, evento, ubicación, técnica, extras, producción, anticipo y generación de email/documento HTML. Google Sheet sigue siendo fuente principal para datos operativos.
