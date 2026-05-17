@@ -1,6 +1,6 @@
-const APP_ENHE_APP_VERSION = '2.6.0-economic-agreements';
-const STORE_KEY = 'n_mayuscula_control_pro_v12_lady_stone_economic_agreements';
-const OLD_STORE_KEYS = ['n_mayuscula_control_pro_v11_lady_stone_admin','n_mayuscula_control_pro_v10_budget_advanced','n_mayuscula_control_pro_v9_admin_notice_fix','n_mayuscula_control_pro_v8_mobile_sheet_lite','n_mayuscula_control_pro_v7_mobile_sheet_jsonp','n_mayuscula_control_pro_v6_sheet_master_v20','n_mayuscula_control_pro_v5_sheet_master','n_mayuscula_control_pro_v4_sheet_first','n_mayuscula_control_pro_v3','n_mayuscula_control_pro_v2','n_mayuscula_control_pro'];
+const APP_ENHE_APP_VERSION = '2.7.0-agreement-edit-delete';
+const STORE_KEY = 'n_mayuscula_control_pro_v13_lady_stone_agreement_edit_delete';
+const OLD_STORE_KEYS = ['n_mayuscula_control_pro_v12_lady_stone_economic_agreements','n_mayuscula_control_pro_v11_lady_stone_admin','n_mayuscula_control_pro_v10_budget_advanced','n_mayuscula_control_pro_v9_admin_notice_fix','n_mayuscula_control_pro_v8_mobile_sheet_lite','n_mayuscula_control_pro_v7_mobile_sheet_jsonp','n_mayuscula_control_pro_v6_sheet_master_v20','n_mayuscula_control_pro_v5_sheet_master','n_mayuscula_control_pro_v4_sheet_first','n_mayuscula_control_pro_v3','n_mayuscula_control_pro_v2','n_mayuscula_control_pro'];
 let db = loadData();
 let filteredCRM = [];
 const tabs = [
@@ -751,6 +751,26 @@ function pushSheetRow(action,row,opts={}){
       throw err;
     });
 }
+
+function deleteSheetRow(action,row,opts={}){
+  if(!sheetWriteEnabled()) return Promise.reject(new Error('No hay endpoint Apps Script configurado.'));
+  if(!isAdminActive() && !opts.allowUser) return Promise.reject(new Error('Modo usuario: no se puede borrar en Google Sheet.'));
+  sheetStatus('Borrando en Google Sheet maestro…');
+  return appsScriptJSONP({action, key:'1929', row:JSON.stringify(row)})
+    .then(payload=>{
+      if(!payload || payload.ok===false) throw new Error(payload?.error || 'No se pudo borrar en Google Sheet.');
+      sheetStatus('Borrado en Google Sheet maestro. Actualizando vista…','ok');
+      return syncCRMFromGoogleSheet({silent:true, afterWrite:true}).then(()=>payload);
+    })
+    .catch(err=>{
+      sheetStatus('Borrado solo en este navegador. Falló Google Sheet: '+esc(err.message||err),'bad');
+      throw err;
+    });
+}
+
+function deleteLadyStoneTicketFromSheet(id){return deleteSheetRow('deleteLadyStoneTicket', {id:id, ID:id});}
+function deleteLadyStoneMovementFromSheet(id){return deleteSheetRow('deleteLadyStoneMovement', {id:id, ID:id});}
+function deleteLadyStoneInvoiceFromSheet(id){return deleteSheetRow('deleteLadyStoneInvoice', {id:id, ID:id});}
 
 function pushConcertToSheet(c){
   return pushSheetRow('upsertConcert', concertToSheetRow(c));
@@ -2776,14 +2796,31 @@ function calculateLadyStoneTicketForm(){
     <strong>Neto estimado total:</strong> ${money2(c.netEstimate)} · <strong>Neto por proyecto:</strong> ${money2(c.netPerProject)}<br>
     <span class="muted">${esc(warn)} Cifras orientativas; validar contrato, liquidación, factura y fiscalidad antes de cerrar.</span>
   `;
+  updateLadyStoneAgreementFormMode();
   return c;
 }
 
-function createLadyStoneTicket(){
+
+function ladyStoneTicketNaturalKey(t){
+  const project=normalizeLadyProjectName(t.project);
+  const date=String(t.date||'').trim();
+  const event=norm(t.event||'');
+  const venue=norm(t.venue||'');
+  if(!project || !date || !event) return '';
+  return [project,date,event,venue].join('|');
+}
+
+function findLadyStoneTicketDuplicate(ticket, excludeId){
   const ls=ensureLadyStone();
+  const key=ladyStoneTicketNaturalKey(ticket);
+  if(!key) return null;
+  return (ls.tickets||[]).find(t => String(t.id||'') !== String(excludeId||'') && ladyStoneTicketNaturalKey(t) === key) || null;
+}
+
+function ladyStoneTicketFromForm(id){
   const c=ladyStoneTicketEstimateFromForm();
-  const ticket={
-    id:'agreement_'+Date.now(),
+  return {
+    id:id || 'agreement_'+Date.now(),
     project:normalizeLadyProjectName(getInputVal('lstTicketProject')),
     date:getInputVal('lstTicketDate') || todayISO(),
     event:getInputVal('lstTicketEvent') || 'Evento sin nombre',
@@ -2831,9 +2868,183 @@ function createLadyStoneTicket(){
     notes:getInputVal('lstTicketNotes') || '',
     updatedAt:new Date().toISOString()
   };
-  ls.tickets.unshift(ticket);
+}
+
+function saveLadyStoneTicket(){
+  const ls=ensureLadyStone();
+  const editingId=String(getInputVal('lstAgreementId') || '').trim();
+  let ticket=ladyStoneTicketFromForm(editingId || null);
+
+  const duplicate=findLadyStoneTicketDuplicate(ticket, editingId);
+  if(duplicate && !editingId){
+    const ok=confirm('Ya existe un acuerdo para este proyecto, fecha, evento y sala/lugar.\\n\\n¿Quieres actualizar ese acuerdo existente en vez de crear un duplicado?');
+    if(!ok) return;
+    ticket.id=duplicate.id;
+    ticket.createdFromDuplicate=true;
+  }
+
+  const idx=(ls.tickets||[]).findIndex(t=>String(t.id||'')===String(ticket.id||''));
+  if(idx>=0){
+    ls.tickets[idx]=Object.assign({}, ls.tickets[idx], ticket, {updatedAt:new Date().toISOString()});
+  }else{
+    ls.tickets.unshift(ticket);
+  }
+
+  setInputVal('lstAgreementId', ticket.id);
   saveData();
+  updateLadyStoneAgreementFormMode();
   pushLadyStoneTicketToSheet(ticket).catch(alertSheetWriteError);
+}
+
+function createLadyStoneTicket(){
+  return saveLadyStoneTicket();
+}
+
+function editLadyStoneTicket(id){
+  const ls=ensureLadyStone();
+  const t=(ls.tickets||[]).find(x=>String(x.id||'')===String(id||''));
+  if(!t){
+    alert('No encuentro ese acuerdo. Actualiza desde Google Sheet e inténtalo de nuevo.');
+    return;
+  }
+  setInputVal('lstAgreementId', t.id || '');
+  setInputVal('lstAgreementType', t.agreementType || 'canon_mas_taquilla');
+  setInputVal('lstTicketProject', t.project || 'Ñ Mayúscula');
+  setInputVal('lstTicketDate', t.date || todayISO());
+  setInputVal('lstTicketEvent', t.event || '');
+  setInputVal('lstTicketVenue', t.venue || '');
+  setInputVal('lstTicketChannel', t.channel || 'Passline sala');
+  setInputVal('lstTicketCapacity', t.capacity ?? 150);
+  setInputVal('lstTicketUrl', t.url || '');
+  setInputVal('lstCacheFixed', t.cacheFixed ?? 0);
+  setInputVal('lstMinimumGuarantee', t.minimumGuarantee ?? 0);
+  setInputVal('lstExtraSound', t.extraSound ?? 0);
+  setInputVal('lstExtraLights', t.extraLights ?? 0);
+  setInputVal('lstExtraTravel', t.extraTravel ?? 0);
+  setInputVal('lstExtraOther', t.extraOther ?? 0);
+  setInputVal('lstPriceAdvance', t.priceAdvance ?? 10);
+  setInputVal('lstSoldAdvance', t.soldAdvance ?? 0);
+  setInputVal('lstPriceDoor', t.priceDoor ?? 12);
+  setInputVal('lstSoldDoor', t.soldDoor ?? 0);
+  setInputVal('lstTicketPct', t.ticketPct ?? 100);
+  setInputVal('lstInvites', t.invites ?? 0);
+  setInputVal('lstBarGross', t.barGross ?? 0);
+  setInputVal('lstBarPct', t.barPct ?? 0);
+  setInputVal('lstBarBase', t.barBaseMode || 'bruta');
+  setInputVal('lstBarWindow', t.barWindow || '');
+  setInputVal('lstCanon', t.canon ?? 0);
+  setInputVal('lstVatPct', t.vatPct ?? 10);
+  setInputVal('lstSgaeMode', t.sgaeMode || 'sala');
+  setInputVal('lstSgaePct', t.sgaePct ?? 8.5);
+  setInputVal('lstOtherExpenses', t.otherExpenses ?? 0);
+  setInputVal('lstManualAmount', t.manualAmount ?? 0);
+  setInputVal('lstSplitBands', t.splitBands || '1');
+  setInputVal('lstTicketNotes', t.notes || '');
+  calculateLadyStoneTicketForm();
+  updateLadyStoneAgreementFormMode();
+  document.getElementById('ladyTicketCalc')?.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function resetLadyStoneTicketForm(){
+  setInputVal('lstAgreementId','');
+  setInputVal('lstAgreementType','canon_mas_taquilla');
+  setInputVal('lstTicketProject','Ñ Mayúscula');
+  setInputVal('lstTicketDate', todayISO());
+  setInputVal('lstTicketEvent','');
+  setInputVal('lstTicketVenue','');
+  setInputVal('lstTicketChannel','Passline sala');
+  setInputVal('lstTicketCapacity',150);
+  setInputVal('lstTicketUrl','');
+  setInputVal('lstCacheFixed',0);
+  setInputVal('lstMinimumGuarantee',0);
+  setInputVal('lstExtraSound',0);
+  setInputVal('lstExtraLights',0);
+  setInputVal('lstExtraTravel',0);
+  setInputVal('lstExtraOther',0);
+  setInputVal('lstPriceAdvance',10);
+  setInputVal('lstSoldAdvance',0);
+  setInputVal('lstPriceDoor',12);
+  setInputVal('lstSoldDoor',0);
+  setInputVal('lstTicketPct',100);
+  setInputVal('lstInvites',0);
+  setInputVal('lstBarGross',0);
+  setInputVal('lstBarPct',0);
+  setInputVal('lstBarBase','bruta');
+  setInputVal('lstBarWindow','');
+  setInputVal('lstCanon',423.50);
+  setInputVal('lstVatPct',10);
+  setInputVal('lstSgaeMode','sala');
+  setInputVal('lstSgaePct',8.5);
+  setInputVal('lstOtherExpenses',0);
+  setInputVal('lstManualAmount',0);
+  setInputVal('lstSplitBands','2');
+  setInputVal('lstTicketNotes','');
+  calculateLadyStoneTicketForm();
+  updateLadyStoneAgreementFormMode();
+}
+
+function deleteLadyStoneTicket(id){
+  const ls=ensureLadyStone();
+  const t=(ls.tickets||[]).find(x=>String(x.id||'')===String(id||''));
+  if(!t){
+    alert('No encuentro ese acuerdo.');
+    return;
+  }
+  if(!confirm('Vas a borrar este acuerdo económico:\\n\\n'+(t.event||'Evento sin nombre')+' · '+(t.project||'')+' · '+(t.date||'')+'\\n\\n¿Confirmas el borrado?')) return;
+  ls.tickets=(ls.tickets||[]).filter(x=>String(x.id||'')!==String(id||''));
+  if(String(getInputVal('lstAgreementId')||'')===String(id||'')) resetLadyStoneTicketForm();
+  saveData();
+  deleteLadyStoneTicketFromSheet(id).catch(alertSheetWriteError);
+}
+
+function consolidateLadyStoneTicketDuplicates(){
+  const ls=ensureLadyStone();
+  const byKey={};
+  const keep=[];
+  const remove=[];
+  (ls.tickets||[]).forEach(t=>{
+    const key=ladyStoneTicketNaturalKey(t);
+    if(!key){
+      keep.push(t);
+      return;
+    }
+    if(!byKey[key]){
+      byKey[key]=t;
+      keep.push(t);
+      return;
+    }
+    const current=byKey[key];
+    const currentDate=new Date(current.updatedAt || current.date || 0).getTime() || 0;
+    const newDate=new Date(t.updatedAt || t.date || 0).getTime() || 0;
+    if(newDate>currentDate){
+      const idx=keep.findIndex(x=>String(x.id||'')===String(current.id||''));
+      if(idx>=0) keep[idx]=t;
+      remove.push(current);
+      byKey[key]=t;
+    }else{
+      remove.push(t);
+    }
+  });
+  if(!remove.length){
+    alert('No se han encontrado acuerdos duplicados por proyecto + fecha + evento + sala/lugar.');
+    return;
+  }
+  if(!confirm('Se han encontrado '+remove.length+' acuerdo(s) duplicado(s).\\n\\nSe conservará el más reciente por proyecto + fecha + evento + sala/lugar y se borrarán los duplicados.\\n\\n¿Continuar?')) return;
+  ls.tickets=keep;
+  saveData();
+  Promise.all(remove.filter(x=>x.id).map(x=>deleteLadyStoneTicketFromSheet(x.id).catch(err=>err))).then(()=>{
+    alert('Duplicados consolidados. Revisa Google Sheet si algún borrado no se pudo sincronizar.');
+  });
+}
+
+function updateLadyStoneAgreementFormMode(){
+  const id=String(getInputVal('lstAgreementId')||'').trim();
+  const saveBtn=document.getElementById('lstSaveAgreementBtn');
+  const deleteBtn=document.getElementById('lstDeleteAgreementBtn');
+  const mode=document.getElementById('lstAgreementMode');
+  if(saveBtn) saveBtn.textContent = id ? 'Actualizar acuerdo económico' : 'Guardar acuerdo económico';
+  if(deleteBtn) deleteBtn.disabled = !id;
+  if(mode) mode.textContent = id ? ('Editando acuerdo: '+id) : 'Nuevo acuerdo';
 }
 
 function createLadyStoneMovement(){
@@ -2915,10 +3126,11 @@ function renderLadyStoneAdmin(){
     </ul>`;
 
   const ticketBody=document.querySelector('#ladyTicketsTable tbody');
-  ticketBody.innerHTML=(ls.tickets||[]).slice(0,20).map(t=>`<tr>
+  ticketBody.innerHTML=(ls.tickets||[]).slice(0,30).map(t=>`<tr>
     <td>${esc(t.date||'')}</td><td>${esc(t.project||'')}</td><td><strong>${esc(t.event||'')}</strong><br><small>${esc(t.venue||'')}</small></td>
     <td>${esc(t.agreementLabel || agreementLabel(t.agreementType) || 'Acuerdo')}</td><td>${esc(t.baseDescription || '')}</td><td>${money2(t.netEstimate)}</td><td>${esc(t.channel||'')}</td>
-  </tr>`).join('') || `<tr><td colspan="7" class="muted">Sin acuerdos económicos todavía.</td></tr>`;
+    <td class="actions" style="gap:6px;flex-wrap:nowrap"><button class="btn ghost" type="button" onclick="editLadyStoneTicket('${esc(t.id||'')}')">Editar</button><button class="btn danger" type="button" onclick="deleteLadyStoneTicket('${esc(t.id||'')}')">Borrar</button></td>
+  </tr>`).join('') || `<tr><td colspan="8" class="muted">Sin acuerdos económicos todavía.</td></tr>`;
 
   const movBody=document.querySelector('#ladyMovementsTable tbody');
   movBody.innerHTML=(ls.movements||[]).slice(0,20).map(m=>`<tr>
@@ -2930,6 +3142,7 @@ function renderLadyStoneAdmin(){
     <td>${esc(i.date||'')}</td><td>${esc(i.project||'')}</td><td>${esc(i.client||'')}</td><td>${money2(i.amount)}</td><td>${badge(i.status||'')}</td><td>${esc(i.invoiceBy||'')}</td>
   </tr>`).join('') || `<tr><td colspan="6" class="muted">Sin facturas/liquidaciones registradas.</td></tr>`;
   calculateLadyStoneTicketForm();
+  updateLadyStoneAgreementFormMode();
 }
 
 function ladyStoneSummaryText(){

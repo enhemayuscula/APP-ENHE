@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- APP-ENHE v2.6 Lady Stone Acuerdos Económicos -->
+<!-- APP-ENHE v2.7 Lady Stone Acuerdos Editables -->
 <title>Ñ Mayúscula · Control profesional de conciertos, CRM y setlist</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#120608">
@@ -190,6 +190,7 @@
         <button class="btn gold" type="button" onclick="renderLadyStoneAdmin()">Actualizar vista</button>
         <button class="btn dark" type="button" onclick="exportLadyStoneCSV()">Exportar control CSV</button>
         <button class="btn ghost" type="button" onclick="copyLadyStoneSummary()">Copiar resumen</button>
+        <button class="btn ghost" type="button" onclick="consolidateLadyStoneTicketDuplicates()">Consolidar duplicados</button>
       </div>
     </div>
 
@@ -207,6 +208,8 @@
       <div class="card">
         <h4>Acuerdo económico / liquidación</h4>
         <p class="muted">Controla cualquier modelo real: caché fijo, extras, mínimo garantizado, porcentaje de taquilla, porcentaje de barra, canon de sala o acuerdo mixto. No vende entradas ni sustituye contabilidad oficial.</p>
+        <input type="hidden" id="lstAgreementId">
+        <div class="notice compact" id="lstAgreementMode">Nuevo acuerdo</div>
         <div class="formGrid">
           <div class="field span2"><label>Tipo de acuerdo económico</label><select id="lstAgreementType" onchange="calculateLadyStoneTicketForm()">
             <option value="cache_fijo">Caché fijo</option>
@@ -258,8 +261,10 @@
         </div>
         <div id="ladyTicketCalc" class="notice" style="margin-top:12px"></div>
         <div class="actions" style="margin-top:12px">
-          <button class="btn gold" type="button" onclick="createLadyStoneTicket()">Guardar acuerdo económico</button>
+          <button class="btn gold" id="lstSaveAgreementBtn" type="button" onclick="saveLadyStoneTicket()">Guardar acuerdo económico</button>
           <button class="btn dark" type="button" onclick="copyLadyStoneTicketEstimate()">Copiar estimación</button>
+          <button class="btn ghost" type="button" onclick="resetLadyStoneTicketForm()">Nuevo acuerdo limpio</button>
+          <button class="btn danger" id="lstDeleteAgreementBtn" type="button" onclick="deleteLadyStoneTicket(getInputVal('lstAgreementId'))" disabled>Borrar acuerdo actual</button>
         </div>
       </div>
 
@@ -303,7 +308,7 @@
     <div class="grid two">
       <div class="card">
         <h4>Últimos acuerdos económicos</h4>
-        <div class="tableWrap"><table id="ladyTicketsTable"><thead><tr><th>Fecha</th><th>Proyecto</th><th>Evento</th><th>Modelo</th><th>Base cálculo</th><th>Neto estimado</th><th>Canal</th></tr></thead><tbody></tbody></table></div>
+        <div class="tableWrap"><table id="ladyTicketsTable"><thead><tr><th>Fecha</th><th>Proyecto</th><th>Evento</th><th>Modelo</th><th>Base cálculo</th><th>Neto estimado</th><th>Canal</th><th>Acciones</th></tr></thead><tbody></tbody></table></div>
       </div>
       <div class="card">
         <h4>Últimos movimientos</h4>
@@ -320,7 +325,7 @@
           <a class="btn dark" href="#" onclick="alert('Configurar URL de APP-BCB cuando se cierre versión estable.'); return false;">APP-BCB pendiente</a>
           <a class="btn ghost" href="https://docs.google.com/spreadsheets/d/1mrffAdGxfzRL602XHD4Uw-EKiYBgZ4PgLuVuOFPxEGU/edit?gid=2128742185#gid=2128742185" target="_blank" rel="noopener">Google Sheet Ñ</a>
         </div>
-        <div class="notice" style="margin-top:12px">Fase v2.6: acuerdos económicos completos. No vende entradas ni presenta impuestos. La asociación central definitiva podrá migrarse más adelante a APP-LADY-STONE.</div>
+        <div class="notice" style="margin-top:12px">Fase v2.7: acuerdos editables, borrado y control de duplicados. No vende entradas ni presenta impuestos. La asociación central definitiva podrá migrarse más adelante a APP-LADY-STONE.</div>
       </div>
     </div>
   </section>

@@ -1,4 +1,4 @@
-# APP-ENHE v2.6 · Lady Stone Acuerdos Económicos
+# APP-ENHE v2.7 · Lady Stone Acuerdos Económicos
 
 Versión completa para APP-ENHE.
 
@@ -55,10 +55,15 @@ Este módulo es la primera base de administración central.
 Cuando esté estable en Ñ, se podrá replicar la arquitectura a APP-BCB y, si conviene, crear una app central independiente `APP-LADY-STONE`.
 
 
-## Cambios v2.6
+## Cambios v2.7
 
 - Renombra el bloque de entradas a **Acuerdo económico / liquidación**.
 - Añade selector obligatorio de modelo económico.
 - Añade campos de caché fijo, mínimo garantizado, extras, porcentaje de taquilla y porcentaje de barra.
 - Calcula neto estimado según modelo.
-- Guarda los campos ampliados en Google Sheet mediante el bridge v2.6.
+- Guarda los campos ampliados en Google Sheet mediante el bridge v2.7.
+
+
+## v2.7
+
+Corrige edición, borrado y control de duplicados en acuerdos económicos Lady Stone.

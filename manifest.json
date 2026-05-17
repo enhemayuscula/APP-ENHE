@@ -1,8 +1,8 @@
 {
   "name": "Ñ Mayúscula · Control profesional",
   "short_name": "Ñ Mayúscula",
-  "description": "App interna de Ñ Mayúscula para CRM, repertorio, setlist, dossier, tareas, seguimiento y acuerdos económicos Lady Stone.",
-  "start_url": "./?source=pwa",
+  "description": "App interna de Ñ Mayúscula para CRM, repertorio, setlist, dossier, tareas, seguimiento y acuerdos económicos editables Lady Stone.",
+  "start_url": "./?source=pwa&v=27agreements",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
