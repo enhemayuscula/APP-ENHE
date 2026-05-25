@@ -1,5 +1,5 @@
-/* APP-ENHE · PWA service worker v2.7.3 callback/tariff fix */
-const CACHE_NAME = "app-enhe-pwa-2.7.3-callback-fix";
+/* APP-ENHE · PWA service worker v2.7.4 hours fix */
+const CACHE_NAME = "app-enhe-pwa-2.7.4-hours-fix";
 const APP_SHELL = [
   "./",
   "./index.html",
