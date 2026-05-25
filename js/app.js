@@ -1929,6 +1929,39 @@ function budgetBaseLine(date){
   if(base && base.price===0) return {price:0, name:base.name, note:'Día laborable/no disponible en tabla. Consultar o introducir caché manual.'};
   return {price:0, name:'Sin tarifa automática', note:'La fecha no está dentro de la tabla 2026. Introducir caché artístico manual o validar tarifa.'};
 }
+function findBaseTariff(dateStr){
+  if(!dateStr) return null;
+
+  const special = (db.tariffs?.specialDates || []).find(x => x.date === dateStr);
+  if(special){
+    return {
+      name: special.name || 'Fecha especial',
+      price: Number(special.price || 0),
+      special: true
+    };
+  }
+
+  const d = new Date(dateStr + 'T00:00:00');
+  if(isNaN(d)) return null;
+
+  const rows = db.tariffs?.base || [];
+  const row = rows.find(x => dateStr >= x.from && dateStr <= x.to);
+  if(!row) return null;
+
+  const day = d.getDay();
+  let price = 0;
+
+  if(day === 5) price = Number(row.friday || 0);
+  else if(day === 6) price = Number(row.saturday || 0);
+  else if(day === 0) price = Number(row.sunday || 0);
+  else price = Number(row.weekday || 0);
+
+  return {
+    name: row.name || 'Tarifa base',
+    price,
+    special: false
+  };
+}
 function calcBudget(){
   const date=val('budgetDate');
   const eventType=val('budgetEventType','boda');
