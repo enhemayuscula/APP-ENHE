@@ -520,27 +520,55 @@ function appEnheEndpointUrl(params={}){
 }
 function appsScriptJSONP(params={}){
   return new Promise((resolve,reject)=>{
-    if(!GOOGLE_SHEET_MASTER.appsScriptUrl) return reject(new Error('No hay URL /exec de Apps Script configurada.'));
-    const cb='APP_ENHE_JSONP_'+Date.now()+'_'+Math.random().toString(36).slice(2);
-    const script=document.createElement('script');
-    const timeout=setTimeout(()=>{
-      cleanup();
+    if(!GOOGLE_SHEET_MASTER.appsScriptUrl) {
+      return reject(new Error('No hay URL /exec de Apps Script configurada.'));
+    }
+
+    const cb = 'APP_ENHE_JSONP_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const script = document.createElement('script');
+    let settled = false;
+
+    const timeout = setTimeout(()=>{
+      if(settled) return;
+      settled = true;
+
+      // Dejamos un callback fantasma para evitar el error:
+      // APP_ENHE_JSONP_xxx is not defined si Apps Script responde tarde.
+      window[cb] = function(){};
+
+      try { script.remove(); } catch(e) {}
+
+      setTimeout(()=>{
+        try { delete window[cb]; } catch(e) { window[cb] = undefined; }
+      }, 120000);
+
       reject(new Error('Tiempo agotado leyendo Apps Script.'));
-    }, 25000);
+    }, 90000);
+
     function cleanup(){
       clearTimeout(timeout);
-      try{delete window[cb];}catch(e){window[cb]=undefined;}
-      script.remove();
+      try { script.remove(); } catch(e) {}
+      setTimeout(()=>{
+        try { delete window[cb]; } catch(e) { window[cb] = undefined; }
+      }, 1000);
     }
-    window[cb]=function(payload){
+
+    window[cb] = function(payload){
+      if(settled) return;
+      settled = true;
       cleanup();
       resolve(payload);
     };
-    script.onerror=function(){
+
+    script.onerror = function(){
+      if(settled) return;
+      settled = true;
       cleanup();
       reject(new Error('No se pudo cargar el endpoint de Apps Script.'));
     };
-    script.src=appEnheEndpointUrl(Object.assign({}, params, {callback:cb}));
+
+    script.async = true;
+    script.src = appEnheEndpointUrl(Object.assign({}, params, {callback: cb}));
     document.head.appendChild(script);
   });
 }
