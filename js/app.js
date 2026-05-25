@@ -1,4 +1,4 @@
-const APP_ENHE_APP_VERSION = '2.7.0-agreement-edit-delete';
+const APP_ENHE_APP_VERSION = '2.7.3-callback-fix';
 const STORE_KEY = 'n_mayuscula_control_pro_v13_lady_stone_agreement_edit_delete';
 const OLD_STORE_KEYS = ['n_mayuscula_control_pro_v12_lady_stone_economic_agreements','n_mayuscula_control_pro_v11_lady_stone_admin','n_mayuscula_control_pro_v10_budget_advanced','n_mayuscula_control_pro_v9_admin_notice_fix','n_mayuscula_control_pro_v8_mobile_sheet_lite','n_mayuscula_control_pro_v7_mobile_sheet_jsonp','n_mayuscula_control_pro_v6_sheet_master_v20','n_mayuscula_control_pro_v5_sheet_master','n_mayuscula_control_pro_v4_sheet_first','n_mayuscula_control_pro_v3','n_mayuscula_control_pro_v2','n_mayuscula_control_pro'];
 let db = loadData();
@@ -532,7 +532,7 @@ function appsScriptJSONP(params={}){
       if(settled) return;
       settled = true;
 
-      // Dejamos un callback fantasma para evitar el error:
+      // Callback fantasma para evitar el error:
       // APP_ENHE_JSONP_xxx is not defined si Apps Script responde tarde.
       window[cb] = function(){};
 
@@ -572,6 +572,7 @@ function appsScriptJSONP(params={}){
     document.head.appendChild(script);
   });
 }
+
 
 function isAdminActive(){
   return document.body.classList.contains('admin-enabled') ||
@@ -1519,7 +1520,9 @@ function saveConcert(){
   }
   closeModal();
   saveData();
-  pushConcertToSheet(item).catch(alertSheetWriteError);
+  pushConcertToSheet(item)
+    .then(()=>sheetStatus('Concierto guardado en Google Sheet maestro.', 'ok'))
+    .catch(alertSheetWriteError);
 }
 
 function bandMembers(){
@@ -1949,14 +1952,6 @@ function budgetTechnicalRange(){
   if(aforo==='small') return {min:700,max:1100,label:'Producción técnica estimada para interior pequeño/medio.', included:true, needed:true};
   return {min:1100,max:1800,label:'Producción técnica estimada para boda/evento interior estándar.', included:true, needed:true};
 }
-function budgetBaseLine(date){
-  const manual=numInput('budgetManualBase');
-  const base=findBaseTariff(date);
-  if(manual>0) return {price:manual, name:'Caché artístico manual', note:'Importe introducido manualmente por administración.'};
-  if(base && base.price>0) return {price:Number(base.price), name:base.name, note:base.special?'Fecha especial':'Tarifa base según tabla'};
-  if(base && base.price===0) return {price:0, name:base.name, note:'Día laborable/no disponible en tabla. Consultar o introducir caché manual.'};
-  return {price:0, name:'Sin tarifa automática', note:'La fecha no está dentro de la tabla 2026. Introducir caché artístico manual o validar tarifa.'};
-}
 function findBaseTariff(dateStr){
   if(!dateStr) return null;
 
@@ -1989,6 +1984,15 @@ function findBaseTariff(dateStr){
     price,
     special: false
   };
+}
+
+function budgetBaseLine(date){
+  const manual=numInput('budgetManualBase');
+  const base=findBaseTariff(date);
+  if(manual>0) return {price:manual, name:'Caché artístico manual', note:'Importe introducido manualmente por administración.'};
+  if(base && base.price>0) return {price:Number(base.price), name:base.name, note:base.special?'Fecha especial':'Tarifa base según tabla'};
+  if(base && base.price===0) return {price:0, name:base.name, note:'Día laborable/no disponible en tabla. Consultar o introducir caché manual.'};
+  return {price:0, name:'Sin tarifa automática', note:'La fecha no está dentro de la tabla 2026. Introducir caché artístico manual o validar tarifa.'};
 }
 function calcBudget(){
   const date=val('budgetDate');

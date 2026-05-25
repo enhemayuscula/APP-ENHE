@@ -12,9 +12,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="stylesheet" href="css/styles.css?v=2.7.2-tariff-fix">
-<link rel="stylesheet" href="css/admin-guard.css?v=2.7.2-tariff-fix">
-<script defer src="js/admin-guard.js?v=2.7.2-tariff-fix"></script>
+<link rel="stylesheet" href="css/styles.css?v=2.7.3-callback-fix">
+<link rel="stylesheet" href="css/admin-guard.css?v=2.7.3-callback-fix">
+<script defer src="js/admin-guard.js?v=2.7.3-callback-fix"></script>
 </head>
 <body>
 <div class="app">
@@ -637,13 +637,13 @@
 
 <div class="modal" id="modal"><div class="modalPanel"><div class="modalHead"><strong id="modalTitle">Detalle</strong><button class="close" onclick="closeModal()">×</button></div><div class="modalBody" id="modalBody"></div></div></div>
 
-<script src="js/assets.js?v=2.7.2-tariff-fix"></script>
-<script src="js/data.js?v=2.7.2-tariff-fix"></script>
-<script src="js/app.js?v=2.7.2-tariff-fix"></script>
+<script src="js/assets.js?v=2.7.3-callback-fix"></script>
+<script src="js/data.js?v=2.7.3-callback-fix"></script>
+<script src="js/app.js?v=2.7.3-callback-fix"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("./sw.js?v=2.7.2-tariff-fix").catch(function (error) {
+    navigator.serviceWorker.register("./sw.js?v=2.7.3-callback-fix").catch(function (error) {
       console.warn("Service Worker no registrado:", error);
     });
   });

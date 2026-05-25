@@ -1,5 +1,5 @@
-/* APP-ENHE · PWA service worker v2.7 Lady Stone Acuerdos Editables */
-const CACHE_NAME = "app-enhe-pwa-v2-7-0";
+/* APP-ENHE · PWA service worker v2.7.3 callback/tariff fix */
+const CACHE_NAME = "app-enhe-pwa-2.7.3-callback-fix";
 const APP_SHELL = [
   "./",
   "./index.html",
