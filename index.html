@@ -637,13 +637,13 @@
 
 <div class="modal" id="modal"><div class="modalPanel"><div class="modalHead"><strong id="modalTitle">Detalle</strong><button class="close" onclick="closeModal()">×</button></div><div class="modalBody" id="modalBody"></div></div></div>
 
-<script src="js/assets.js?v=2.5.0"></script>
-<script src="js/data.js?v=2.5.0"></script>
+<script src="js/assets.js?v=2.7.2-tariff-fix"></script>
+<script src="js/data.js?v=2.7.2-tariff-fix"></script>
 <script src="js/app.js?v=2.7.2-tariff-fix"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("./sw.js?v=2.5.0").catch(function (error) {
+    navigator.serviceWorker.register("./sw.js?v=2.7.2-tariff-fix").catch(function (error) {
       console.warn("Service Worker no registrado:", error);
     });
   });
