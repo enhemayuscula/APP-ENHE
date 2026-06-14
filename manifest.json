@@ -65,7 +65,19 @@
           "sizes": "192x192"
         }
       ]
+    },
+    {
+      "name": "Audio Studio",
+      "short_name": "Audio",
+      "description": "Abrir módulo Audio Studio",
+      "url": "./?tab=audioStudio",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ],
-  "version": "2.6"
+  "version": "2.8-audio"
 }

@@ -1,11 +1,11 @@
-const APP_ENHE_APP_VERSION = '2.7.4-hours-fix';
-const STORE_KEY = 'n_mayuscula_control_pro_v13_lady_stone_agreement_edit_delete';
+const APP_ENHE_APP_VERSION = '3.0.0-biblioteca-pistas';
+const STORE_KEY = 'n_mayuscula_control_pro_v16_biblioteca_pistas';
 const OLD_STORE_KEYS = ['n_mayuscula_control_pro_v12_lady_stone_economic_agreements','n_mayuscula_control_pro_v11_lady_stone_admin','n_mayuscula_control_pro_v10_budget_advanced','n_mayuscula_control_pro_v9_admin_notice_fix','n_mayuscula_control_pro_v8_mobile_sheet_lite','n_mayuscula_control_pro_v7_mobile_sheet_jsonp','n_mayuscula_control_pro_v6_sheet_master_v20','n_mayuscula_control_pro_v5_sheet_master','n_mayuscula_control_pro_v4_sheet_first','n_mayuscula_control_pro_v3','n_mayuscula_control_pro_v2','n_mayuscula_control_pro'];
 let db = loadData();
 let filteredCRM = [];
 const tabs = [
   ['dashboard','Panel','●'],['crm','CRM','●'],['followup','Seguimiento','●'],['gmail','Gmail','●'],['concerts','Conciertos','●'],['rehearsals','Ensayos','●'],['local','Local ensayo','●'],
-  ['ladyStone','Lady Stone','●'],['budget','Presupuesto','●'],['repertoire','Canciones','●'],['setlist','Setlist','●'],['dossier','Dossier','●'],['templates','Plantillas','●'],['tasks','Tareas','●'],['importExport','Exportar','●']
+  ['ladyStone','Lady Stone','●'],['audioLibrary','Pistas','●'],['budget','Presupuesto','●'],['repertoire','Canciones','●'],['setlist','Setlist','●'],['dossier','Dossier','●'],['templates','Plantillas','●'],['tasks','Tareas','●'],['importExport','Exportar','●']
 ];
 
 function clone(o){return JSON.parse(JSON.stringify(o));}
@@ -136,8 +136,6 @@ function migrateData(data){
     id: 0,
     date: '',
     time: '',
-    startTime: '',
-    endTime: '',
     eventName: '',
     venue: '',
     city: '',
@@ -156,7 +154,7 @@ function migrateData(data){
     attendanceNotes: '',
     notes: ''
   };
-  data.concerts = data.concerts.map((concert, idx)=>normalizeConcertTimes(Object.assign({}, defaultConcert, {id: idx+1}, concert || {})));
+  data.concerts = data.concerts.map((concert, idx)=>Object.assign({}, defaultConcert, {id: idx+1}, concert || {}));
   const seedConcerts = Array.isArray(INITIAL_DATA.concerts) ? INITIAL_DATA.concerts : [];
   seedConcerts.forEach(seedConcert=>{
     const match = data.concerts.find(concert =>
@@ -169,10 +167,10 @@ function migrateData(data){
         if(shouldSeedReplace(match[key])) match[key] = seedConcert[key];
       });
     }else{
-      data.concerts.push(normalizeConcertTimes(Object.assign({}, defaultConcert, seedConcert, {id: nextId(data.concerts)})));
+      data.concerts.push(Object.assign({}, defaultConcert, seedConcert, {id: nextId(data.concerts)}));
     }
   });
-  data.concerts.sort((a,b)=>String(a.date||'9999-99-99').localeCompare(String(b.date||'9999-99-99')) || String(getConcertStartTime(a)||'99:99').localeCompare(String(getConcertStartTime(b)||'99:99')));
+  data.concerts.sort((a,b)=>String(a.date||'9999-99-99').localeCompare(String(b.date||'9999-99-99')) || String(a.time||'99:99').localeCompare(String(b.time||'99:99')));
 
   const defaultAttendance = {};
   data.bandMembers.forEach(m=>{ defaultAttendance[m.id] = {status:'Pendiente', notes:''}; });
@@ -227,49 +225,6 @@ function norm(v){return String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/
 function eur(n){n=Number(n||0);return n? n.toLocaleString('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:0}) : '—';}
 function compact(v,n=95){v=String(v??'').trim(); return v.length>n ? v.slice(0,n-1)+'…' : v;}
 function nextId(arr){return (arr||[]).reduce((m,x)=>Math.max(m, Number(x.id)||0),0)+1;}
-
-function normalizeTimeValue(v){
-  if(v === undefined || v === null) return '';
-  if(typeof v === 'number' && Number.isFinite(v)){
-    const totalMinutes = Math.round(((v % 1) + (v < 0 ? 1 : 0)) * 24 * 60);
-    const hh = String(Math.floor(totalMinutes / 60) % 24).padStart(2,'0');
-    const mm = String(totalMinutes % 60).padStart(2,'0');
-    return `${hh}:${mm}`;
-  }
-  let s = String(v).trim();
-  if(!s) return '';
-  const iso = s.match(/T(\d{1,2}):(\d{2})/);
-  if(iso) return `${String(iso[1]).padStart(2,'0')}:${iso[2]}`;
-  const m = s.match(/(\d{1,2})[:.hH](\d{2})/);
-  if(m) return `${String(m[1]).padStart(2,'0')}:${m[2]}`;
-  const short = s.match(/^(\d{1,2})$/);
-  if(short) return `${String(short[1]).padStart(2,'0')}:00`;
-  return s.slice(0,5);
-}
-function splitTimeRange(v){
-  const s = String(v||'').trim();
-  if(!s) return ['', ''];
-  const parts = s.split(/\s*(?:-|–|—|a|hasta)\s*/i).filter(Boolean);
-  if(parts.length >= 2) return [normalizeTimeValue(parts[0]), normalizeTimeValue(parts[1])];
-  return [normalizeTimeValue(s), ''];
-}
-function normalizeConcertTimes(c){
-  const legacyRange = splitTimeRange(c?.time || '');
-  const start = normalizeTimeValue(c?.startTime || c?.hora_inicio || c?.['Hora inicio']) || legacyRange[0];
-  const end = normalizeTimeValue(c?.endTime || c?.hora_fin || c?.['Hora fin']) || legacyRange[1];
-  c.startTime = start || '';
-  c.endTime = end || '';
-  c.time = start || normalizeTimeValue(c?.time || '');
-  return c;
-}
-function getConcertStartTime(c){
-  return normalizeTimeValue(c?.startTime || c?.time || '');
-}
-function concertTimeText(c){
-  const start = normalizeTimeValue(c?.startTime || c?.time || '');
-  const end = normalizeTimeValue(c?.endTime || '');
-  return [start,end].filter(Boolean).join(' - ');
-}
 
 function parseEuroValue(v){
   if(typeof v==='number') return Number.isFinite(v)?v:0;
@@ -565,59 +520,30 @@ function appEnheEndpointUrl(params={}){
 }
 function appsScriptJSONP(params={}){
   return new Promise((resolve,reject)=>{
-    if(!GOOGLE_SHEET_MASTER.appsScriptUrl) {
-      return reject(new Error('No hay URL /exec de Apps Script configurada.'));
-    }
-
-    const cb = 'APP_ENHE_JSONP_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-    const script = document.createElement('script');
-    let settled = false;
-
-    const timeout = setTimeout(()=>{
-      if(settled) return;
-      settled = true;
-
-      // Callback fantasma para evitar el error:
-      // APP_ENHE_JSONP_xxx is not defined si Apps Script responde tarde.
-      window[cb] = function(){};
-
-      try { script.remove(); } catch(e) {}
-
-      setTimeout(()=>{
-        try { delete window[cb]; } catch(e) { window[cb] = undefined; }
-      }, 120000);
-
+    if(!GOOGLE_SHEET_MASTER.appsScriptUrl) return reject(new Error('No hay URL /exec de Apps Script configurada.'));
+    const cb='APP_ENHE_JSONP_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const script=document.createElement('script');
+    const timeout=setTimeout(()=>{
+      cleanup();
       reject(new Error('Tiempo agotado leyendo Apps Script.'));
-    }, 90000);
-
+    }, 25000);
     function cleanup(){
       clearTimeout(timeout);
-      try { script.remove(); } catch(e) {}
-      setTimeout(()=>{
-        try { delete window[cb]; } catch(e) { window[cb] = undefined; }
-      }, 1000);
+      try{delete window[cb];}catch(e){window[cb]=undefined;}
+      script.remove();
     }
-
-    window[cb] = function(payload){
-      if(settled) return;
-      settled = true;
+    window[cb]=function(payload){
       cleanup();
       resolve(payload);
     };
-
-    script.onerror = function(){
-      if(settled) return;
-      settled = true;
+    script.onerror=function(){
       cleanup();
       reject(new Error('No se pudo cargar el endpoint de Apps Script.'));
     };
-
-    script.async = true;
-    script.src = appEnheEndpointUrl(Object.assign({}, params, {callback: cb}));
+    script.src=appEnheEndpointUrl(Object.assign({}, params, {callback:cb}));
     document.head.appendChild(script);
   });
 }
-
 
 function isAdminActive(){
   return document.body.classList.contains('admin-enabled') ||
@@ -649,10 +575,6 @@ function attendanceToSheetFields(attendance){
 }
 
 function concertToSheetRow(c){
-  c = normalizeConcertTimes(Object.assign({}, c || {}));
-  const start = normalizeTimeValue(c.startTime || c.time || '');
-  const end = normalizeTimeValue(c.endTime || '');
-  const range = [start,end].filter(Boolean).join(' - ');
   return Object.assign({
     id:c.id,
     ID:c.id,
@@ -660,12 +582,8 @@ function concertToSheetRow(c){
     Estado:c.status || '',
     fecha:c.date || '',
     Fecha:c.date || '',
-    hora:start || '',
-    Hora:range || start || '',
-    hora_inicio:start || '',
-    'Hora inicio':start || '',
-    hora_fin:end || '',
-    'Hora fin':end || '',
+    hora:c.time || '',
+    Hora:c.time || '',
     titulo:c.eventName || '',
     'Sala / Evento':c.eventName || c.venue || '',
     sala_lugar:c.venue || '',
@@ -941,16 +859,10 @@ function memberAttendanceFromRow(row, prefix='asistencia_'){
   return attendance;
 }
 function mapConcertRow(row,i){
-  const legacyTime = pick(row,['hora','Hora','time','Horario','horario']);
-  const legacyRange = splitTimeRange(legacyTime);
-  const startTime = normalizeTimeValue(pick(row,['hora_inicio','Hora inicio','Hora Inicio','startTime','inicio','Inicio'])) || legacyRange[0];
-  const endTime = normalizeTimeValue(pick(row,['hora_fin','Hora fin','Hora Fin','endTime','fin','Fin'])) || legacyRange[1];
-  const item = {
+  return {
     id: Number(pick(row,['id','ID'])) || i+1,
     date: String(pick(row,['fecha','Fecha','date','Fecha evento'])||'').slice(0,10),
-    time: startTime || normalizeTimeValue(legacyTime),
-    startTime: startTime || '',
-    endTime: endTime || '',
+    time: String(pick(row,['hora','Hora','time'])||'').slice(0,5),
     eventName: pick(row,['titulo','Título','eventName','Concierto','Evento']) || 'Concierto Ñ Mayúscula',
     venue: pick(row,['sala_lugar','Sala / lugar','venue','Sala','Lugar','lugar']),
     city: pick(row,['ciudad','Ciudad','city']),
@@ -970,7 +882,6 @@ function mapConcertRow(row,i){
     attendanceNotes: pick(row,['attendanceNotes','notas_asistencia','Notas asistencia']),
     raw: row
   };
-  return normalizeConcertTimes(item);
 }
 function applyConcertsFromSheet(rows){
   const items=rows.map(mapConcertRow).filter(x=>x.date || x.eventName || x.venue || x.posterUrl);
@@ -1463,24 +1374,7 @@ function renderGmail(){
   }).join('')||'<tr><td colspan="6">Sin respuestas.</td></tr>';
 }
 function concertFields(){return [
-  ['date','Fecha','date'],
-  ['startTime','Hora inicio','time'],
-  ['endTime','Hora fin','time'],
-  ['eventName','Evento','text','span2'],
-  ['venue','Sala / lugar','text','span2'],
-  ['city','Ciudad','text'],
-  ['type','Tipo','select','', ['Sala','Boda Madrid','Boda premium completa','Fiesta privada','Ayuntamiento','Empresa','Otro']],
-  ['status','Estado','select','', ['Pre-reserva','Presupuesto enviado','Confirmado','Realizado','Cancelado']],
-  ['fee','Caché total','number'],
-  ['deposit','Anticipo','number'],
-  ['paid','Cobrado adicional','number'],
-  ['sound','Sonido/iluminación','text'],
-  ['contactId','ID contacto CRM','number'],
-  ['posterTitle','Título del cartel','text','span2'],
-  ['posterUrl','URL / ruta del cartel','text','span2'],
-  ['posterThumbUrl','URL / ruta miniatura','text','span2'],
-  ['publicInfo','Texto público / entrada / dirección','textarea','span4'],
-  ['notes','Notas producción','textarea','span4']
+  ['date','Fecha','date'],['time','Hora','time'],['eventName','Evento','text','span2'],['venue','Sala / lugar','text','span2'],['city','Ciudad','text'],['type','Tipo','select','', ['Sala','Boda Madrid','Boda premium completa','Fiesta privada','Ayuntamiento','Empresa','Otro']],['status','Estado','select','', ['Pre-reserva','Presupuesto enviado','Confirmado','Realizado','Cancelado']],['fee','Caché total','number'],['deposit','Anticipo','number'],['paid','Cobrado adicional','number'],['sound','Sonido/iluminación','text'],['contactId','ID contacto CRM','number'],['posterTitle','Título del cartel','text','span2'],['posterUrl','URL / ruta del cartel','text','span2'],['posterThumbUrl','URL / ruta miniatura','text','span2'],['publicInfo','Texto público / entrada / dirección','textarea','span4'],['notes','Notas producción','textarea','span4']
 ];}
 function concertIsPast(concert){
   if(!concert.date) return false;
@@ -1509,7 +1403,7 @@ function renderConcertPosters(arr){
             ${src?`<a href="${esc(full)}" target="_blank" rel="noopener"><img src="${esc(src)}" alt="${esc(x.posterTitle||x.eventName||'Cartel concierto')}"></a>`:`<div class="posterEmpty">Sin cartel</div>`}
             <div class="posterInfo">
               <strong>${esc(x.posterTitle||x.eventName||'Concierto')}</strong>
-              <span>${esc([x.date,concertTimeText(x)].filter(Boolean).join(' · '))}</span>
+              <span>${esc([x.date,x.time].filter(Boolean).join(' · '))}</span>
               <span>${esc([x.venue,x.city].filter(Boolean).join(' · '))}</span>
               ${x.publicInfo?`<p>${esc(x.publicInfo)}</p>`:''}
               <div class="actions">
@@ -1530,7 +1424,7 @@ function renderConcerts(){
     ['Conciertos', arr.length],['Facturación prevista', eur(total)],['Cobrado/anticipos', eur(deposit)],['Pendiente', eur(pending)]
   ].map(k=>`<div class="card kpi"><strong>${k[1]}</strong><span>${k[0]}</span></div>`).join('');
   renderConcertPosters(arr);
-  document.querySelector('#concertTable tbody').innerHTML=arr.map(x=>{const paid=Number(x.deposit||0)+Number(x.paid||0), pending=Math.max(0,Number(x.fee||0)-paid);return `<tr><td>${esc(x.date)} ${esc(concertTimeText(x))}</td><td><strong>${esc(x.eventName)}</strong><br><span style="color:var(--muted)">${esc(compact(x.notes,80))}</span></td><td>${esc(x.venue)}<br><span style="color:var(--muted)">${esc(x.city)}</span></td><td>${esc(x.type)}</td><td>${badge(x.status)}</td><td>${eur(x.fee)}</td><td>${eur(x.deposit)}</td><td>${eur(x.paid)}</td><td>${eur(pending)}</td><td><button class="btn small gold" onclick="openConcertModal(${x.id})">Editar</button> <button class="btn small red" onclick="deleteRecord('concerts',${x.id})">Borrar</button></td></tr>`}).join('')||'<tr><td colspan="10" class="muted">Todavía no hay conciertos creados. Usa “+ Concierto” o la calculadora de presupuesto.</td></tr>';
+  document.querySelector('#concertTable tbody').innerHTML=arr.map(x=>{const paid=Number(x.deposit||0)+Number(x.paid||0), pending=Math.max(0,Number(x.fee||0)-paid);return `<tr><td>${esc(x.date)} ${esc(x.time||'')}</td><td><strong>${esc(x.eventName)}</strong><br><span style="color:var(--muted)">${esc(compact(x.notes,80))}</span></td><td>${esc(x.venue)}<br><span style="color:var(--muted)">${esc(x.city)}</span></td><td>${esc(x.type)}</td><td>${badge(x.status)}</td><td>${eur(x.fee)}</td><td>${eur(x.deposit)}</td><td>${eur(x.paid)}</td><td>${eur(pending)}</td><td><button class="btn small gold" onclick="openConcertModal(${x.id})">Editar</button> <button class="btn small red" onclick="deleteRecord('concerts',${x.id})">Borrar</button></td></tr>`}).join('')||'<tr><td colspan="10" class="muted">Todavía no hay conciertos creados. Usa “+ Concierto” o la calculadora de presupuesto.</td></tr>';
 }
 function posterUploadBlock(item){
   const current = item?.posterUrl || item?.posterThumbUrl || '';
@@ -1576,7 +1470,7 @@ function loadConcertPosterFile(file){
   reader.readAsDataURL(file);
 }
 function openConcertModal(id=null,preset=null){
-  const item=normalizeConcertTimes(id?Object.assign({}, db.concerts.find(x=>x.id===id)||{}):Object.assign({status:'Pre-reserva',type:'Sala',fee:0,deposit:0,paid:0}, preset||{}));
+  const item=id?db.concerts.find(x=>x.id===id):(preset||{status:'Pre-reserva',type:'Sala',fee:0,deposit:0,paid:0});
   modalContext={type:'concert',id};
   document.getElementById('modalTitle').textContent=id?'Editar concierto':'Nuevo concierto';
   document.getElementById('modalBody').innerHTML=renderForm(concertFields(), item)+posterUploadBlock(item)+`<div class="hr"></div><div class="actions"><button class="btn gold" onclick="saveConcert()">Guardar</button><button class="btn dark" onclick="closeModal()">Cancelar</button></div>`;
@@ -1585,7 +1479,6 @@ function openConcertModal(id=null,preset=null){
 function saveConcert(){
   const obj=readForm(concertFields());
   ['fee','deposit','paid','contactId'].forEach(k=>obj[k]=Number(obj[k]||0));
-  normalizeConcertTimes(obj);
   let item;
   if(modalContext.id){
     const idx=db.concerts.findIndex(x=>x.id===modalContext.id);
@@ -1598,9 +1491,7 @@ function saveConcert(){
   }
   closeModal();
   saveData();
-  pushConcertToSheet(item)
-    .then(()=>sheetStatus('Concierto guardado en Google Sheet maestro.', 'ok'))
-    .catch(alertSheetWriteError);
+  pushConcertToSheet(item).catch(alertSheetWriteError);
 }
 
 function bandMembers(){
@@ -2030,40 +1921,6 @@ function budgetTechnicalRange(){
   if(aforo==='small') return {min:700,max:1100,label:'Producción técnica estimada para interior pequeño/medio.', included:true, needed:true};
   return {min:1100,max:1800,label:'Producción técnica estimada para boda/evento interior estándar.', included:true, needed:true};
 }
-function findBaseTariff(dateStr){
-  if(!dateStr) return null;
-
-  const special = (db.tariffs?.specialDates || []).find(x => x.date === dateStr);
-  if(special){
-    return {
-      name: special.name || 'Fecha especial',
-      price: Number(special.price || 0),
-      special: true
-    };
-  }
-
-  const d = new Date(dateStr + 'T00:00:00');
-  if(isNaN(d)) return null;
-
-  const rows = db.tariffs?.base || [];
-  const row = rows.find(x => dateStr >= x.from && dateStr <= x.to);
-  if(!row) return null;
-
-  const day = d.getDay();
-  let price = 0;
-
-  if(day === 5) price = Number(row.friday || 0);
-  else if(day === 6) price = Number(row.saturday || 0);
-  else if(day === 0) price = Number(row.sunday || 0);
-  else price = Number(row.weekday || 0);
-
-  return {
-    name: row.name || 'Tarifa base',
-    price,
-    special: false
-  };
-}
-
 function budgetBaseLine(date){
   const manual=numInput('budgetManualBase');
   const base=findBaseTariff(date);
@@ -3351,7 +3208,7 @@ window.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 function initialTabFromUrl(){
   try{
     const raw = new URL(window.location.href).searchParams.get('tab') || '';
-    const map = {songs:'repertoire', canciones:'repertoire', repertorio:'repertoire', ensayos:'rehearsals', ensayo:'rehearsals', rehearsals:'rehearsals', ladystone:'ladyStone', asociacion:'ladyStone', asociación:'ladyStone', admin:'ladyStone', export:'importExport', exportar:'importExport'};
+    const map = {songs:'repertoire', canciones:'repertoire', repertorio:'repertoire', ensayos:'rehearsals', ensayo:'rehearsals', rehearsals:'rehearsals', ladystone:'ladyStone', asociacion:'ladyStone', asociación:'ladyStone', admin:'ladyStone', export:'importExport', exportar:'importExport', audio:'audioStudio', audiostudio:'audioStudio', nstudio:'audioStudio'};
     const id = map[raw] || raw;
     return tabs.some(t=>t[0]===id) ? id : 'dashboard';
   }catch(e){ return 'dashboard'; }

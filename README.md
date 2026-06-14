@@ -67,15 +67,3 @@ Cuando esté estable en Ñ, se podrá replicar la arquitectura a APP-BCB y, si c
 ## v2.7
 
 Corrige edición, borrado y control de duplicados en acuerdos económicos Lady Stone.
-
-
-## Revisión 2.7.3-callback-fix
-
-Paquete completo preparado para subir a GitHub Pages.
-
-Cambios incluidos:
-- `index.html` actualizado para cargar todos los recursos con `2.7.3-callback-fix`.
-- `js/app.js` actualizado con `findBaseTariff()` para evitar el corte en `saveData()`.
-- `js/app.js` actualizado con `appsScriptJSONP()` más estable para respuestas lentas de Apps Script.
-- Guardado de conciertos con confirmación visual de envío a Google Sheet.
-- `sw.js` actualizado con nuevo nombre de caché para evitar arrastre de archivos antiguos.

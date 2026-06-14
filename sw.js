@@ -1,19 +1,22 @@
-/* APP-ENHE · PWA service worker v2.7.4 hours fix */
-const CACHE_NAME = "app-enhe-pwa-2.7.4-hours-fix";
+/* APP-ENHE · PWA service worker v2.7 Lady Stone Acuerdos Editables */
+const CACHE_NAME = "app-enhe-pwa-v3-0-0-library";
 const APP_SHELL = [
   "./",
-  "./index.html",
-  "./manifest.json",
-  "./css/styles.css",
-  "./css/admin-guard.css",
-  "./js/assets.js",
-  "./js/data.js",
-  "./js/app.js",
-  "./js/admin-guard.js",
+  "./index.html?v=3.0.0-library",
+  "./manifest.json?v=3.0.0-library",
+  "./css/styles.css?v=3.0.0-library",
+  "./css/audio-library.css?v=3.0.0-library",
+  "./css/admin-guard.css?v=3.0.0-library",
+  "./js/assets.js?v=3.0.0-library",
+  "./js/data.js?v=3.0.0-library",
+  "./js/audio-library.js?v=3.0.0-library",
+  "./js/app.js?v=3.0.0-library",
+  "./js/admin-guard.js?v=3.0.0-library",
   "./assets/logo-n-mayuscula.jpg",
   "./assets/n-mayuscula-stage-bg.jpg",
   "./assets/posters/cartel-cien-x-cien-2026-06-16.jpg",
   "./assets/posters/cartel-cien-x-cien-2026-06-16-thumb.jpg",
+  "./assets/audio-library/library_n_mayuscula.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/maskable-512.png",
@@ -67,7 +70,7 @@ self.addEventListener("fetch", event => {
           caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(request).then(cached => cached || caches.match("./index.html")))
+        .catch(() => caches.match(request).then(cached => cached || caches.match("./index.html?v=3.0.0-library")))
     );
     return;
   }
