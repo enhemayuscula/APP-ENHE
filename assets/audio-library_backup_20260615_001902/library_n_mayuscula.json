@@ -2,7 +2,7 @@
   "schema": "audio_studio_library_v1",
   "band": "n_mayuscula",
   "band_label": "Ñ Mayúscula",
-  "updated_at": "2026-06-15 00:19:02",
+  "updated_at": "2026-06-14 17:40:34",
   "songs": [
     {
       "title": "chica de ayer",
@@ -153,97 +153,6 @@
       "storage": "drive_local_sync",
       "folder": "enamorado_semilla",
       "published_at": "2026-06-14 14:17:00"
-    },
-    {
-      "title": "Esther Pongamos que hablo de Madrid",
-      "slug": "esther_pongamos_que_hablo_de_madrid",
-      "band": "n_mayuscula",
-      "band_label": "Ñ Mayúscula",
-      "created_at": "2026-06-15 00:19:00",
-      "default_variant": "0",
-      "tracks": [
-        {
-          "id": "bass",
-          "label": "Bajo",
-          "source": "bass.wav",
-          "file": "tracks/bass.mp3",
-          "url": "assets/audio-library/esther_pongamos_que_hablo_de_madrid/tracks/bass.mp3",
-          "drive_url": ""
-        },
-        {
-          "id": "drums",
-          "label": "Batería",
-          "source": "drums.wav",
-          "file": "tracks/drums.mp3",
-          "url": "assets/audio-library/esther_pongamos_que_hablo_de_madrid/tracks/drums.mp3",
-          "drive_url": ""
-        },
-        {
-          "id": "other",
-          "label": "Resto",
-          "source": "other.wav",
-          "file": "tracks/other.mp3",
-          "url": "assets/audio-library/esther_pongamos_que_hablo_de_madrid/tracks/other.mp3",
-          "drive_url": ""
-        },
-        {
-          "id": "vocals",
-          "label": "Voz",
-          "source": "vocals.wav",
-          "file": "tracks/vocals.mp3",
-          "url": "assets/audio-library/esther_pongamos_que_hablo_de_madrid/tracks/vocals.mp3",
-          "drive_url": ""
-        }
-      ],
-      "variants": {
-        "0": {
-          "label": "Original",
-          "semitones": 0,
-          "tracks": [
-            {
-              "id": "bass",
-              "label": "Bajo",
-              "source": "bass.wav",
-              "file": "tracks/bass.mp3",
-              "url": "assets/audio-library/esther_pongamos_que_hablo_de_madrid/tracks/bass.mp3",
-              "drive_url": ""
-            },
-            {
-              "id": "drums",
-              "label": "Batería",
-              "source": "drums.wav",
-              "file": "tracks/drums.mp3",
-              "url": "assets/audio-library/esther_pongamos_que_hablo_de_madrid/tracks/drums.mp3",
-              "drive_url": ""
-            },
-            {
-              "id": "other",
-              "label": "Resto",
-              "source": "other.wav",
-              "file": "tracks/other.mp3",
-              "url": "assets/audio-library/esther_pongamos_que_hablo_de_madrid/tracks/other.mp3",
-              "drive_url": ""
-            },
-            {
-              "id": "vocals",
-              "label": "Voz",
-              "source": "vocals.wav",
-              "file": "tracks/vocals.mp3",
-              "url": "assets/audio-library/esther_pongamos_que_hablo_de_madrid/tracks/vocals.mp3",
-              "drive_url": ""
-            }
-          ]
-        }
-      },
-      "notes": "URLs relativas. Si los audios están en Drive, sustituir url por enlace directo reproducible si hace falta.",
-      "original_archive": {
-        "storage": "drive_local_sync",
-        "file": "esther_pongamos_que_hablo_de_madrid__original_20260615_001901.mp3",
-        "path": "G:\\Mi unidad\\Ñ Mayuscula\\Audio Studio\\Originales\\esther_pongamos_que_hablo_de_madrid__original_20260615_001901.mp3"
-      },
-      "storage": "drive_local_sync",
-      "folder": "esther_pongamos_que_hablo_de_madrid",
-      "published_at": "2026-06-15 00:19:02"
     },
     {
       "title": "Fito y los Fitipaldis 2004 11 11.Whisky barato",
