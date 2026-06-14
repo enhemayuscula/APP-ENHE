@@ -1,0 +1,21 @@
+AUDIO STUDIO · EXPORTACIÓN PARA BIBLIOTECA
+
+Banda: Ñ Mayúscula
+Tema: Enamorado Semilla
+Slug: enamorado_semilla
+
+Contenido:
+- tracks/: pistas MP3 optimizadas para app.
+- variants/: variantes de tono, si se solicitaron.
+- session.json: sesión individual.
+- library_entry.json: entrada individual para añadir a la biblioteca.
+- library_n_mayuscula.json: índice maestro local generado por Audio Studio.
+
+Uso recomendado:
+1. Sube la carpeta completa enamorado_semilla_20260614_141639 al Drive de Ñ Mayúscula.
+2. Mantén un único índice de biblioteca para la app de la banda.
+3. Si la app no reproduce enlaces relativos desde Drive, sustituye en library_n_mayuscula.json las rutas url por enlaces directos reproducibles de Drive.
+4. No mezcles carpetas ni bibliotecas de Ñ y BCB.
+
+Nota:
+Drive sirve como almacén. La app necesita URLs reproducibles de los MP3 para poder cargar las pistas en móvil.
