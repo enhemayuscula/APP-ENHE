@@ -2,7 +2,7 @@
   "schema": "audio_studio_library_v1",
   "band": "n_mayuscula",
   "band_label": "Ñ Mayúscula",
-  "updated_at": "2026-06-15 01:18:03",
+  "updated_at": "2026-06-15 00:13:10",
   "songs": [
     {
       "title": "chica de ayer",
@@ -17,7 +17,7 @@
           "label": "Base sin voz",
           "source": "no_vocals.wav",
           "file": "tracks/no_vocals.mp3",
-          "url": "assets/audio-library/chica_de_ayer/tracks/no_vocals.mp3",
+          "url": "chica_de_ayer/tracks/no_vocals.mp3",
           "drive_url": ""
         },
         {
@@ -25,7 +25,7 @@
           "label": "Voz",
           "source": "vocals.wav",
           "file": "tracks/vocals.mp3",
-          "url": "assets/audio-library/chica_de_ayer/tracks/vocals.mp3",
+          "url": "chica_de_ayer/tracks/vocals.mp3",
           "drive_url": ""
         }
       ],
@@ -39,7 +39,7 @@
               "label": "Base sin voz",
               "source": "no_vocals.wav",
               "file": "tracks/no_vocals.mp3",
-              "url": "assets/audio-library/chica_de_ayer/tracks/no_vocals.mp3",
+              "url": "chica_de_ayer/tracks/no_vocals.mp3",
               "drive_url": ""
             },
             {
@@ -47,7 +47,7 @@
               "label": "Voz",
               "source": "vocals.wav",
               "file": "tracks/vocals.mp3",
-              "url": "assets/audio-library/chica_de_ayer/tracks/vocals.mp3",
+              "url": "chica_de_ayer/tracks/vocals.mp3",
               "drive_url": ""
             }
           ]
@@ -64,97 +64,6 @@
       "published_at": "2026-06-14 17:31:23"
     },
     {
-      "title": "chica de ayer 1",
-      "slug": "chica_de_ayer_1",
-      "band": "n_mayuscula",
-      "band_label": "Ñ Mayúscula",
-      "created_at": "2026-06-15 01:18:01",
-      "default_variant": "0",
-      "tracks": [
-        {
-          "id": "bass",
-          "label": "Bajo",
-          "source": "bass.wav",
-          "file": "tracks/bass.mp3",
-          "url": "assets/audio-library/chica_de_ayer_1/tracks/bass.mp3",
-          "drive_url": ""
-        },
-        {
-          "id": "drums",
-          "label": "Batería",
-          "source": "drums.wav",
-          "file": "tracks/drums.mp3",
-          "url": "assets/audio-library/chica_de_ayer_1/tracks/drums.mp3",
-          "drive_url": ""
-        },
-        {
-          "id": "other",
-          "label": "Resto",
-          "source": "other.wav",
-          "file": "tracks/other.mp3",
-          "url": "assets/audio-library/chica_de_ayer_1/tracks/other.mp3",
-          "drive_url": ""
-        },
-        {
-          "id": "vocals",
-          "label": "Voz",
-          "source": "vocals.wav",
-          "file": "tracks/vocals.mp3",
-          "url": "assets/audio-library/chica_de_ayer_1/tracks/vocals.mp3",
-          "drive_url": ""
-        }
-      ],
-      "variants": {
-        "0": {
-          "label": "Original",
-          "semitones": 0,
-          "tracks": [
-            {
-              "id": "bass",
-              "label": "Bajo",
-              "source": "bass.wav",
-              "file": "tracks/bass.mp3",
-              "url": "assets/audio-library/chica_de_ayer_1/tracks/bass.mp3",
-              "drive_url": ""
-            },
-            {
-              "id": "drums",
-              "label": "Batería",
-              "source": "drums.wav",
-              "file": "tracks/drums.mp3",
-              "url": "assets/audio-library/chica_de_ayer_1/tracks/drums.mp3",
-              "drive_url": ""
-            },
-            {
-              "id": "other",
-              "label": "Resto",
-              "source": "other.wav",
-              "file": "tracks/other.mp3",
-              "url": "assets/audio-library/chica_de_ayer_1/tracks/other.mp3",
-              "drive_url": ""
-            },
-            {
-              "id": "vocals",
-              "label": "Voz",
-              "source": "vocals.wav",
-              "file": "tracks/vocals.mp3",
-              "url": "assets/audio-library/chica_de_ayer_1/tracks/vocals.mp3",
-              "drive_url": ""
-            }
-          ]
-        }
-      },
-      "notes": "URLs relativas. Si los audios están en Drive, sustituir url por enlace directo reproducible si hace falta.",
-      "original_archive": {
-        "storage": "drive_local_sync",
-        "file": "chica_de_ayer_1__original.mp3",
-        "path": "G:\\Mi unidad\\Ñ Mayuscula\\Audio Studio\\Originales\\chica_de_ayer_1__original.mp3"
-      },
-      "storage": "drive_local_sync",
-      "folder": "chica_de_ayer_1",
-      "published_at": "2026-06-15 01:18:03"
-    },
-    {
       "title": "Enamorado Semilla",
       "slug": "enamorado_semilla",
       "band": "n_mayuscula",
@@ -167,7 +76,7 @@
           "label": "Bajo",
           "source": "bass.wav",
           "file": "tracks/bass.mp3",
-          "url": "assets/audio-library/enamorado_semilla/tracks/bass.mp3",
+          "url": "enamorado_semilla/tracks/bass.mp3",
           "drive_url": ""
         },
         {
@@ -175,7 +84,7 @@
           "label": "Batería",
           "source": "drums.wav",
           "file": "tracks/drums.mp3",
-          "url": "assets/audio-library/enamorado_semilla/tracks/drums.mp3",
+          "url": "enamorado_semilla/tracks/drums.mp3",
           "drive_url": ""
         },
         {
@@ -183,7 +92,7 @@
           "label": "Resto",
           "source": "other.wav",
           "file": "tracks/other.mp3",
-          "url": "assets/audio-library/enamorado_semilla/tracks/other.mp3",
+          "url": "enamorado_semilla/tracks/other.mp3",
           "drive_url": ""
         },
         {
@@ -191,7 +100,7 @@
           "label": "Voz",
           "source": "vocals.wav",
           "file": "tracks/vocals.mp3",
-          "url": "assets/audio-library/enamorado_semilla/tracks/vocals.mp3",
+          "url": "enamorado_semilla/tracks/vocals.mp3",
           "drive_url": ""
         }
       ],
@@ -205,7 +114,7 @@
               "label": "Bajo",
               "source": "bass.wav",
               "file": "tracks/bass.mp3",
-              "url": "assets/audio-library/enamorado_semilla/tracks/bass.mp3",
+              "url": "enamorado_semilla/tracks/bass.mp3",
               "drive_url": ""
             },
             {
@@ -213,7 +122,7 @@
               "label": "Batería",
               "source": "drums.wav",
               "file": "tracks/drums.mp3",
-              "url": "assets/audio-library/enamorado_semilla/tracks/drums.mp3",
+              "url": "enamorado_semilla/tracks/drums.mp3",
               "drive_url": ""
             },
             {
@@ -221,7 +130,7 @@
               "label": "Resto",
               "source": "other.wav",
               "file": "tracks/other.mp3",
-              "url": "assets/audio-library/enamorado_semilla/tracks/other.mp3",
+              "url": "enamorado_semilla/tracks/other.mp3",
               "drive_url": ""
             },
             {
@@ -229,7 +138,7 @@
               "label": "Voz",
               "source": "vocals.wav",
               "file": "tracks/vocals.mp3",
-              "url": "assets/audio-library/enamorado_semilla/tracks/vocals.mp3",
+              "url": "enamorado_semilla/tracks/vocals.mp3",
               "drive_url": ""
             }
           ]
@@ -250,7 +159,7 @@
       "slug": "esther_pongamos_que_hablo_de_madrid",
       "band": "n_mayuscula",
       "band_label": "Ñ Mayúscula",
-      "created_at": "2026-06-15 00:19:00",
+      "created_at": "2026-06-15 00:13:09",
       "default_variant": "0",
       "tracks": [
         {
@@ -258,7 +167,7 @@
           "label": "Bajo",
           "source": "bass.wav",
           "file": "tracks/bass.mp3",
-          "url": "assets/audio-library/esther_pongamos_que_hablo_de_madrid/tracks/bass.mp3",
+          "url": "esther_pongamos_que_hablo_de_madrid/tracks/bass.mp3",
           "drive_url": ""
         },
         {
@@ -266,7 +175,7 @@
           "label": "Batería",
           "source": "drums.wav",
           "file": "tracks/drums.mp3",
-          "url": "assets/audio-library/esther_pongamos_que_hablo_de_madrid/tracks/drums.mp3",
+          "url": "esther_pongamos_que_hablo_de_madrid/tracks/drums.mp3",
           "drive_url": ""
         },
         {
@@ -274,7 +183,7 @@
           "label": "Resto",
           "source": "other.wav",
           "file": "tracks/other.mp3",
-          "url": "assets/audio-library/esther_pongamos_que_hablo_de_madrid/tracks/other.mp3",
+          "url": "esther_pongamos_que_hablo_de_madrid/tracks/other.mp3",
           "drive_url": ""
         },
         {
@@ -282,7 +191,7 @@
           "label": "Voz",
           "source": "vocals.wav",
           "file": "tracks/vocals.mp3",
-          "url": "assets/audio-library/esther_pongamos_que_hablo_de_madrid/tracks/vocals.mp3",
+          "url": "esther_pongamos_que_hablo_de_madrid/tracks/vocals.mp3",
           "drive_url": ""
         }
       ],
@@ -296,7 +205,7 @@
               "label": "Bajo",
               "source": "bass.wav",
               "file": "tracks/bass.mp3",
-              "url": "assets/audio-library/esther_pongamos_que_hablo_de_madrid/tracks/bass.mp3",
+              "url": "esther_pongamos_que_hablo_de_madrid/tracks/bass.mp3",
               "drive_url": ""
             },
             {
@@ -304,7 +213,7 @@
               "label": "Batería",
               "source": "drums.wav",
               "file": "tracks/drums.mp3",
-              "url": "assets/audio-library/esther_pongamos_que_hablo_de_madrid/tracks/drums.mp3",
+              "url": "esther_pongamos_que_hablo_de_madrid/tracks/drums.mp3",
               "drive_url": ""
             },
             {
@@ -312,7 +221,7 @@
               "label": "Resto",
               "source": "other.wav",
               "file": "tracks/other.mp3",
-              "url": "assets/audio-library/esther_pongamos_que_hablo_de_madrid/tracks/other.mp3",
+              "url": "esther_pongamos_que_hablo_de_madrid/tracks/other.mp3",
               "drive_url": ""
             },
             {
@@ -320,7 +229,7 @@
               "label": "Voz",
               "source": "vocals.wav",
               "file": "tracks/vocals.mp3",
-              "url": "assets/audio-library/esther_pongamos_que_hablo_de_madrid/tracks/vocals.mp3",
+              "url": "esther_pongamos_que_hablo_de_madrid/tracks/vocals.mp3",
               "drive_url": ""
             }
           ]
@@ -329,12 +238,12 @@
       "notes": "URLs relativas. Si los audios están en Drive, sustituir url por enlace directo reproducible si hace falta.",
       "original_archive": {
         "storage": "drive_local_sync",
-        "file": "esther_pongamos_que_hablo_de_madrid__original_20260615_001901.mp3",
-        "path": "G:\\Mi unidad\\Ñ Mayuscula\\Audio Studio\\Originales\\esther_pongamos_que_hablo_de_madrid__original_20260615_001901.mp3"
+        "file": "esther_pongamos_que_hablo_de_madrid__original.mp3",
+        "path": "G:\\Mi unidad\\Ñ Mayuscula\\Audio Studio\\Originales\\esther_pongamos_que_hablo_de_madrid__original.mp3"
       },
       "storage": "drive_local_sync",
       "folder": "esther_pongamos_que_hablo_de_madrid",
-      "published_at": "2026-06-15 00:19:02"
+      "published_at": "2026-06-15 00:13:10"
     },
     {
       "title": "Fito y los Fitipaldis 2004 11 11.Whisky barato",
@@ -349,7 +258,7 @@
           "label": "Bajo",
           "source": "bass.wav",
           "file": "tracks/bass.mp3",
-          "url": "assets/audio-library/fito_y_los_fitipaldis_2004_11_11_whisky_barato/tracks/bass.mp3",
+          "url": "fito_y_los_fitipaldis_2004_11_11_whisky_barato/tracks/bass.mp3",
           "drive_url": ""
         },
         {
@@ -357,7 +266,7 @@
           "label": "Batería",
           "source": "drums.wav",
           "file": "tracks/drums.mp3",
-          "url": "assets/audio-library/fito_y_los_fitipaldis_2004_11_11_whisky_barato/tracks/drums.mp3",
+          "url": "fito_y_los_fitipaldis_2004_11_11_whisky_barato/tracks/drums.mp3",
           "drive_url": ""
         },
         {
@@ -365,7 +274,7 @@
           "label": "Resto",
           "source": "other.wav",
           "file": "tracks/other.mp3",
-          "url": "assets/audio-library/fito_y_los_fitipaldis_2004_11_11_whisky_barato/tracks/other.mp3",
+          "url": "fito_y_los_fitipaldis_2004_11_11_whisky_barato/tracks/other.mp3",
           "drive_url": ""
         },
         {
@@ -373,7 +282,7 @@
           "label": "Voz",
           "source": "vocals.wav",
           "file": "tracks/vocals.mp3",
-          "url": "assets/audio-library/fito_y_los_fitipaldis_2004_11_11_whisky_barato/tracks/vocals.mp3",
+          "url": "fito_y_los_fitipaldis_2004_11_11_whisky_barato/tracks/vocals.mp3",
           "drive_url": ""
         }
       ],
@@ -387,7 +296,7 @@
               "label": "Bajo",
               "source": "bass.wav",
               "file": "tracks/bass.mp3",
-              "url": "assets/audio-library/fito_y_los_fitipaldis_2004_11_11_whisky_barato/tracks/bass.mp3",
+              "url": "fito_y_los_fitipaldis_2004_11_11_whisky_barato/tracks/bass.mp3",
               "drive_url": ""
             },
             {
@@ -395,7 +304,7 @@
               "label": "Batería",
               "source": "drums.wav",
               "file": "tracks/drums.mp3",
-              "url": "assets/audio-library/fito_y_los_fitipaldis_2004_11_11_whisky_barato/tracks/drums.mp3",
+              "url": "fito_y_los_fitipaldis_2004_11_11_whisky_barato/tracks/drums.mp3",
               "drive_url": ""
             },
             {
@@ -403,7 +312,7 @@
               "label": "Resto",
               "source": "other.wav",
               "file": "tracks/other.mp3",
-              "url": "assets/audio-library/fito_y_los_fitipaldis_2004_11_11_whisky_barato/tracks/other.mp3",
+              "url": "fito_y_los_fitipaldis_2004_11_11_whisky_barato/tracks/other.mp3",
               "drive_url": ""
             },
             {
@@ -411,7 +320,7 @@
               "label": "Voz",
               "source": "vocals.wav",
               "file": "tracks/vocals.mp3",
-              "url": "assets/audio-library/fito_y_los_fitipaldis_2004_11_11_whisky_barato/tracks/vocals.mp3",
+              "url": "fito_y_los_fitipaldis_2004_11_11_whisky_barato/tracks/vocals.mp3",
               "drive_url": ""
             }
           ]
@@ -440,7 +349,7 @@
           "label": "Bajo",
           "source": "bass.wav",
           "file": "tracks/bass.mp3",
-          "url": "assets/audio-library/groenlandia/tracks/bass.mp3",
+          "url": "groenlandia/tracks/bass.mp3",
           "drive_url": ""
         },
         {
@@ -448,7 +357,7 @@
           "label": "Batería",
           "source": "drums.wav",
           "file": "tracks/drums.mp3",
-          "url": "assets/audio-library/groenlandia/tracks/drums.mp3",
+          "url": "groenlandia/tracks/drums.mp3",
           "drive_url": ""
         },
         {
@@ -456,7 +365,7 @@
           "label": "Guitarra",
           "source": "guitar.wav",
           "file": "tracks/guitar.mp3",
-          "url": "assets/audio-library/groenlandia/tracks/guitar.mp3",
+          "url": "groenlandia/tracks/guitar.mp3",
           "drive_url": ""
         },
         {
@@ -464,7 +373,7 @@
           "label": "Resto",
           "source": "other.wav",
           "file": "tracks/other.mp3",
-          "url": "assets/audio-library/groenlandia/tracks/other.mp3",
+          "url": "groenlandia/tracks/other.mp3",
           "drive_url": ""
         },
         {
@@ -472,7 +381,7 @@
           "label": "Piano / teclado",
           "source": "piano.wav",
           "file": "tracks/piano.mp3",
-          "url": "assets/audio-library/groenlandia/tracks/piano.mp3",
+          "url": "groenlandia/tracks/piano.mp3",
           "drive_url": ""
         },
         {
@@ -480,7 +389,7 @@
           "label": "Voz",
           "source": "vocals.wav",
           "file": "tracks/vocals.mp3",
-          "url": "assets/audio-library/groenlandia/tracks/vocals.mp3",
+          "url": "groenlandia/tracks/vocals.mp3",
           "drive_url": ""
         }
       ],
@@ -494,7 +403,7 @@
               "label": "Bajo",
               "source": "bass.wav",
               "file": "tracks/bass.mp3",
-              "url": "assets/audio-library/groenlandia/tracks/bass.mp3",
+              "url": "groenlandia/tracks/bass.mp3",
               "drive_url": ""
             },
             {
@@ -502,7 +411,7 @@
               "label": "Batería",
               "source": "drums.wav",
               "file": "tracks/drums.mp3",
-              "url": "assets/audio-library/groenlandia/tracks/drums.mp3",
+              "url": "groenlandia/tracks/drums.mp3",
               "drive_url": ""
             },
             {
@@ -510,7 +419,7 @@
               "label": "Guitarra",
               "source": "guitar.wav",
               "file": "tracks/guitar.mp3",
-              "url": "assets/audio-library/groenlandia/tracks/guitar.mp3",
+              "url": "groenlandia/tracks/guitar.mp3",
               "drive_url": ""
             },
             {
@@ -518,7 +427,7 @@
               "label": "Resto",
               "source": "other.wav",
               "file": "tracks/other.mp3",
-              "url": "assets/audio-library/groenlandia/tracks/other.mp3",
+              "url": "groenlandia/tracks/other.mp3",
               "drive_url": ""
             },
             {
@@ -526,7 +435,7 @@
               "label": "Piano / teclado",
               "source": "piano.wav",
               "file": "tracks/piano.mp3",
-              "url": "assets/audio-library/groenlandia/tracks/piano.mp3",
+              "url": "groenlandia/tracks/piano.mp3",
               "drive_url": ""
             },
             {
@@ -534,7 +443,7 @@
               "label": "Voz",
               "source": "vocals.wav",
               "file": "tracks/vocals.mp3",
-              "url": "assets/audio-library/groenlandia/tracks/vocals.mp3",
+              "url": "groenlandia/tracks/vocals.mp3",
               "drive_url": ""
             }
           ]
@@ -563,7 +472,7 @@
           "label": "Bajo",
           "source": "bass.wav",
           "file": "tracks/bass.mp3",
-          "url": "assets/audio-library/mil_calles/tracks/bass.mp3",
+          "url": "mil_calles/tracks/bass.mp3",
           "drive_url": ""
         },
         {
@@ -571,7 +480,7 @@
           "label": "Batería",
           "source": "drums.wav",
           "file": "tracks/drums.mp3",
-          "url": "assets/audio-library/mil_calles/tracks/drums.mp3",
+          "url": "mil_calles/tracks/drums.mp3",
           "drive_url": ""
         },
         {
@@ -579,7 +488,7 @@
           "label": "Resto",
           "source": "other.wav",
           "file": "tracks/other.mp3",
-          "url": "assets/audio-library/mil_calles/tracks/other.mp3",
+          "url": "mil_calles/tracks/other.mp3",
           "drive_url": ""
         },
         {
@@ -587,7 +496,7 @@
           "label": "Voz",
           "source": "vocals.wav",
           "file": "tracks/vocals.mp3",
-          "url": "assets/audio-library/mil_calles/tracks/vocals.mp3",
+          "url": "mil_calles/tracks/vocals.mp3",
           "drive_url": ""
         }
       ],
@@ -601,7 +510,7 @@
               "label": "Bajo",
               "source": "bass.wav",
               "file": "tracks/bass.mp3",
-              "url": "assets/audio-library/mil_calles/tracks/bass.mp3",
+              "url": "mil_calles/tracks/bass.mp3",
               "drive_url": ""
             },
             {
@@ -609,7 +518,7 @@
               "label": "Batería",
               "source": "drums.wav",
               "file": "tracks/drums.mp3",
-              "url": "assets/audio-library/mil_calles/tracks/drums.mp3",
+              "url": "mil_calles/tracks/drums.mp3",
               "drive_url": ""
             },
             {
@@ -617,7 +526,7 @@
               "label": "Resto",
               "source": "other.wav",
               "file": "tracks/other.mp3",
-              "url": "assets/audio-library/mil_calles/tracks/other.mp3",
+              "url": "mil_calles/tracks/other.mp3",
               "drive_url": ""
             },
             {
@@ -625,7 +534,7 @@
               "label": "Voz",
               "source": "vocals.wav",
               "file": "tracks/vocals.mp3",
-              "url": "assets/audio-library/mil_calles/tracks/vocals.mp3",
+              "url": "mil_calles/tracks/vocals.mp3",
               "drive_url": ""
             }
           ]
