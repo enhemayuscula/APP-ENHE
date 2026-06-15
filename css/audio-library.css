@@ -30,3 +30,8 @@
   .audio-lib-config,.audio-lib-layout,.audio-lib-controls,.audio-lib-track{grid-template-columns:1fr}
   .audio-lib-transport-buttons{margin-top:10px}
 }
+
+
+.audio-lib-tone-note{display:block;margin-top:6px;color:#bfb7c8;font-size:12px;line-height:1.3}
+.audio-lib-controls label{min-width:0}
+.audio-lib-controls select:disabled{opacity:.72;cursor:not-allowed}

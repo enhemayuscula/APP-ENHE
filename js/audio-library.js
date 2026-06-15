@@ -1,4 +1,4 @@
-/* Audio Library Player v1 · Ñ / BCB
+/* Audio Library Player v1.1 · Ñ / BCB
    Lee un library.json y reproduce pistas ya separadas.
    No separa audio. No necesita Windows.
 */
@@ -174,6 +174,11 @@
       const tracks = this.variantTracks(song, this.currentVariantKey);
       const player = q(this.root, '.audio-lib-player');
       const variantOptions = this.variantOptions(song);
+      const variantCount = this.variantCount(song);
+      const toneNotice = variantCount > 1
+        ? 'Tono disponible: elige variante y se cargarán las pistas ya preparadas.'
+        : 'Solo tono original disponible. Para cambiar tono, el administrador debe publicar variantes (-2, -1, +1, +2) desde Audio Studio.';
+      const toneDisabled = variantCount > 1 ? '' : 'disabled';
       player.innerHTML = `
         <div class="audio-lib-player-head">
           <div>
@@ -204,7 +209,8 @@
             </select>
           </label>
           <label>Tono
-            <select class="variant">${variantOptions}</select>
+            <select class="variant" ${toneDisabled}>${variantOptions}</select>
+            <small class="audio-lib-tone-note">${toneNotice}</small>
           </label>
           <label>Loop A <input type="number" class="loop-a" min="0" step="0.1" placeholder="segundos"></label>
           <label>Loop B <input type="number" class="loop-b" min="0" step="0.1" placeholder="segundos"></label>
@@ -223,6 +229,28 @@
       this.bindPlayerControls();
       this.renderSongs();
       this.startTimer();
+      this.scrollSessionIntoView();
+    }
+
+    scrollSessionIntoView(){
+      const player = q(this.root, '.audio-lib-player');
+      if (!player) return;
+      window.setTimeout(() => {
+        try {
+          player.scrollIntoView({behavior:'smooth', block:'start'});
+        } catch(e) {
+          try { player.scrollIntoView(); } catch(_e) {}
+        }
+        const play = q(player, '.play');
+        if (play && window.matchMedia && window.matchMedia('(max-width: 800px)').matches) {
+          try { play.focus({preventScroll:true}); } catch(e) {}
+        }
+      }, 80);
+    }
+
+    variantCount(song){
+      const variants = song.variants || {'0': {label:'Original', semitones:0}};
+      return Object.keys(variants).length;
     }
 
     variantOptions(song){
