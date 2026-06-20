@@ -1,83 +1,83 @@
-{
-  "name": "Ñ Mayúscula · Control profesional",
-  "short_name": "Ñ Mayúscula",
-  "description": "App interna de Ñ Mayúscula para CRM, repertorio, setlist, dossier, tareas, seguimiento y acuerdos económicos editables Lady Stone.",
-  "start_url": "./?source=pwa&v=27agreements",
-  "scope": "./",
-  "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#050202",
-  "theme_color": "#120608",
-  "lang": "es",
-  "icons": [
-    {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Canciones",
-      "short_name": "Canciones",
-      "description": "Abrir repertorio",
-      "url": "./?tab=songs",
-      "icons": [
-        {
-          "src": "icons/icon-192.png",
-          "sizes": "192x192"
-        }
-      ]
-    },
-    {
-      "name": "CRM",
-      "short_name": "CRM",
-      "description": "Abrir CRM",
-      "url": "./?tab=crm",
-      "icons": [
-        {
-          "src": "icons/icon-192.png",
-          "sizes": "192x192"
-        }
-      ]
-    },
-    {
-      "name": "Dossier",
-      "short_name": "Dossier",
-      "description": "Abrir dossier",
-      "url": "./?tab=dossier",
-      "icons": [
-        {
-          "src": "icons/icon-192.png",
-          "sizes": "192x192"
-        }
-      ]
-    },
-    {
-      "name": "Audio Studio",
-      "short_name": "Audio",
-      "description": "Abrir módulo Audio Studio",
-      "url": "./?tab=audioStudio",
-      "icons": [
-        {
-          "src": "icons/icon-192.png",
-          "sizes": "192x192"
-        }
-      ]
-    }
-  ],
-  "version": "2.8-audio"
+﻿{
+    "name":  "Ñ Mayúscula · Control profesional",
+    "short_name":  "Ñ Mayúscula",
+    "description":  "App interna de Ã‘ MayÃºscula con pantalla automÃ¡tica de novedades, CRM, repertorio, setlist, dossier, tareas, seguimiento, acuerdos y mÃ³dulo Pistas.",
+    "start_url":  "./?v=4.3-news",
+    "scope":  "./",
+    "display":  "standalone",
+    "orientation":  "portrait",
+    "background_color":  "#050202",
+    "theme_color":  "#120608",
+    "lang":  "es",
+    "icons":  [
+                  {
+                      "src":  "icons/icon-192.png",
+                      "sizes":  "192x192",
+                      "type":  "image/png",
+                      "purpose":  "any"
+                  },
+                  {
+                      "src":  "icons/icon-512.png",
+                      "sizes":  "512x512",
+                      "type":  "image/png",
+                      "purpose":  "any"
+                  },
+                  {
+                      "src":  "icons/maskable-512.png",
+                      "sizes":  "512x512",
+                      "type":  "image/png",
+                      "purpose":  "maskable"
+                  }
+              ],
+    "shortcuts":  [
+                      {
+                          "name":  "Canciones",
+                          "short_name":  "Canciones",
+                          "description":  "Abrir repertorio",
+                          "url":  "./?tab=songs",
+                          "icons":  [
+                                        {
+                                            "src":  "icons/icon-192.png",
+                                            "sizes":  "192x192"
+                                        }
+                                    ]
+                      },
+                      {
+                          "name":  "CRM",
+                          "short_name":  "CRM",
+                          "description":  "Abrir CRM",
+                          "url":  "./?tab=crm",
+                          "icons":  [
+                                        {
+                                            "src":  "icons/icon-192.png",
+                                            "sizes":  "192x192"
+                                        }
+                                    ]
+                      },
+                      {
+                          "name":  "Dossier",
+                          "short_name":  "Dossier",
+                          "description":  "Abrir dossier",
+                          "url":  "./?tab=dossier",
+                          "icons":  [
+                                        {
+                                            "src":  "icons/icon-192.png",
+                                            "sizes":  "192x192"
+                                        }
+                                    ]
+                      },
+                      {
+                          "name":  "Audio Studio",
+                          "short_name":  "Audio",
+                          "description":  "Abrir módulo Audio Studio",
+                          "url":  "./?tab=audioStudio",
+                          "icons":  [
+                                        {
+                                            "src":  "icons/icon-192.png",
+                                            "sizes":  "192x192"
+                                        }
+                                    ]
+                      }
+                  ],
+    "version":  "2.8-audio"
 }

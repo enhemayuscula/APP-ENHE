@@ -1,16 +1,18 @@
-/* APP-ENHE · PWA service worker v2.7 Lady Stone Acuerdos Editables */
-const CACHE_NAME = "app-enhe-pwa-v3-0-0-library";
+﻿/* APP-ENHE · PWA service worker v2.7 Lady Stone Acuerdos Editables */
+const CACHE_NAME = "app-enhe-pwa-v4-3-0-news";
 const APP_SHELL = [
   "./",
   "./index.html?v=3.0.0-library",
   "./manifest.json?v=3.0.0-library",
   "./css/styles.css?v=3.0.0-library",
   "./css/audio-library.css?v=3.0.0-library",
+  "./css/news-modal.css?v=4.3.0-news",
   "./css/admin-guard.css?v=3.0.0-library",
   "./js/assets.js?v=3.0.0-library",
   "./js/data.js?v=3.0.0-library",
   "./js/audio-library.js?v=3.0.0-library",
   "./js/app.js?v=3.0.0-library",
+  "./js/news-modal.js?v=4.3.0-news",
   "./js/admin-guard.js?v=3.0.0-library",
   "./assets/logo-n-mayuscula.jpg",
   "./assets/n-mayuscula-stage-bg.jpg",
@@ -87,3 +89,4 @@ self.addEventListener("fetch", event => {
       })
   );
 });
+
